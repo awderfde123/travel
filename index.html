@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>旅伴地圖共筆</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>旅伴地圖共筆</h1>
+          <p>主畫面看地圖與總行程，編輯請進入地點內頁。</p>
+        </div>
+        <div class="actions">
+          <button id="mapConfigBtn">Google Map 設定</button>
+          <button id="addPlaceBtn" class="primary">新增地點</button>
+        </div>
+      </header>
+
+      <main id="mainView" class="main-layout">
+        <section class="panel map-panel">
+          <div class="panel-head">
+            <h2>Google Map</h2>
+            <p>點擊地圖標記即可進入該地點內頁編輯。</p>
+          </div>
+          <div id="map"></div>
+          <div id="mapHint" class="map-hint hidden"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>地點列表</h2>
+            <p>可從這裡進入地點內頁管理景點與討論。</p>
+          </div>
+          <div id="placesList" class="list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>行程總覽（唯讀）</h2>
+            <p>僅顯示所有地點的時程摘要；編輯請進內頁。</p>
+          </div>
+          <div id="itineraryOverview" class="list"></div>
+        </section>
+      </main>
+
+      <main id="detailView" class="detail-view hidden">
+        <section class="panel">
+          <div class="panel-head detail-head">
+            <div>
+              <h2 id="detailTitle">地點內頁</h2>
+              <p id="detailCoords"></p>
+            </div>
+            <button id="backBtn">回主畫面</button>
+          </div>
+
+          <div class="detail-grid">
+            <div class="subpanel">
+              <h3>地點資訊編輯</h3>
+              <form id="placeForm" class="form-grid">
+                <input id="placeName" type="text" placeholder="地點名稱" required />
+                <textarea id="placeNote" placeholder="地點備註（交通、門票、注意事項）"></textarea>
+                <button type="submit" class="primary">儲存地點資訊</button>
+              </form>
+            </div>
+
+            <div class="subpanel">
+              <h3>該地點行程（可編輯）</h3>
+              <form id="itineraryForm" class="form-grid compact">
+                <input id="itemDate" type="date" required />
+                <input id="itemTime" type="time" required />
+                <input id="itemTitle" type="text" placeholder="行程內容" required />
+                <textarea id="itemNote" placeholder="備註"></textarea>
+                <button type="submit" class="primary">新增行程項目</button>
+              </form>
+              <div id="detailItinerary" class="list"></div>
+            </div>
+
+            <div class="subpanel">
+              <h3>該地點討論（可編輯）</h3>
+              <form id="discussionForm" class="form-grid compact">
+                <input id="author" type="text" placeholder="名稱" required />
+                <input id="topic" type="text" placeholder="主題" required />
+                <textarea id="message" placeholder="討論內容" required></textarea>
+                <button type="submit" class="primary">新增討論</button>
+              </form>
+              <div id="detailDiscussions" class="list"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="mapConfigDialog">
+      <h3>Google Maps API Key 設定</h3>
+      <p>請填入可用的 API Key（需啟用 Maps JavaScript API）。</p>
+      <input id="apiKeyInput" type="text" placeholder="貼上 API Key" />
+      <menu>
+        <button id="saveApiKeyBtn" class="primary">儲存並載入地圖</button>
+        <button id="closeApiKeyBtn">關閉</button>
+      </menu>
+    </dialog>
+
+    <template id="simpleCardTemplate">
+      <article class="item-card">
+        <h3></h3>
+        <p class="meta"></p>
+        <p class="content"></p>
+        <div class="item-actions"></div>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
