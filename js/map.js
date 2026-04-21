@@ -117,29 +117,19 @@ function setupMap() {
   initPlacesSearch();
 }
 
-function updateMapConfigBtn() {
-  const hasKey = !!localStorage.getItem(MAP_KEY);
-  document.getElementById("mapConfigBtn").classList.toggle("hidden", hasKey);
-}
+// Google Maps API Key（固定，不需使用者設定）
+const GOOGLE_MAPS_KEY = "AIzaSyACPr5Rmw-vyFeNOO_oScADGSsxT3LR4D0";
 
 function loadGoogleMap() {
-  updateMapConfigBtn();
-  const key = localStorage.getItem(MAP_KEY);
-  if (!key) {
-    mapHintEl.classList.remove("hidden");
-    document.getElementById("map").style.display = "none";
-    document.getElementById("mapConfigDialog").showModal();
-    return;
-  }
   if (window.google?.maps) return setupMap();
 
   const script = document.createElement("script");
-  script.src   = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=places&callback=__initMap`;
+  script.src   = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&callback=__initMap`;
   script.async  = true;
   window.__initMap = setupMap;
   script.onerror = () => {
     mapHintEl.classList.remove("hidden");
-    mapHintEl.querySelector("p").textContent = "Google Maps 載入失敗，請檢查 API Key 與授權設定。";
+    mapHintEl.querySelector("p").textContent = "Google Maps 載入失敗，請確認網路連線。";
     document.getElementById("map").style.display = "none";
   };
   document.head.appendChild(script);
@@ -170,22 +160,4 @@ routeToggleBtn.addEventListener("click", () => {
   routeToggleBtn.textContent = state.showRoute ? "🛣 隱藏路線" : "🛣 顯示路線";
   routeToggleBtn.classList.toggle("active", state.showRoute);
   renderRoute();
-});
-
-document.getElementById("mapConfigBtn").addEventListener("click", () => {
-  document.getElementById("apiKeyInput").value = localStorage.getItem(MAP_KEY) || "";
-  document.getElementById("mapConfigDialog").showModal();
-});
-document.getElementById("closeApiKeyBtn").addEventListener("click", () => {
-  document.getElementById("mapConfigDialog").close();
-});
-document.getElementById("saveApiKeyBtn").addEventListener("click", () => {
-  const key = document.getElementById("apiKeyInput").value.trim();
-  if (!key) return alert("請輸入 API Key");
-  localStorage.setItem(MAP_KEY, key);
-  document.getElementById("mapConfigDialog").close();
-  mapHintEl.classList.add("hidden");
-  document.getElementById("map").style.display = "";
-  updateMapConfigBtn();
-  loadGoogleMap();
 });

@@ -39,7 +39,6 @@
         </div>
         <div class="actions">
           <button id="openPlanBtn" class="primary">🗓 規劃行程</button>
-          <button id="mapConfigBtn">⚙ 地圖設定</button>
         </div>
       </header>
 
@@ -232,23 +231,6 @@
     </div>
 
     <!-- ── Dialogs ── -->
-
-    <dialog id="mapConfigDialog">
-      <div class="dialog-header">
-        <h3>⚙ Google Maps API 設定</h3>
-        <p>輸入 API Key（需啟用 Maps JavaScript API 與 Places API）</p>
-      </div>
-      <div class="dialog-body">
-        <div class="field">
-          <label>API Key</label>
-          <input id="apiKeyInput" type="text" placeholder="貼上 API Key…" />
-        </div>
-      </div>
-      <menu class="dialog-footer">
-        <button id="saveApiKeyBtn" class="primary">儲存並載入地圖</button>
-        <button id="closeApiKeyBtn">取消</button>
-      </menu>
-    </dialog>
 
     <dialog id="addPlaceDialog">
       <div class="dialog-header">
