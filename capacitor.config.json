@@ -1,0 +1,10 @@
+{
+  "appId": "com.yourname.travelmapcollab",
+  "appName": "旅伴地圖共筆",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#eef2f7",
+    "scrollEnabled": false
+  }
+}

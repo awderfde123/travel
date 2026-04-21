@@ -1,0 +1,19 @@
+[build]
+  publish = "."
+  command = ""
+
+# 單頁應用：所有路徑都回傳 index.html
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/styles.css"
+  [headers.values]
+    Cache-Control = "no-cache"

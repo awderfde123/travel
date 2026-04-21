@@ -1,0 +1,17 @@
+{
+  "name": "travel-map-collab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "旅游筆記 iOS App",
+  "scripts": {
+    "sync": "cp index.html styles.css www/ && cp -r js www/ && npx cap sync ios",
+    "open": "npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.2.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0",
+    "@capacitor/ios": "^6.2.0"
+  }
+}

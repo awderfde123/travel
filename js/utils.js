@@ -1,0 +1,26 @@
+// ─────────────────────────────────────────────
+// 常數
+// ─────────────────────────────────────────────
+const DATA_KEY      = "trip-map-collab-v1";
+const MAP_KEY       = "google-maps-api-key";
+const AUTHOR_KEY    = "trip-map-author";
+const TRANSPORT_KEY = "trip-transport-v1";
+const PACKING_KEY   = "trip-packing-v1";
+
+// ─────────────────────────────────────────────
+// 工具函式
+// ─────────────────────────────────────────────
+function esc(str) {
+  const d = document.createElement("div");
+  d.textContent = String(str ?? "");
+  return d.innerHTML;
+}
+
+function fmtTime(iso) {
+  try {
+    return new Date(iso).toLocaleString("zh-TW", {
+      hour12: false, month: "numeric", day: "numeric",
+      hour: "2-digit", minute: "2-digit",
+    });
+  } catch { return iso; }
+}

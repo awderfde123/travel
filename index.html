@@ -2,116 +2,417 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>旅伴地圖共筆</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="旅伴共筆" />
+    <title>旅游筆記</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="styles.css" />
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   </head>
   <body>
     <div class="app-shell">
+      <!-- ── Header ── -->
       <header class="topbar">
-        <div>
-          <h1>旅伴地圖共筆</h1>
-          <p>主畫面看地圖與總行程，編輯請進入地點內頁。</p>
+        <div class="topbar-brand">
+          <div class="brand-icon">✈</div>
+          <div>
+            <h1>旅游筆記</h1>
+            <p>點擊地圖新增地點，點選地點查看討論</p>
+          </div>
+        </div>
+        <div class="trip-code-chip">
+          <span class="trip-label">旅程</span>
+          <code id="tripCodeDisplay">------</code>
+          <button id="copyTripBtn" title="複製邀請連結">📋</button>
+          <button id="joinTripBtn" class="tool-btn">換旅程</button>
         </div>
         <div class="actions">
-          <button id="mapConfigBtn">Google Map 設定</button>
-          <button id="addPlaceBtn" class="primary">新增地點</button>
+          <button id="openPlanBtn" class="primary">🗓 規劃行程</button>
+          <button id="mapConfigBtn">⚙ 地圖設定</button>
         </div>
       </header>
 
-      <main id="mainView" class="main-layout">
-        <section class="panel map-panel">
-          <div class="panel-head">
-            <h2>Google Map</h2>
-            <p>點擊地圖標記即可進入該地點內頁編輯。</p>
-          </div>
-          <div id="map"></div>
-          <div id="mapHint" class="map-hint hidden"></div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-head">
-            <h2>地點列表</h2>
-            <p>可從這裡進入地點內頁管理景點與討論。</p>
-          </div>
-          <div id="placesList" class="list"></div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-head">
-            <h2>行程總覽（唯讀）</h2>
-            <p>僅顯示所有地點的時程摘要；編輯請進內頁。</p>
-          </div>
-          <div id="itineraryOverview" class="list"></div>
-        </section>
-      </main>
-
-      <main id="detailView" class="detail-view hidden">
-        <section class="panel">
-          <div class="panel-head detail-head">
-            <div>
-              <h2 id="detailTitle">地點內頁</h2>
-              <p id="detailCoords"></p>
+      <!-- ── Main View（地圖 + 地點列表）── -->
+      <div id="mainView" class="page-layout">
+        <!-- Left: Map -->
+        <div class="map-column">
+          <div class="map-card">
+            <div class="map-toolbar">
+              <div class="map-search">
+                <span class="map-search-icon">🔍</span>
+                <input
+                  id="mapSearch"
+                  type="text"
+                  placeholder="搜尋地點…"
+                  autocomplete="off"
+                />
+              </div>
+              <div class="map-toolbar-btns">
+                <button id="routeToggleBtn" class="tool-btn hidden">
+                  🛣 顯示路線
+                </button>
+              </div>
             </div>
-            <button id="backBtn">回主畫面</button>
-          </div>
-
-          <div class="detail-grid">
-            <div class="subpanel">
-              <h3>地點資訊編輯</h3>
-              <form id="placeForm" class="form-grid">
-                <input id="placeName" type="text" placeholder="地點名稱" required />
-                <textarea id="placeNote" placeholder="地點備註（交通、門票、注意事項）"></textarea>
-                <button type="submit" class="primary">儲存地點資訊</button>
-              </form>
-            </div>
-
-            <div class="subpanel">
-              <h3>該地點行程（可編輯）</h3>
-              <form id="itineraryForm" class="form-grid compact">
-                <input id="itemDate" type="date" required />
-                <input id="itemTime" type="time" required />
-                <input id="itemTitle" type="text" placeholder="行程內容" required />
-                <textarea id="itemNote" placeholder="備註"></textarea>
-                <button type="submit" class="primary">新增行程項目</button>
-              </form>
-              <div id="detailItinerary" class="list"></div>
-            </div>
-
-            <div class="subpanel">
-              <h3>該地點討論（可編輯）</h3>
-              <form id="discussionForm" class="form-grid compact">
-                <input id="author" type="text" placeholder="名稱" required />
-                <input id="topic" type="text" placeholder="主題" required />
-                <textarea id="message" placeholder="討論內容" required></textarea>
-                <button type="submit" class="primary">新增討論</button>
-              </form>
-              <div id="detailDiscussions" class="list"></div>
+            <div id="map"></div>
+            <div id="mapHint" class="map-empty hidden">
+              <div class="map-empty-icon">🗺</div>
+              <p>
+                尚未設定 Google Maps API Key<br />請點擊右上角「⚙ 地圖設定」
+              </p>
             </div>
           </div>
-        </section>
-      </main>
+        </div>
+
+        <!-- Right: Tabbed sidebar -->
+        <div class="sidebar">
+          <div class="sidebar-panel">
+            <!-- Tabs -->
+            <div class="sidebar-tabs">
+              <button class="tab-btn active" id="tabLocations">📍 地點</button>
+              <button class="tab-btn" id="tabTransport">🚌 交通</button>
+              <button class="tab-btn" id="tabPacking">🎒 攜帶清單</button>
+            </div>
+
+            <!-- Locations tab -->
+            <div id="locationsPanel" class="tab-panel">
+              <div class="panel-header">
+                <h2>
+                  📍 地點列表
+                  <span id="locationsCount" class="loc-count-badge"
+                    >共 0 個地點</span
+                  >
+                </h2>
+              </div>
+              <div class="loc-search-wrap">
+                <span class="loc-search-icon">🔍</span>
+                <input
+                  id="locSearch"
+                  type="text"
+                  placeholder="搜尋地點…"
+                  autocomplete="off"
+                />
+              </div>
+              <div id="locationsList" class="locations-list"></div>
+            </div>
+
+            <!-- Transport tab -->
+            <div id="transportPanel" class="tab-panel hidden">
+              <div
+                class="panel-header"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                "
+              >
+                <h2>🚌 交通備忘 <span id="transportBadge" class="loc-count-badge"></span></h2>
+                <button
+                  id="addTransportBtn"
+                  class="primary"
+                  style="font-size: 0.78rem; padding: 5px 11px"
+                >
+                  ＋ 新增
+                </button>
+              </div>
+              <div id="transportList" class="locations-list"></div>
+            </div>
+
+            <!-- Packing tab -->
+            <div id="packingPanel" class="tab-panel hidden">
+              <div
+                class="panel-header"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  gap: 8px;
+                "
+              >
+                <h2>
+                  🎒 攜帶清單
+                  <span id="packingProgress" class="loc-count-badge"></span>
+                </h2>
+                <div style="display: flex; gap: 6px; flex-shrink: 0">
+                  <button
+                    id="clearCheckedBtn"
+                    class="danger"
+                    style="font-size: 0.72rem; padding: 4px 8px"
+                  >
+                    清除已勾選
+                  </button>
+                </div>
+              </div>
+              <div class="packing-add-bar">
+                <input
+                  id="packingInput"
+                  type="text"
+                  placeholder="新增品項…"
+                  autocomplete="off"
+                />
+                <button id="packingAddBtn" class="primary">＋</button>
+              </div>
+              <div id="packingList" class="locations-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Plan View（行程規劃頁）── -->
+      <div id="planView" class="plan-view hidden">
+        <div class="plan-layout">
+          <!-- Left: pool of all locations -->
+          <div class="plan-pool-col">
+            <div class="plan-pool-head">
+              <button id="backPlanBtn" class="back-btn">← 返回</button>
+              <div>
+                <h2>📍 所有地點</h2>
+                <p>拖曳想去的地點至右側</p>
+              </div>
+            </div>
+            <div id="planPool" class="plan-pool"></div>
+          </div>
+
+          <!-- Right: map (top) + selected route (bottom) -->
+          <div class="plan-right-col">
+            <div class="plan-map-wrap">
+              <div id="planMap" class="plan-map"></div>
+              <div id="planMapHint" class="map-empty hidden">
+                <div class="map-empty-icon">🗺</div>
+                <p>地圖未載入<br />請先在主頁設定 API Key</p>
+              </div>
+            </div>
+
+            <div class="plan-selected-panel">
+              <div class="plan-selected-head">
+                <div class="plan-summary">
+                  <span>🗓 已選行程</span>
+                  <span class="plan-summary-sep">｜</span>
+                  <span id="planCount">0 個地點</span>
+                  <span class="plan-summary-sep">｜</span>
+                  <span id="planBudget">NT$0</span>
+                </div>
+                <button id="confirmPlanBtn" class="primary">✅ 定案</button>
+              </div>
+              <div id="planList" class="plan-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Discuss View（獨立討論頁）── -->
+      <div id="discussView" class="discuss-view hidden">
+        <div class="discuss-header">
+          <button id="backBtn" class="back-btn">← 返回</button>
+          <div id="discussInfo" class="discuss-info-inline"></div>
+        </div>
+        <div id="discussMsgs" class="discuss-msgs"></div>
+        <form id="discussForm" class="discuss-form">
+          <div class="discuss-inputs">
+            <input id="dAuthor" type="text" placeholder="您的名稱" required />
+            <textarea
+              id="dText"
+              placeholder="輸入討論內容…"
+              required
+            ></textarea>
+          </div>
+          <button type="submit" class="primary">💬 發表留言</button>
+        </form>
+      </div>
     </div>
 
+    <!-- ── Dialogs ── -->
+
     <dialog id="mapConfigDialog">
-      <h3>Google Maps API Key 設定</h3>
-      <p>請填入可用的 API Key（需啟用 Maps JavaScript API）。</p>
-      <input id="apiKeyInput" type="text" placeholder="貼上 API Key" />
-      <menu>
+      <div class="dialog-header">
+        <h3>⚙ Google Maps API 設定</h3>
+        <p>輸入 API Key（需啟用 Maps JavaScript API 與 Places API）</p>
+      </div>
+      <div class="dialog-body">
+        <div class="field">
+          <label>API Key</label>
+          <input id="apiKeyInput" type="text" placeholder="貼上 API Key…" />
+        </div>
+      </div>
+      <menu class="dialog-footer">
         <button id="saveApiKeyBtn" class="primary">儲存並載入地圖</button>
-        <button id="closeApiKeyBtn">關閉</button>
+        <button id="closeApiKeyBtn">取消</button>
       </menu>
     </dialog>
 
-    <template id="simpleCardTemplate">
-      <article class="item-card">
-        <h3></h3>
-        <p class="meta"></p>
-        <p class="content"></p>
-        <div class="item-actions"></div>
-      </article>
-    </template>
+    <dialog id="addPlaceDialog">
+      <div class="dialog-header">
+        <h3>📍 新增地點</h3>
+      </div>
+      <div class="dialog-body">
+        <div class="field">
+          <label>地點名稱 <span class="req">*</span></label>
+          <input id="newPlaceName" type="text" placeholder="例：九份老街" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>預算金額（選填）</label>
+            <input id="newPlaceBudget" type="number" min="0" placeholder="0" />
+          </div>
+          <div class="field">
+            <label>備註（選填）</label>
+            <input id="newPlaceNote" type="text" placeholder="交通、門票…" />
+          </div>
+        </div>
+      </div>
+      <menu class="dialog-footer">
+        <button id="confirmAddPlaceBtn" class="primary">新增地點</button>
+        <button id="cancelAddPlaceBtn">取消</button>
+      </menu>
+    </dialog>
 
-    <script src="app.js"></script>
+    <dialog id="editPlaceDialog">
+      <div class="dialog-header">
+        <h3>✏ 編輯地點</h3>
+      </div>
+      <div class="dialog-body">
+        <div class="field">
+          <label>地點名稱 <span class="req">*</span></label>
+          <input id="editPlaceName" type="text" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>預算金額</label>
+            <input id="editPlaceBudget" type="number" min="0" placeholder="0" />
+          </div>
+          <div class="field">
+            <label>備註（選填）</label>
+            <input id="editPlaceNote" type="text" placeholder="交通、門票…" />
+          </div>
+        </div>
+      </div>
+      <menu class="dialog-footer">
+        <button id="saveEditBtn" class="primary">儲存</button>
+        <button id="cancelEditBtn">取消</button>
+      </menu>
+    </dialog>
+
+    <dialog id="addTransportDialog">
+      <div class="dialog-header">
+        <h3>🚌 新增交通</h3>
+      </div>
+      <div class="dialog-body">
+        <div class="field">
+          <label>交通方式 <span class="req">*</span></label>
+          <input
+            id="tMethod"
+            type="text"
+            placeholder="高鐵、客運、計程車、飛機…"
+          />
+        </div>
+        <div class="field">
+          <label>路線（選填）</label>
+          <input id="tRoute" type="text" placeholder="台北→台南" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>購買處（選填）</label>
+            <input id="tWhere" type="text" placeholder="台灣高鐵官網、KKday…" />
+          </div>
+          <div class="field" style="flex: 0 0 110px">
+            <label>金額（選填）</label>
+            <input id="tPrice" type="number" min="0" placeholder="0" />
+          </div>
+        </div>
+        <label class="purchased-check-label">
+          <input id="tPurchased" type="checkbox" />
+          已購買
+        </label>
+      </div>
+      <menu class="dialog-footer">
+        <button id="confirmAddTransportBtn" class="primary">新增</button>
+        <button id="cancelAddTransportBtn">取消</button>
+      </menu>
+    </dialog>
+
+    <dialog id="editTransportDialog">
+      <div class="dialog-header">
+        <h3>✏ 編輯交通</h3>
+      </div>
+      <div class="dialog-body">
+        <div class="field">
+          <label>交通方式 <span class="req">*</span></label>
+          <input
+            id="etMethod"
+            type="text"
+            placeholder="高鐵、客運、計程車、飛機…"
+          />
+        </div>
+        <div class="field">
+          <label>路線（選填）</label>
+          <input id="etRoute" type="text" placeholder="台北→台南" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>購買處（選填）</label>
+            <input
+              id="etWhere"
+              type="text"
+              placeholder="台灣高鐵官網、KKday…"
+            />
+          </div>
+          <div class="field" style="flex: 0 0 110px">
+            <label>金額（選填）</label>
+            <input id="etPrice" type="number" min="0" placeholder="0" />
+          </div>
+        </div>
+        <label class="purchased-check-label">
+          <input id="etPurchased" type="checkbox" />
+          已購買
+        </label>
+      </div>
+      <menu class="dialog-footer">
+        <button id="saveEditTransportBtn" class="primary">儲存</button>
+        <button id="cancelEditTransportBtn">取消</button>
+      </menu>
+    </dialog>
+
+    <!-- 加入旅程 dialog -->
+    <dialog id="joinTripDialog">
+      <div class="dialog-header">
+        <h3>🔑 加入旅程</h3>
+        <p>輸入 6 位旅程代碼，或貼上邀請連結中的代碼</p>
+      </div>
+      <div class="dialog-body">
+        <div class="field">
+          <label>旅程代碼</label>
+          <input id="joinTripInput" type="text" placeholder="例：ABC123" maxlength="6"
+                 style="text-transform:uppercase;letter-spacing:.15em;font-size:1.1rem;" />
+        </div>
+      </div>
+      <menu class="dialog-footer">
+        <button id="confirmJoinBtn" class="primary">加入</button>
+        <button id="cancelJoinBtn">取消</button>
+      </menu>
+    </dialog>
+
+    <!-- 載入順序不可更動 -->
+    <script src="js/utils.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/transport.js"></script>
+    <script src="js/packing.js"></script>
+    <script src="js/plan.js"></script>
+    <script src="js/discuss.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/locations.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/main.js"></script>
   </body>
 </html>
