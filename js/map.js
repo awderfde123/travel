@@ -93,6 +93,7 @@ function setupMap() {
     zoom: 11,
     mapTypeControl: false,
     streetViewControl: false,
+    gestureHandling: "greedy",
     fullscreenControlOptions: { position: google.maps.ControlPosition.RIGHT_BOTTOM },
   });
 

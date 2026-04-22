@@ -32,6 +32,7 @@ function initPlanMap() {
     zoom: 11,
     mapTypeControl: false,
     streetViewControl: false,
+    gestureHandling: "greedy",
   });
   renderPlanMarkers();
 }
@@ -62,7 +63,13 @@ function renderPlanCards() {
         <div class="plan-card-name">${esc(p.name)}</div>
         ${p.note   ? `<div class="plan-card-note">${esc(p.note)}</div>` : ""}
         ${p.budget > 0 ? `<div class="plan-card-budget">NT$${p.budget.toLocaleString()}</div>` : ""}
-      </div>`;
+      </div>
+      <button class="plan-tap-remove" title="移除">✕</button>`;
+    card.querySelector(".plan-tap-remove").addEventListener("click", () => {
+      planOrder.splice(i, 1);
+      planPool.push(id);
+      renderPoolCards(); renderPlanCards(); renderPlanMarkers(); updatePlanSummary();
+    });
     makeDraggable(card, i, "active");
     listEl.appendChild(card);
   });
@@ -93,7 +100,13 @@ function renderPoolCards() {
         ${p.note   ? `<div class="plan-card-note">${esc(p.note)}</div>` : ""}
         ${p.budget > 0 ? `<div class="plan-card-budget">NT$${p.budget.toLocaleString()}</div>` : ""}
       </div>
+      <button class="plan-tap-add" title="加入行程">＋</button>
       <div class="plan-drag-handle">⠿</div>`;
+    card.querySelector(".plan-tap-add").addEventListener("click", () => {
+      planPool.splice(i, 1);
+      planOrder.push(id);
+      renderPoolCards(); renderPlanCards(); renderPlanMarkers(); updatePlanSummary();
+    });
     makeDraggable(card, i, "pool");
     poolEl.appendChild(card);
   });

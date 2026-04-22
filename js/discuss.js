@@ -10,48 +10,53 @@ function renderDiscussView() {
   // ── 資訊卡（地點 / 交通統一呈現）──
   const infoEl = document.getElementById("discussInfo");
 
-  // 保留收合狀態
-  const wasCollapsed = infoEl.dataset.collapsed === "1";
+  // 保留收合狀態（預設收合）
+  const detailEl   = document.getElementById("discussInfoDetail");
+  const wasExpanded = infoEl.dataset.expanded === "1";
+
+  // 產生欄位 HTML（放到下方區塊）
+  let fields = [];
+  let icon   = "📍";
+  let title  = item.name;
 
   if (isTransport) {
-    const title  = [item.method, item.route].filter(Boolean).join("　");
-    const fields = [];
-    if (item.where)     fields.push(`<span class="dic-inline-field"><span class="dic-label">購買處</span> ${esc(item.where)}</span>`);
-    if (item.price > 0) fields.push(`<span class="dic-inline-field dic-price">NT$${item.price.toLocaleString()}</span>`);
-    fields.push(`<span class="dic-inline-field ${item.purchased ? "dic-purchased" : "dic-unpurchased"}">${item.purchased ? "✅ 已購買" : "🛒 未購買"}</span>`);
-    infoEl.innerHTML = `
-      <span class="dic-sep"></span>
-      <span class="dic-icon">${transportIcon(item.method)}</span>
-      <span class="dic-name">${esc(title)}</span>
-      ${fields.length ? `<span class="dic-fields-inline" id="dicFields">${fields.join("")}</span>` : ""}
-      ${fields.length ? `<button class="dic-toggle-btn" id="dicToggle">${wasCollapsed ? "▸" : "▾"}</button>` : ""}
-      <span class="dic-spacer"></span>
-      <button class="edit-info-btn" id="editDiscussItemBtn">✏ 編輯</button>`;
+    icon  = transportIcon(item.method);
+    title = [item.method, item.route].filter(Boolean).join("　");
+    if (item.where)     fields.push(`<div class="dic-detail-field"><span class="dic-label">購買處</span><span class="dic-val">${esc(item.where)}</span></div>`);
+    if (item.price > 0) fields.push(`<div class="dic-detail-field"><span class="dic-label">金額</span><span class="dic-val dic-price">NT$${item.price.toLocaleString()}</span></div>`);
+    fields.push(`<div class="dic-detail-field"><span class="dic-label">狀態</span><span class="dic-val ${item.purchased ? "dic-purchased" : "dic-unpurchased"}">${item.purchased ? "✅ 已購買" : "🛒 未購買"}</span></div>`);
   } else {
-    const fields = [];
-    if (item.note)       fields.push(`<span class="dic-inline-field"><span class="dic-label">備註</span> ${esc(item.note)}</span>`);
-    if (item.budget > 0) fields.push(`<span class="dic-inline-field dic-price">預算 NT$${item.budget.toLocaleString()}</span>`);
-    infoEl.innerHTML = `
-      <span class="dic-sep"></span>
-      <span class="dic-icon">📍</span>
-      <span class="dic-name">${esc(item.name)}</span>
-      ${fields.length ? `<span class="dic-fields-inline" id="dicFields">${fields.join("")}</span>` : ""}
-      ${fields.length ? `<button class="dic-toggle-btn" id="dicToggle">${wasCollapsed ? "▸" : "▾"}</button>` : ""}
-      <span class="dic-spacer"></span>
-      <button class="edit-info-btn" id="editDiscussItemBtn">✏ 編輯</button>`;
+    if (item.note)       fields.push(`<div class="dic-detail-field"><span class="dic-label">備註</span><span class="dic-val">${esc(item.note)}</span></div>`);
+    if (item.budget > 0) fields.push(`<div class="dic-detail-field"><span class="dic-label">預算</span><span class="dic-val dic-price">NT$${item.budget.toLocaleString()}</span></div>`);
   }
 
-  // 套用收合狀態
-  const fieldsEl = document.getElementById("dicFields");
-  if (fieldsEl && wasCollapsed) fieldsEl.classList.add("collapsed");
+  const hasFields = fields.length > 0;
+
+  // Header 行：只顯示 icon + 名稱 + 收合按鈕 + 編輯
+  infoEl.innerHTML = `
+    <span class="dic-sep"></span>
+    <span class="dic-icon">${icon}</span>
+    <span class="dic-name">${esc(title)}</span>
+    ${hasFields ? `<button class="dic-toggle-btn" id="dicToggle">${wasExpanded ? "▸" : "▾"}</button>` : ""}
+    <span class="dic-spacer"></span>
+    <button class="edit-info-btn" id="editDiscussItemBtn">✏ 編輯</button>`;
+
+  // 下方詳細區塊
+  if (hasFields) {
+    detailEl.innerHTML = fields.join("");
+    detailEl.classList.toggle("hidden", !wasExpanded);
+  } else {
+    detailEl.innerHTML = "";
+    detailEl.classList.add("hidden");
+  }
 
   // 收合切換
   const toggleBtn = document.getElementById("dicToggle");
-  if (toggleBtn && fieldsEl) {
+  if (toggleBtn && hasFields) {
     toggleBtn.addEventListener("click", () => {
-      const collapsed = fieldsEl.classList.toggle("collapsed");
-      toggleBtn.textContent = collapsed ? "▸" : "▾";
-      infoEl.dataset.collapsed = collapsed ? "1" : "0";
+      const expanded = detailEl.classList.toggle("hidden") === false;
+      toggleBtn.textContent = expanded ? "▸" : "▾";
+      infoEl.dataset.expanded = expanded ? "1" : "0";
     });
   }
 
