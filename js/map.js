@@ -97,17 +97,31 @@ function setupMap() {
     fullscreenControlOptions: { position: google.maps.ControlPosition.RIGHT_BOTTOM },
   });
 
-  map.addListener("click", event => {
+  map.addListener("click", async event => {
     pendingLatLng = { lat: event.latLng.lat(), lng: event.latLng.lng() };
     if (event.placeId) {
       event.stop();
-      new google.maps.places.PlacesService(map).getDetails(
-        { placeId: event.placeId, fields: ["name"] },
-        (place, status) => {
-          const name = status === google.maps.places.PlacesServiceStatus.OK ? place.name : "";
-          openAddDialog(name);
-        }
-      );
+      let name = "";
+      // 嘗試新版 Places API
+      try {
+        const p = new google.maps.places.Place({ id: event.placeId });
+        await p.fetchFields({ fields: ["displayName"] });
+        name = p.displayName || "";
+      } catch (_) {
+        // 退回舊版 PlacesService
+        name = await new Promise(resolve => {
+          new google.maps.places.PlacesService(map).getDetails(
+            { placeId: event.placeId, fields: ["name"] },
+            (place, status) => {
+              resolve(
+                status === google.maps.places.PlacesServiceStatus.OK
+                  ? (place.name || "") : ""
+              );
+            }
+          );
+        });
+      }
+      openAddDialog(name);
     } else {
       openAddDialog("");
     }
@@ -125,7 +139,7 @@ function loadGoogleMap() {
   if (window.google?.maps) return setupMap();
 
   const script = document.createElement("script");
-  script.src   = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&callback=__initMap`;
+  script.src   = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&v=beta&callback=__initMap`;
   script.async  = true;
   window.__initMap = setupMap;
   script.onerror = () => {
