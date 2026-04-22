@@ -103,15 +103,24 @@ function setupMap() {
     pendingLatLng = { lat: event.latLng.lat(), lng: event.latLng.lng() };
     if (event.placeId) {
       event.stop();
-      // Geocoder 不需要 Places API，用 placeId 取得地點名稱
+      // 用 placeId Geocode 取得地點名稱
       _geocoder.geocode({ placeId: event.placeId }, (results, status) => {
         let name = "";
         if (status === "OK" && results.length > 0) {
-          const comp = results[0].address_components.find(c =>
-            c.types.some(t => ["establishment", "point_of_interest",
-              "natural_feature", "airport", "park", "tourist_attraction"].includes(t))
-          );
-          name = comp ? comp.long_name : "";
+          const r = results[0];
+          const POI_TYPES = ["establishment", "point_of_interest",
+            "natural_feature", "tourist_attraction", "airport", "park",
+            "place_of_worship", "premise"];
+          // 若結果本身是 POI，第一個 address_component 就是地點名稱
+          if (r.types.some(t => POI_TYPES.includes(t))) {
+            name = r.address_components[0]?.long_name || "";
+          } else {
+            // 否則找有 POI type 的 component
+            const comp = r.address_components.find(c =>
+              c.types.some(t => POI_TYPES.includes(t))
+            );
+            name = comp ? comp.long_name : "";
+          }
         }
         openAddDialog(name);
       });
