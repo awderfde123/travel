@@ -97,34 +97,52 @@ function setupMap() {
     fullscreenControlOptions: { position: google.maps.ControlPosition.RIGHT_BOTTOM },
   });
 
-  const _geocoder = new google.maps.Geocoder();
+  const _placesService = new google.maps.places.PlacesService(map);
+
+  // ── Places API 用量監控（每月上限 10,000 次，低於免費額度 ~11,700 次）──
+  // Places Details Basic: $0.017/req，$200 credit ÷ $0.017 ≈ 11,764 次/月
+  const PLACES_MONTHLY_LIMIT = 10000;
+  function _placesKey() {
+    const d = new Date();
+    return `places-${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  }
+  function _placesCount() { return parseInt(localStorage.getItem(_placesKey()) || "0", 10); }
+  function _placesAllowed() { return _placesCount() < PLACES_MONTHLY_LIMIT; }
+  function _placesIncrement() {
+    const key = _placesKey();
+    const next = _placesCount() + 1;
+    localStorage.setItem(key, next);
+    const remaining = PLACES_MONTHLY_LIMIT - next;
+    if (remaining === 500) {
+      console.warn(`[Places API] 本月剩餘配額僅剩 ${remaining} 次，即將暫停自動帶入地點名稱`);
+    }
+  }
 
   map.addListener("click", event => {
     pendingLatLng = { lat: event.latLng.lat(), lng: event.latLng.lng() };
-    if (event.placeId) {
+    console.log("[click] placeId:", event.placeId, "allowed:", _placesAllowed());
+    if (event.placeId && _placesAllowed()) {
       event.stop();
-      // 用 placeId Geocode 取得地點名稱
-      _geocoder.geocode({ placeId: event.placeId }, (results, status) => {
-        let name = "";
-        if (status === "OK" && results.length > 0) {
-          const r = results[0];
-          const POI_TYPES = ["establishment", "point_of_interest",
-            "natural_feature", "tourist_attraction", "airport", "park",
-            "place_of_worship", "premise"];
-          // 若結果本身是 POI，第一個 address_component 就是地點名稱
-          if (r.types.some(t => POI_TYPES.includes(t))) {
-            name = r.address_components[0]?.long_name || "";
-          } else {
-            // 否則找有 POI type 的 component
-            const comp = r.address_components.find(c =>
-              c.types.some(t => POI_TYPES.includes(t))
-            );
-            name = comp ? comp.long_name : "";
-          }
+      _placesIncrement();
+      console.log("[Places] calling getDetails...");
+      _placesService.getDetails(
+        { placeId: event.placeId, fields: ["name", "types"] },
+        (place, status) => {
+          console.log("[Places] callback:", status, place?.types, place?.name);
+          const SKIP_TYPES = ["route", "street_address", "street_number",
+            "intersection", "political", "country",
+            "administrative_area_level_1", "administrative_area_level_2",
+            "administrative_area_level_3", "locality", "sublocality",
+            "sublocality_level_1", "postal_code", "neighborhood"];
+          const isRoadOrArea = place?.types?.some(t => SKIP_TYPES.includes(t));
+          const name = (status === google.maps.places.PlacesServiceStatus.OK && !isRoadOrArea)
+            ? (place.name || "")
+            : "";
+          openAddDialog(name);
         }
-        openAddDialog(name);
-      });
+      );
     } else {
+      console.log("[click] else branch → openAddDialog empty");
       openAddDialog("");
     }
   });
