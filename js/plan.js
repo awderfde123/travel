@@ -15,7 +15,25 @@ function renderPlanPage() {
   updatePlanSummary();
   renderPoolCards();
   renderPlanCards();
+  renderPlanTransport();
   initPlanMap();
+}
+
+function renderPlanTransport() {
+  const finals  = (typeof transportItems !== "undefined" ? transportItems : []).filter(t => t.isFinal);
+  const section = document.getElementById("planTransportSection");
+  const listEl  = document.getElementById("planTransportList");
+  if (!section) return;
+  if (!finals.length) { section.classList.add("hidden"); return; }
+  section.classList.remove("hidden");
+  listEl.innerHTML = finals.map(t => `
+    <div class="plan-transport-card">
+      <span class="plan-transport-method">${esc(t.method)}</span>
+      ${t.route ? `<span class="transport-tag">${esc(t.route)}</span>` : ""}
+      ${t.where ? `<span class="transport-tag">${esc(t.where)}</span>` : ""}
+      ${t.price > 0 ? `<span class="loc-budget">NT$${t.price.toLocaleString()}</span>` : ""}
+      <span class="${t.purchased ? "dic-purchased" : "dic-unpurchased"}">${t.purchased ? "✅ 已購買" : "🛒 未購買"}</span>
+    </div>`).join("");
 }
 
 function initPlanMap() {

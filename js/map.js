@@ -2,17 +2,18 @@
 // Google Maps
 // ─────────────────────────────────────────────
 let map;
-let markers           = [];
+let markers = [];
 let directionsRenderer = null;
-let routePolyline     = null;
-let pendingLatLng     = null;
+let routePolyline = null;
+let pendingLatLng = null;
 
 // ── Marker SVG ──
 function markerSvg(num) {
-  const s = 28, f = 11;
+  const s = 28,
+    f = 11;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}">
-    <circle cx="${s/2}" cy="${s/2}" r="${s/2-2}" fill="#2563eb" stroke="white" stroke-width="2.5"/>
-    <text x="${s/2}" y="${s/2+4}" text-anchor="middle" fill="white"
+    <circle cx="${s / 2}" cy="${s / 2}" r="${s / 2 - 2}" fill="#2563eb" stroke="white" stroke-width="2.5"/>
+    <text x="${s / 2}" y="${s / 2 + 4}" text-anchor="middle" fill="white"
           font-family="Arial,sans-serif" font-size="${f}" font-weight="bold">${num}</text>
   </svg>`;
   return {
@@ -23,7 +24,10 @@ function markerSvg(num) {
 }
 
 // ── Markers ──
-function clearMarkers() { markers.forEach(m => m.setMap(null)); markers = []; }
+function clearMarkers() {
+  markers.forEach((m) => m.setMap(null));
+  markers = [];
+}
 
 function renderMarkers() {
   if (!map) return;
@@ -43,8 +47,14 @@ function renderMarkers() {
 
 // ── Route ──
 function clearRoute() {
-  if (directionsRenderer) { directionsRenderer.setMap(null); directionsRenderer = null; }
-  if (routePolyline)      { routePolyline.setMap(null);      routePolyline = null; }
+  if (directionsRenderer) {
+    directionsRenderer.setMap(null);
+    directionsRenderer = null;
+  }
+  if (routePolyline) {
+    routePolyline.setMap(null);
+    routePolyline = null;
+  }
 }
 
 function renderRoute() {
@@ -55,34 +65,58 @@ function renderRoute() {
   directionsRenderer = new google.maps.DirectionsRenderer({
     map,
     suppressMarkers: true,
-    polylineOptions: { strokeColor: "#2563eb", strokeWeight: 4, strokeOpacity: 0.75 },
+    polylineOptions: {
+      strokeColor: "#2563eb",
+      strokeWeight: 4,
+      strokeOpacity: 0.75,
+    },
   });
 
-  new google.maps.DirectionsService().route({
-    origin:      { lat: places[0].lat,     lng: places[0].lng },
-    destination: { lat: places.at(-1).lat, lng: places.at(-1).lng },
-    waypoints:   places.slice(1, -1).map(p => ({ location: { lat: p.lat, lng: p.lng }, stopover: true })),
-    travelMode:  google.maps.TravelMode.DRIVING,
-  }, (result, status) => {
-    if (status === "OK") {
-      directionsRenderer.setDirections(result);
-    } else {
-      if (directionsRenderer) { directionsRenderer.setMap(null); directionsRenderer = null; }
-      routePolyline = new google.maps.Polyline({
-        path: places.map(p => ({ lat: p.lat, lng: p.lng })),
-        map,
-        strokeColor: "#2563eb", strokeWeight: 4, strokeOpacity: 0.8, geodesic: true,
-        icons: [{ icon: { path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, scale: 3 }, offset: "50%", repeat: "150px" }],
-      });
-    }
-  });
+  new google.maps.DirectionsService().route(
+    {
+      origin: { lat: places[0].lat, lng: places[0].lng },
+      destination: { lat: places.at(-1).lat, lng: places.at(-1).lng },
+      waypoints: places
+        .slice(1, -1)
+        .map((p) => ({ location: { lat: p.lat, lng: p.lng }, stopover: true })),
+      travelMode: google.maps.TravelMode.DRIVING,
+    },
+    (result, status) => {
+      if (status === "OK") {
+        directionsRenderer.setDirections(result);
+      } else {
+        if (directionsRenderer) {
+          directionsRenderer.setMap(null);
+          directionsRenderer = null;
+        }
+        routePolyline = new google.maps.Polyline({
+          path: places.map((p) => ({ lat: p.lat, lng: p.lng })),
+          map,
+          strokeColor: "#2563eb",
+          strokeWeight: 4,
+          strokeOpacity: 0.8,
+          geodesic: true,
+          icons: [
+            {
+              icon: {
+                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                scale: 3,
+              },
+              offset: "50%",
+              repeat: "150px",
+            },
+          ],
+        });
+      }
+    },
+  );
 }
 
 // ── Fit bounds ──
 function fitBounds() {
   if (!map || !state.places.length) return;
   const bounds = new google.maps.LatLngBounds();
-  state.places.forEach(p => bounds.extend({ lat: p.lat, lng: p.lng }));
+  state.places.forEach((p) => bounds.extend({ lat: p.lat, lng: p.lng }));
   map.fitBounds(bounds, { top: 60, right: 40, bottom: 40, left: 40 });
 }
 
@@ -94,7 +128,9 @@ function setupMap() {
     mapTypeControl: false,
     streetViewControl: false,
     gestureHandling: "greedy",
-    fullscreenControlOptions: { position: google.maps.ControlPosition.RIGHT_BOTTOM },
+    fullscreenControlOptions: {
+      position: google.maps.ControlPosition.RIGHT_BOTTOM,
+    },
   });
 
   const _placesService = new google.maps.places.PlacesService(map);
@@ -106,29 +142,32 @@ function setupMap() {
     const d = new Date();
     return `places-${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   }
-  function _placesCount() { return parseInt(localStorage.getItem(_placesKey()) || "0", 10); }
-  function _placesAllowed() { return _placesCount() < PLACES_MONTHLY_LIMIT; }
+  function _placesCount() {
+    return parseInt(localStorage.getItem(_placesKey()) || "0", 10);
+  }
+  function _placesAllowed() {
+    return _placesCount() < PLACES_MONTHLY_LIMIT;
+  }
   function _placesIncrement() {
     const key = _placesKey();
     const next = _placesCount() + 1;
     localStorage.setItem(key, next);
     const remaining = PLACES_MONTHLY_LIMIT - next;
     if (remaining === 500) {
-      console.warn(`[Places API] 本月剩餘配額僅剩 ${remaining} 次，即將暫停自動帶入地點名稱`);
+      console.warn(
+        `[Places API] 本月剩餘配額僅剩 ${remaining} 次，即將暫停自動帶入地點名稱`,
+      );
     }
   }
 
   map.addListener("click", event => {
     pendingLatLng = { lat: event.latLng.lat(), lng: event.latLng.lng() };
-    console.log("[click] placeId:", event.placeId, "allowed:", _placesAllowed());
     if (event.placeId && _placesAllowed()) {
       event.stop();
       _placesIncrement();
-      console.log("[Places] calling getDetails...");
       _placesService.getDetails(
         { placeId: event.placeId, fields: ["name", "types"] },
         (place, status) => {
-          console.log("[Places] callback:", status, place?.types, place?.name);
           const SKIP_TYPES = ["route", "street_address", "street_number",
             "intersection", "political", "country",
             "administrative_area_level_1", "administrative_area_level_2",
@@ -142,7 +181,6 @@ function setupMap() {
         }
       );
     } else {
-      console.log("[click] else branch → openAddDialog empty");
       openAddDialog("");
     }
   });
@@ -159,12 +197,13 @@ function loadGoogleMap() {
   if (window.google?.maps) return setupMap();
 
   const script = document.createElement("script");
-  script.src   = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&callback=__initMap`;
-  script.async  = true;
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&callback=__initMap`;
+  script.async = true;
   window.__initMap = setupMap;
   script.onerror = () => {
     mapHintEl.classList.remove("hidden");
-    mapHintEl.querySelector("p").textContent = "Google Maps 載入失敗，請確認網路連線。";
+    mapHintEl.querySelector("p").textContent =
+      "Google Maps 載入失敗，請確認網路連線。";
     document.getElementById("map").style.display = "none";
   };
   document.head.appendChild(script);
@@ -174,7 +213,9 @@ function loadGoogleMap() {
 function initPlacesSearch() {
   const input = document.getElementById("mapSearch");
   if (!window.google?.maps?.places || !input) return;
-  const autocomplete = new google.maps.places.Autocomplete(input, { fields: ["name", "geometry"] });
+  const autocomplete = new google.maps.places.Autocomplete(input, {
+    fields: ["name", "geometry"],
+  });
   autocomplete.bindTo("bounds", map);
   autocomplete.addListener("place_changed", () => {
     const place = autocomplete.getPlace();
@@ -182,7 +223,10 @@ function initPlacesSearch() {
     if (place.geometry.viewport) {
       map.fitBounds(place.geometry.viewport);
     } else {
-      map.panTo({ lat: place.geometry.location.lat(), lng: place.geometry.location.lng() });
+      map.panTo({
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng(),
+      });
       map.setZoom(16);
     }
     input.value = "";

@@ -1150,6 +1150,82 @@ dialog::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(6px); }
   .plan-pool, .locations-list, .discuss-msgs { touch-action: pan-y; }
 }
 
+/* ── Transport tags ── */
+.transport-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 3px 0 2px;
+}
+.transport-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-light);
+  font-size: .72rem;
+  line-height: 1.6;
+}
+.transport-final-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 20px;
+  background: var(--green-bg);
+  border: 1px solid var(--green-border);
+  color: var(--green);
+  font-size: .68rem;
+  font-weight: 600;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* ── Final toggle button (discuss view) ── */
+.final-toggle-btn {
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: .72rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.final-toggle-btn.is-final {
+  background: var(--green-bg);
+  border-color: var(--green-border);
+  color: var(--green);
+  font-weight: 600;
+}
+
+/* ── Plan transport section ── */
+.plan-transport-section {
+  border-top: 1px solid var(--border);
+  padding: 10px 12px 8px;
+}
+.plan-transport-head {
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.plan-transport-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-light);
+  font-size: .8rem;
+}
+.plan-transport-card:last-child { border-bottom: none; }
+.plan-transport-method { font-weight: 600; color: var(--text); }
+
 /* ── iOS 安全區域（瀏海 / 底部 Home Bar）── */
 @supports (padding: env(safe-area-inset-top)) {
   .app-shell {

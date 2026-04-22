@@ -39,6 +39,7 @@ function renderDiscussView() {
     <span class="dic-name">${esc(title)}</span>
     ${hasFields ? `<button class="dic-toggle-btn" id="dicToggle">${wasExpanded ? "▸" : "▾"}</button>` : ""}
     <span class="dic-spacer"></span>
+    ${isTransport ? `<button class="final-toggle-btn${item.isFinal ? " is-final" : ""}" id="finalToggleBtn">${item.isFinal ? "✓ 定案" : "標記定案"}</button>` : ""}
     <button class="edit-info-btn" id="editDiscussItemBtn">✏ 編輯</button>`;
 
   // 下方詳細區塊
@@ -58,6 +59,15 @@ function renderDiscussView() {
       toggleBtn.textContent = expanded ? "▸" : "▾";
       infoEl.dataset.expanded = expanded ? "1" : "0";
     });
+  }
+
+  const finalBtn = document.getElementById("finalToggleBtn");
+  if (finalBtn) {
+    finalBtn.onclick = () => {
+      item.isFinal = !item.isFinal;
+      discussContext.saveFunc();
+      renderDiscussView();
+    };
   }
 
   document.getElementById("editDiscussItemBtn").onclick = () => {

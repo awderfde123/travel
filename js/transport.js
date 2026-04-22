@@ -9,6 +9,7 @@ function loadTransport() {
   transportItems.forEach(t => {
     if (!t.discussions) t.discussions = [];
     if (t.price === undefined) t.price = 0;
+    if (t.isFinal === undefined) t.isFinal = false;
   });
 }
 
@@ -58,10 +59,15 @@ function renderTransportList() {
     el.className = "loc-item";
     const count = item.discussions?.length ?? 0;
     el.innerHTML = `
-      <div class="transport-num">${transportIcon(item.method)}</div>
       <div class="loc-info">
-        <div class="loc-name">${esc(item.method)}${item.route ? `　${esc(item.route)}` : ""}</div>
-        ${item.where ? `<div class="loc-note">🔗 ${esc(item.where)}</div>` : ""}
+        <div class="loc-name">
+          ${esc(item.method)}
+          ${item.isFinal ? '<span class="transport-final-badge">定案</span>' : ""}
+        </div>
+        <div class="transport-tags">
+          ${item.route ? `<span class="transport-tag">${esc(item.route)}</span>` : ""}
+          ${item.where ? `<span class="transport-tag">${esc(item.where)}</span>` : ""}
+        </div>
         <div class="loc-meta-row">
           ${item.price > 0 ? `<span class="loc-budget">NT$${item.price.toLocaleString()}</span>` : ""}
           <button class="transport-status-btn ${item.purchased ? "purchased" : "unpurchased"}">
@@ -76,7 +82,6 @@ function renderTransportList() {
       </div>`;
 
     el.querySelector(".loc-info").addEventListener("click", () => openTransportDiscussPage(item.id));
-    el.querySelector(".transport-num").addEventListener("click", () => openTransportDiscussPage(item.id));
     el.querySelector(".transport-status-btn").addEventListener("click", e => {
       e.stopPropagation();
       item.purchased = !item.purchased;
