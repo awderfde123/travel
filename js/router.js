@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────
 // 路由（hash-based SPA）
 // ─────────────────────────────────────────────
-const ALL_VIEWS = [mainViewEl, discussViewEl, planViewEl];
+const ALL_VIEWS = [tripsViewEl, mainViewEl, discussViewEl, planViewEl];
 
 function showOnly(el) {
   ALL_VIEWS.forEach(v => v.classList.add("hidden"));
@@ -14,6 +14,20 @@ function openTransportDiscussPage(id) { location.hash = `#/t-discuss/${id}`; }
 function route() {
   const hash = location.hash;
 
+  // 旅程列表（首頁）
+  if (!hash || hash === "#/" || hash === "#/trips") {
+    showOnly(tripsViewEl);
+    renderTripsPage();
+    return;
+  }
+
+  // 主旅程畫面
+  if (hash === "#/trip") {
+    showOnly(mainViewEl);
+    if (typeof applyFinalizedUI === "function") applyFinalizedUI();
+    return;
+  }
+
   // 行程規劃
   if (hash === "#/plan") {
     showOnly(planViewEl);
@@ -25,12 +39,12 @@ function route() {
   const discussMatch = hash.match(/^#\/discuss\/(.+)$/);
   if (discussMatch) {
     const place = getPlace(discussMatch[1]);
-    if (!place) { location.hash = "#/"; return; }
+    if (!place) { location.hash = "#/trip"; return; }
     showOnly(discussViewEl);
     discussContext = {
       item:     place,
       saveFunc: () => { saveState(); renderLocationsList(); },
-      backFn:   () => { location.hash = "#/"; },
+      backFn:   () => { location.hash = "#/trip"; },
     };
     renderDiscussView();
     return;
@@ -40,19 +54,19 @@ function route() {
   const tDiscussMatch = hash.match(/^#\/t-discuss\/(.+)$/);
   if (tDiscussMatch) {
     const tItem = transportItems.find(t => t.id === tDiscussMatch[1]);
-    if (!tItem) { location.hash = "#/"; return; }
+    if (!tItem) { location.hash = "#/trip"; return; }
     showOnly(discussViewEl);
     discussContext = {
       item:     tItem,
       saveFunc: () => { saveTransport(); renderTransportList(); },
-      backFn:   () => { location.hash = "#/"; },
+      backFn:   () => { location.hash = "#/trip"; },
     };
     renderDiscussView();
     return;
   }
 
-  // 主頁
-  showOnly(mainViewEl);
+  // 預設
+  location.hash = tripId ? "#/trip" : "#/";
 }
 
 window.addEventListener("hashchange", route);

@@ -2,19 +2,13 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="旅伴共筆" />
-    <title>旅游筆記</title>
+    <title>旅伴共筆</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -22,155 +16,149 @@
   </head>
   <body>
     <div class="app-shell">
-      <!-- ── Header ── -->
-      <header class="topbar">
-        <div class="topbar-brand">
-          <div class="brand-icon">✈</div>
-          <div>
-            <h1>旅游筆記</h1>
-            <p>點擊地圖新增地點，點選地點查看討論</p>
-          </div>
-        </div>
-        <div class="trip-code-chip">
-          <span class="trip-label">旅程</span>
-          <code id="tripCodeDisplay">------</code>
-          <button id="copyTripBtn" title="複製邀請連結">📋</button>
-          <button id="joinTripBtn" class="tool-btn">換旅程</button>
-        </div>
-        <div class="actions">
-          <button id="openPlanBtn" class="primary">🗓 規劃行程</button>
-        </div>
-      </header>
 
-      <!-- ── Main View（地圖 + 地點列表）── -->
-      <div id="mainView" class="page-layout">
-        <!-- Left: Map -->
-        <div class="map-column">
-          <div class="map-card">
-            <div class="map-toolbar">
-              <div class="map-search">
-                <span class="map-search-icon">🔍</span>
-                <input
-                  id="mapSearch"
-                  type="text"
-                  placeholder="搜尋地點…"
-                  autocomplete="off"
-                />
-              </div>
-              <div class="map-toolbar-btns">
-                <button id="routeToggleBtn" class="tool-btn hidden">
-                  🛣 顯示路線
-                </button>
-              </div>
-            </div>
-            <div id="map"></div>
-            <div id="mapHint" class="map-empty hidden">
-              <div class="map-empty-icon">🗺</div>
-              <p>
-                尚未設定 Google Maps API Key<br />請點擊右上角「⚙ 地圖設定」
-              </p>
+      <!-- ── 旅程列表頁 ── -->
+      <div id="tripsView" class="trips-page">
+        <header class="trips-header">
+          <div class="topbar-brand">
+            <div class="brand-icon">✈</div>
+            <div>
+              <h1>旅伴共筆</h1>
+              <p>選擇或建立旅程開始規劃</p>
             </div>
           </div>
-        </div>
+          <div class="trips-actions">
+            <button id="createTripBtn" class="primary">＋ 建立新旅程</button>
+            <button id="joinTripFromListBtn" class="tool-btn">🔑 加入旅程</button>
+          </div>
+        </header>
+        <div id="tripsList" class="trips-list"></div>
+      </div>
 
-        <!-- Right: Tabbed sidebar -->
-        <div class="sidebar">
-          <div class="sidebar-panel">
-            <!-- Tabs -->
-            <div class="sidebar-tabs">
-              <button class="tab-btn active" id="tabLocations">📍 地點</button>
-              <button class="tab-btn" id="tabTransport">🚌 交通</button>
-              <button class="tab-btn" id="tabPacking">🎒 攜帶清單</button>
+      <!-- ── 主旅程畫面 ── -->
+      <div id="mainView" class="main-page hidden">
+
+        <!-- Topbar -->
+        <header class="topbar">
+          <div class="topbar-left">
+            <button id="backToTripsBtn" class="back-btn topbar-back">← 所有旅程</button>
+            <div class="trip-name-wrap">
+              <span id="tripNameDisplay" class="trip-name-display">旅程</span>
+              <button id="editTripNameBtn" class="topbar-icon-btn" title="修改名稱">✏</button>
             </div>
-
-            <!-- Locations tab -->
-            <div id="locationsPanel" class="tab-panel">
-              <div class="panel-header">
-                <h2>
-                  📍 地點列表
-                  <span id="locationsCount" class="loc-count-badge"
-                    >共 0 個地點</span
-                  >
-                </h2>
-              </div>
-              <div class="loc-search-wrap">
-                <span class="loc-search-icon">🔍</span>
-                <input
-                  id="locSearch"
-                  type="text"
-                  placeholder="搜尋地點…"
-                  autocomplete="off"
-                />
-              </div>
-              <div id="locationsList" class="locations-list"></div>
+          </div>
+          <div class="topbar-right">
+            <span id="finalizedBadge" class="finalized-status-badge hidden">✓ 已定案</span>
+            <button id="unfinalizeBtn" class="tool-btn topbar-tool hidden">解除定案</button>
+            <button id="finalizeBtn" class="tool-btn topbar-tool">定案</button>
+            <div class="trip-code-chip">
+              <code id="tripCodeDisplay">------</code>
+              <button id="copyTripBtn" title="複製邀請連結">📋</button>
             </div>
+            <button id="openPlanBtn" class="primary">🗓 規劃行程</button>
+          </div>
+        </header>
 
-            <!-- Transport tab -->
-            <div id="transportPanel" class="tab-panel hidden">
-              <div
-                class="panel-header"
-                style="
-                  display: flex;
-                  align-items: center;
-                  justify-content: space-between;
-                "
-              >
-                <h2>🚌 交通備忘 <span id="transportBadge" class="loc-count-badge"></span></h2>
-                <button
-                  id="addTransportBtn"
-                  class="primary"
-                  style="font-size: 0.78rem; padding: 5px 11px"
-                >
-                  ＋ 新增
-                </button>
-              </div>
-              <div id="transportList" class="locations-list"></div>
-            </div>
+        <!-- Map + Sidebar -->
+        <div class="page-layout">
 
-            <!-- Packing tab -->
-            <div id="packingPanel" class="tab-panel hidden">
-              <div
-                class="panel-header"
-                style="
-                  display: flex;
-                  align-items: center;
-                  justify-content: space-between;
-                  gap: 8px;
-                "
-              >
-                <h2>
-                  🎒 攜帶清單
-                  <span id="packingProgress" class="loc-count-badge"></span>
-                </h2>
-                <div style="display: flex; gap: 6px; flex-shrink: 0">
-                  <button
-                    id="clearCheckedBtn"
-                    class="danger"
-                    style="font-size: 0.72rem; padding: 4px 8px"
-                  >
-                    清除已勾選
-                  </button>
+          <!-- Left: Map -->
+          <div class="map-column">
+            <div class="map-card">
+              <div class="map-toolbar">
+                <div class="map-search">
+                  <span class="map-search-icon">🔍</span>
+                  <input id="mapSearch" type="text" placeholder="搜尋地點…" autocomplete="off" />
+                </div>
+                <div class="map-toolbar-btns">
+                  <button id="routeToggleBtn" class="tool-btn hidden">🛣 顯示路線</button>
                 </div>
               </div>
-              <div class="packing-add-bar">
-                <input
-                  id="packingInput"
-                  type="text"
-                  placeholder="新增品項…"
-                  autocomplete="off"
-                />
-                <button id="packingAddBtn" class="primary">＋</button>
+              <div id="map"></div>
+              <div id="mapHint" class="map-empty hidden">
+                <div class="map-empty-icon">🗺</div>
+                <p>Google Maps 載入失敗，請確認網路連線。</p>
               </div>
-              <div id="packingList" class="locations-list"></div>
+            </div>
+          </div>
+
+          <!-- Right: Tabbed sidebar -->
+          <div class="sidebar">
+            <div class="sidebar-panel">
+              <div class="sidebar-tabs">
+                <button class="tab-btn active" id="tabLocations">📍 地點</button>
+                <button class="tab-btn" id="tabTransport">🚌 交通</button>
+                <button class="tab-btn" id="tabPacking">🎒 清單</button>
+              </div>
+
+              <!-- Locations tab -->
+              <div id="locationsPanel" class="tab-panel">
+                <div class="panel-header">
+                  <h2>📍 地點列表
+                    <span id="locationsCount" class="loc-count-badge">共 0 個地點</span>
+                  </h2>
+                </div>
+                <div class="loc-search-wrap">
+                  <span class="loc-search-icon">🔍</span>
+                  <input id="locSearch" type="text" placeholder="搜尋地點…" autocomplete="off" />
+                </div>
+                <div id="locationsList" class="locations-list"></div>
+              </div>
+
+              <!-- Transport tab -->
+              <div id="transportPanel" class="tab-panel hidden">
+                <div class="panel-header" style="display:flex;align-items:center;justify-content:space-between;">
+                  <h2>🚌 交通備忘 <span id="transportBadge" class="loc-count-badge"></span></h2>
+                  <button id="addTransportBtn" class="primary" style="font-size:.78rem;padding:5px 11px;">＋ 新增</button>
+                </div>
+                <div id="transportList" class="locations-list"></div>
+              </div>
+
+              <!-- Packing tab -->
+              <div id="packingPanel" class="tab-panel hidden">
+                <div class="panel-header" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                  <h2>🎒 攜帶清單
+                    <span id="packingProgress" class="loc-count-badge"></span>
+                  </h2>
+                  <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                    <button id="clearCheckedBtn" class="danger hidden" style="font-size:.72rem;padding:4px 8px;">清除勾選</button>
+                  </div>
+                </div>
+
+                <!-- User name display -->
+                <div class="packing-user-bar">
+                  <span id="packingUserName" class="packing-user-name"></span>
+                  <button id="changeNameBtn" class="icon-btn" title="修改名稱" style="font-size:.8rem;">✏</button>
+                </div>
+
+                <!-- Shared section -->
+                <div class="packing-section">
+                  <div class="packing-section-head">🌍 共同攜帶</div>
+                  <div class="packing-add-bar" id="packingSharedAddBar">
+                    <input id="packingSharedInput" type="text" placeholder="新增共同品項…" autocomplete="off" />
+                    <button id="packingSharedAddBtn" class="primary">＋</button>
+                  </div>
+                  <div id="packingSharedList"></div>
+                </div>
+
+                <!-- Personal section -->
+                <div class="packing-section">
+                  <div class="packing-section-head">👤 個人攜帶</div>
+                  <div class="packing-add-bar" id="packingPersonalAddBar">
+                    <input id="packingPersonalInput" type="text" placeholder="新增個人品項…" autocomplete="off" />
+                    <button id="packingPersonalAddBtn" class="primary">＋</button>
+                  </div>
+                  <div id="packingPersonalList"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ── Plan View（行程規劃頁）── -->
+      <!-- ── Plan View ── -->
       <div id="planView" class="plan-view hidden">
         <div class="plan-layout">
-          <!-- Left: pool of all locations -->
           <div class="plan-pool-col">
             <div class="plan-pool-head">
               <button id="backPlanBtn" class="back-btn">← 返回</button>
@@ -181,17 +169,14 @@
             </div>
             <div id="planPool" class="plan-pool"></div>
           </div>
-
-          <!-- Right: map (top) + selected route (bottom) -->
           <div class="plan-right-col">
             <div class="plan-map-wrap">
               <div id="planMap" class="plan-map"></div>
               <div id="planMapHint" class="map-empty hidden">
                 <div class="map-empty-icon">🗺</div>
-                <p>地圖未載入<br />請先在主頁設定 API Key</p>
+                <p>地圖未載入</p>
               </div>
             </div>
-
             <div class="plan-selected-panel">
               <div class="plan-selected-head">
                 <div class="plan-summary">
@@ -213,7 +198,7 @@
         </div>
       </div>
 
-      <!-- ── Discuss View（獨立討論頁）── -->
+      <!-- ── Discuss View ── -->
       <div id="discussView" class="discuss-view hidden">
         <div class="discuss-header">
           <button id="backBtn" class="back-btn">← 返回</button>
@@ -224,23 +209,34 @@
         <form id="discussForm" class="discuss-form">
           <div class="discuss-inputs">
             <input id="dAuthor" type="text" placeholder="您的名稱" required />
-            <textarea
-              id="dText"
-              placeholder="輸入討論內容…"
-              required
-            ></textarea>
+            <textarea id="dText" placeholder="輸入討論內容…" required></textarea>
           </div>
           <button type="submit" class="primary">💬 發表留言</button>
         </form>
       </div>
+
     </div>
 
     <!-- ── Dialogs ── -->
 
-    <dialog id="addPlaceDialog">
+    <dialog id="nameDialog">
       <div class="dialog-header">
-        <h3>📍 新增地點</h3>
+        <h3>👤 請設定您的名稱</h3>
+        <p style="font-size:.82rem;color:var(--muted);margin:4px 0 0;">名稱用於討論留言及個人攜帶清單</p>
       </div>
+      <div class="dialog-body">
+        <div class="field">
+          <label>您的名稱 <span class="req">*</span></label>
+          <input id="nameInput" type="text" placeholder="例：小美" autocomplete="nickname" />
+        </div>
+      </div>
+      <menu class="dialog-footer">
+        <button id="confirmNameBtn" class="primary">確認</button>
+      </menu>
+    </dialog>
+
+    <dialog id="addPlaceDialog">
+      <div class="dialog-header"><h3>📍 新增地點</h3></div>
       <div class="dialog-body">
         <div class="field">
           <label>地點名稱 <span class="req">*</span></label>
@@ -264,9 +260,7 @@
     </dialog>
 
     <dialog id="editPlaceDialog">
-      <div class="dialog-header">
-        <h3>✏ 編輯地點</h3>
-      </div>
+      <div class="dialog-header"><h3>✏ 編輯地點</h3></div>
       <div class="dialog-body">
         <div class="field">
           <label>地點名稱 <span class="req">*</span></label>
@@ -290,17 +284,11 @@
     </dialog>
 
     <dialog id="addTransportDialog">
-      <div class="dialog-header">
-        <h3>🚌 新增交通</h3>
-      </div>
+      <div class="dialog-header"><h3>🚌 新增交通</h3></div>
       <div class="dialog-body">
         <div class="field">
           <label>交通方式 <span class="req">*</span></label>
-          <input
-            id="tMethod"
-            type="text"
-            placeholder="高鐵、客運、計程車、飛機…"
-          />
+          <input id="tMethod" type="text" placeholder="高鐵、客運、計程車、飛機…" />
         </div>
         <div class="field">
           <label>路線（選填）</label>
@@ -311,14 +299,13 @@
             <label>購買處（選填）</label>
             <input id="tWhere" type="text" placeholder="台灣高鐵官網、KKday…" />
           </div>
-          <div class="field" style="flex: 0 0 110px">
+          <div class="field" style="flex:0 0 110px">
             <label>金額（選填）</label>
             <input id="tPrice" type="number" min="0" placeholder="0" />
           </div>
         </div>
         <label class="purchased-check-label">
-          <input id="tPurchased" type="checkbox" />
-          已購買
+          <input id="tPurchased" type="checkbox" />已購買
         </label>
       </div>
       <menu class="dialog-footer">
@@ -328,17 +315,11 @@
     </dialog>
 
     <dialog id="editTransportDialog">
-      <div class="dialog-header">
-        <h3>✏ 編輯交通</h3>
-      </div>
+      <div class="dialog-header"><h3>✏ 編輯交通</h3></div>
       <div class="dialog-body">
         <div class="field">
           <label>交通方式 <span class="req">*</span></label>
-          <input
-            id="etMethod"
-            type="text"
-            placeholder="高鐵、客運、計程車、飛機…"
-          />
+          <input id="etMethod" type="text" placeholder="高鐵、客運、計程車、飛機…" />
         </div>
         <div class="field">
           <label>路線（選填）</label>
@@ -347,20 +328,15 @@
         <div class="field-row">
           <div class="field">
             <label>購買處（選填）</label>
-            <input
-              id="etWhere"
-              type="text"
-              placeholder="台灣高鐵官網、KKday…"
-            />
+            <input id="etWhere" type="text" placeholder="台灣高鐵官網、KKday…" />
           </div>
-          <div class="field" style="flex: 0 0 110px">
+          <div class="field" style="flex:0 0 110px">
             <label>金額（選填）</label>
             <input id="etPrice" type="number" min="0" placeholder="0" />
           </div>
         </div>
         <label class="purchased-check-label">
-          <input id="etPurchased" type="checkbox" />
-          已購買
+          <input id="etPurchased" type="checkbox" />已購買
         </label>
       </div>
       <menu class="dialog-footer">
@@ -369,7 +345,6 @@
       </menu>
     </dialog>
 
-    <!-- 加入旅程 dialog -->
     <dialog id="joinTripDialog">
       <div class="dialog-header">
         <h3>🔑 加入旅程</h3>
@@ -397,6 +372,7 @@
     <script src="js/discuss.js"></script>
     <script src="js/map.js"></script>
     <script src="js/locations.js"></script>
+    <script src="js/trips.js"></script>
     <script src="js/router.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/db.js"></script>

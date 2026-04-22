@@ -1,11 +1,13 @@
 // ─────────────────────────────────────────────
 // 常數
 // ─────────────────────────────────────────────
-const DATA_KEY      = "trip-map-collab-v1";
-const MAP_KEY       = "google-maps-api-key";
-const AUTHOR_KEY    = "trip-map-author";
-const TRANSPORT_KEY = "trip-transport-v1";
-const PACKING_KEY   = "trip-packing-v1";
+const DATA_KEY             = "trip-map-collab-v1";
+const AUTHOR_KEY           = "trip-map-author";
+const TRANSPORT_KEY        = "trip-transport-v1";
+const PACKING_SHARED_KEY   = "trip-packing-shared-v1";
+const PACKING_PERSONAL_KEY = "trip-packing-personal-v1";
+const TRIP_HISTORY_KEY     = "trip-history-v1";
+const TRIP_META_KEY        = "trip-meta-v1";
 
 // ─────────────────────────────────────────────
 // 工具函式
@@ -23,4 +25,8 @@ function fmtTime(iso) {
       hour: "2-digit", minute: "2-digit",
     });
   } catch { return iso; }
+}
+
+function currentUser() {
+  return localStorage.getItem(AUTHOR_KEY) || "";
 }

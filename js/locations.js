@@ -30,6 +30,7 @@ function renderLocationsList() {
     return;
   }
 
+  const finalized = state.finalized;
   filtered.forEach((place, i) => {
     const count  = place.discussions?.length ?? 0;
     const budget = place.budget || 0;
@@ -45,15 +46,18 @@ function renderLocationsList() {
           <span class="loc-discuss-count">💬 ${count > 0 ? `${count} 則討論` : "查看討論"}</span>
         </div>
       </div>
+      ${!finalized ? `
       <div class="loc-actions">
         <button class="icon-btn edit" title="編輯">✏</button>
         <button class="icon-btn del danger" title="刪除">✕</button>
-      </div>`;
+      </div>` : ""}`;
 
     row.querySelector(".loc-info").addEventListener("click", () => openDiscussPage(place.id));
     row.querySelector(".loc-num").addEventListener("click",  () => openDiscussPage(place.id));
-    row.querySelector(".icon-btn.edit").addEventListener("click", e => { e.stopPropagation(); openEditDialog(place.id); });
-    row.querySelector(".icon-btn.del").addEventListener("click",  e => { e.stopPropagation(); deletePlace(place.id); });
+    if (!finalized) {
+      row.querySelector(".icon-btn.edit").addEventListener("click", e => { e.stopPropagation(); openEditDialog(place.id); });
+      row.querySelector(".icon-btn.del").addEventListener("click",  e => { e.stopPropagation(); deletePlace(place.id); });
+    }
     locationsListEl.appendChild(row);
   });
 }

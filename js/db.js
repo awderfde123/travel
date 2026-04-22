@@ -22,49 +22,70 @@ function initDb() {
   try {
     firebase.initializeApp(FIREBASE_CONFIG);
   } catch (e) {
-    // 重複初始化（熱重載）時忽略
     if (e.code !== "app/duplicate-app") throw e;
   }
   _db = firebase.firestore();
   _db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
 }
 
-// ── 旅程代碼 ──
+// ── 旅程代碼：回傳是否從 URL 加入 ──
 function initTripId() {
-  // 支援 ?trip=ABCDEF 加入分享連結
   const urlParams = new URLSearchParams(location.search);
   const fromUrl   = (urlParams.get("trip") || "").toUpperCase();
   if (/^[A-Z0-9]{6}$/.test(fromUrl)) {
     tripId = fromUrl;
     localStorage.setItem(TRIP_ID_KEY, tripId);
     history.replaceState(null, "", location.pathname + location.hash);
+    return true;
   } else {
     tripId = localStorage.getItem(TRIP_ID_KEY) || "";
-    if (!tripId) {
-      tripId = Math.random().toString(36).slice(2, 8).toUpperCase();
-      localStorage.setItem(TRIP_ID_KEY, tripId);
-    }
+    return false;
   }
-  const el = document.getElementById("tripCodeDisplay");
-  if (el) el.textContent = tripId;
 }
 
 function tripRef() {
+  if (!_db || !tripId) return null;
   return _db.collection("trips").doc(tripId);
+}
+
+// ── Trip history（本地）──
+function updateTripHistory(extra = {}) {
+  if (!tripId) return;
+  const history = JSON.parse(localStorage.getItem(TRIP_HISTORY_KEY) || "[]");
+  const idx = history.findIndex(t => t.code === tripId);
+  const entry = {
+    code:        tripId,
+    name:        state.tripName || "",
+    finalized:   state.finalized || false,
+    lastVisited: new Date().toISOString(),
+    ...extra,
+  };
+  if (idx >= 0) {
+    history[idx] = { ...history[idx], ...entry };
+  } else {
+    history.unshift(entry);
+  }
+  localStorage.setItem(TRIP_HISTORY_KEY, JSON.stringify(history));
 }
 
 // ── 儲存到雲端（防抖 600ms）──
 function cloudSave() {
-  if (!_db) return;
+  const ref = tripRef();
+  if (!ref) return;
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(async () => {
     try {
-      await tripRef().set({
-        places:    JSON.parse(JSON.stringify(state.places)),
-        transport: JSON.parse(JSON.stringify(transportItems)),
-        packing:   JSON.parse(JSON.stringify(packingItems)),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      await ref.set({
+        tripName:        state.tripName       || "",
+        finalized:       state.finalized      || false,
+        showRoute:       state.showRoute      || false,
+        places:          JSON.parse(JSON.stringify(state.places)),
+        transport:       JSON.parse(JSON.stringify(transportItems)),
+        packingShared:   JSON.parse(JSON.stringify(packingShared)),
+        packingPersonal: JSON.parse(JSON.stringify(packingPersonal)),
+        updatedAt:       firebase.firestore.FieldValue.serverTimestamp(),
       });
+      updateTripHistory();
     } catch (e) {
       console.warn("雲端儲存失敗:", e);
     }
@@ -73,17 +94,28 @@ function cloudSave() {
 
 // ── 從雲端載入 ──
 async function loadFromCloud() {
-  if (!_db) return false;
+  const ref = tripRef();
+  if (!ref) return false;
   try {
-    const doc = await tripRef().get();
+    const doc = await ref.get();
     if (!doc.exists) return false;
     const data = doc.data();
+    if (data.tripName  !== undefined) state.tripName  = data.tripName;
+    if (data.finalized !== undefined) state.finalized = data.finalized;
+    if (data.showRoute !== undefined) state.showRoute = data.showRoute;
     if (Array.isArray(data.places))    state.places   = data.places;
     if (Array.isArray(data.transport)) transportItems = data.transport;
-    if (Array.isArray(data.packing))   packingItems   = data.packing;
+    // 新版 packing（含舊版遷移）
+    if (Array.isArray(data.packingShared)) {
+      packingShared = data.packingShared;
+    } else if (Array.isArray(data.packing)) {
+      packingShared = data.packing.map(p => ({ id: p.id, name: p.name, checked: false }));
+    }
+    if (Array.isArray(data.packingPersonal)) packingPersonal = data.packingPersonal;
     saveState(false);
     saveTransport(false);
     savePacking(false);
+    updateTripHistory();
     return true;
   } catch (e) {
     console.warn("雲端載入失敗，回退本地資料:", e);
@@ -93,25 +125,38 @@ async function loadFromCloud() {
 
 // ── 即時同步訂閱 ──
 function subscribeTrip() {
-  if (!_db) return;
+  const ref = tripRef();
+  if (!ref) return;
   if (_unsubscribe) _unsubscribe();
-  _unsubscribe = tripRef().onSnapshot(
+  _unsubscribe = ref.onSnapshot(
     { includeMetadataChanges: true },
     doc => {
-      if (doc.metadata.hasPendingWrites) return; // 自己的寫入，略過
+      if (doc.metadata.hasPendingWrites) return;
       if (!doc.exists) return;
       const data = doc.data();
+      const wasFinalized = state.finalized;
+      if (data.tripName  !== undefined) state.tripName  = data.tripName;
+      if (data.finalized !== undefined) state.finalized = data.finalized;
+      if (data.showRoute !== undefined) state.showRoute = data.showRoute;
       if (Array.isArray(data.places))    state.places   = data.places;
       if (Array.isArray(data.transport)) transportItems = data.transport;
-      if (Array.isArray(data.packing))   packingItems   = data.packing;
+      if (Array.isArray(data.packingShared))   packingShared   = data.packingShared;
+      if (Array.isArray(data.packingPersonal)) packingPersonal = data.packingPersonal;
       saveState(false);
       saveTransport(false);
       savePacking(false);
+      updateTripHistory();
       // 重新渲染
       renderLocationsList();
       renderMarkers();
       renderTransportList();
       renderPackingList();
+      const nameEl = document.getElementById("tripNameDisplay");
+      if (nameEl) nameEl.textContent = state.tripName || tripId;
+      // finalized 狀態改變時更新 UI
+      if (wasFinalized !== state.finalized && typeof applyFinalizedUI === "function") {
+        applyFinalizedUI();
+      }
       if (!discussViewEl.classList.contains("hidden")) renderDiscussView();
     },
     err => console.warn("即時同步錯誤:", err)
@@ -128,21 +173,26 @@ async function joinTrip(code) {
   if (_unsubscribe) _unsubscribe();
   tripId = newId;
   localStorage.setItem(TRIP_ID_KEY, tripId);
+
   const el = document.getElementById("tripCodeDisplay");
   if (el) el.textContent = tripId;
 
+  // 重置為空（等雲端載入）
+  state.places    = [];
+  state.tripName  = "";
+  state.finalized = false;
+  transportItems  = [];
+  packingShared   = [];
+  packingPersonal = [];
+
   const loaded = await loadFromCloud();
   if (!loaded) {
-    state.places   = [];
-    transportItems = [];
-    packingItems   = [];
-    ensureSeed();
+    saveState(false);
+    saveTransport(false);
+    savePacking(false);
     cloudSave();
   }
-  renderLocationsList();
-  renderMarkers();
-  renderTransportList();
-  renderPackingList();
+  updateTripHistory();
   subscribeTrip();
 }
 
@@ -157,19 +207,18 @@ document.getElementById("copyTripBtn").addEventListener("click", () => {
   });
 });
 
-document.getElementById("joinTripBtn").addEventListener("click", () => {
-  document.getElementById("joinTripInput").value = "";
-  document.getElementById("joinTripDialog").showModal();
-  setTimeout(() => document.getElementById("joinTripInput").focus(), 50);
-});
-
 document.getElementById("cancelJoinBtn").addEventListener("click", () => {
   document.getElementById("joinTripDialog").close();
 });
 
-document.getElementById("confirmJoinBtn").addEventListener("click", () => {
+document.getElementById("confirmJoinBtn").addEventListener("click", async () => {
   const code = document.getElementById("joinTripInput").value.trim();
   if (!code) return;
   document.getElementById("joinTripDialog").close();
-  joinTrip(code);
+  await joinTrip(code);
+  renderLocationsList();
+  renderTransportList();
+  renderPackingList();
+  if (typeof applyFinalizedUI === "function") applyFinalizedUI();
+  location.hash = "#/trip";
 });

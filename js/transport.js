@@ -54,6 +54,7 @@ function renderTransportList() {
     return;
   }
 
+  const finalized = state.finalized;
   transportItems.forEach(item => {
     const el = document.createElement("div");
     el.className = "loc-item";
@@ -70,34 +71,39 @@ function renderTransportList() {
         </div>
         <div class="loc-meta-row">
           ${item.price > 0 ? `<span class="loc-budget">NT$${item.price.toLocaleString()}</span>` : ""}
-          <button class="transport-status-btn ${item.purchased ? "purchased" : "unpurchased"}">
-            ${item.purchased ? "✅ 已購買" : "🛒 未購買"}
-          </button>
+          ${finalized ? `
+            <button class="transport-status-btn ${item.purchased ? "purchased" : "unpurchased"}">
+              ${item.purchased ? "✅ 已購買" : "🛒 未購買"}
+            </button>` : ""}
           <span class="loc-discuss-count">💬 ${count > 0 ? `${count} 則討論` : "查看討論"}</span>
         </div>
       </div>
+      ${!finalized ? `
       <div class="loc-actions">
         <button class="icon-btn edit" title="編輯">✏</button>
         <button class="icon-btn del danger" title="刪除">✕</button>
-      </div>`;
+      </div>` : ""}`;
 
     el.querySelector(".loc-info").addEventListener("click", () => openTransportDiscussPage(item.id));
-    el.querySelector(".transport-status-btn").addEventListener("click", e => {
-      e.stopPropagation();
-      item.purchased = !item.purchased;
-      saveTransport();
-      renderTransportList();
-    });
-    el.querySelector(".icon-btn.edit").addEventListener("click", e => {
-      e.stopPropagation();
-      openEditTransportDialog(item.id);
-    });
-    el.querySelector(".del").addEventListener("click", e => {
-      e.stopPropagation();
-      transportItems = transportItems.filter(t => t.id !== item.id);
-      saveTransport();
-      renderTransportList();
-    });
+    if (finalized) {
+      el.querySelector(".transport-status-btn")?.addEventListener("click", e => {
+        e.stopPropagation();
+        item.purchased = !item.purchased;
+        saveTransport();
+        renderTransportList();
+      });
+    } else {
+      el.querySelector(".icon-btn.edit").addEventListener("click", e => {
+        e.stopPropagation();
+        openEditTransportDialog(item.id);
+      });
+      el.querySelector(".del").addEventListener("click", e => {
+        e.stopPropagation();
+        transportItems = transportItems.filter(t => t.id !== item.id);
+        saveTransport();
+        renderTransportList();
+      });
+    }
     listEl.appendChild(el);
   });
 }

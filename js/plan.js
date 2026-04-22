@@ -248,11 +248,11 @@ function updatePlanSummary() {
 
 // ─ 事件綁定 ─
 document.getElementById("openPlanBtn").addEventListener("click", () => { location.hash = "#/plan"; });
-document.getElementById("backPlanBtn").addEventListener("click", () => { location.hash = "#/"; });
+document.getElementById("backPlanBtn").addEventListener("click", () => { location.hash = "#/trip"; });
 document.getElementById("confirmPlanBtn").addEventListener("click", () => {
   const ordered  = planOrder.map(id => getPlace(id)).filter(Boolean);
   const poolRest = planPool.map(id => getPlace(id)).filter(Boolean);
   state.places   = [...ordered, ...poolRest];
   saveState();
-  if (confirm("✅ 行程已定案！順序已儲存。是否返回主頁？")) location.hash = "#/";
+  if (confirm("✅ 順序已儲存。是否返回主頁？")) location.hash = "#/trip";
 });

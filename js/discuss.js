@@ -39,8 +39,8 @@ function renderDiscussView() {
     <span class="dic-name">${esc(title)}</span>
     ${hasFields ? `<button class="dic-toggle-btn" id="dicToggle">${wasExpanded ? "▸" : "▾"}</button>` : ""}
     <span class="dic-spacer"></span>
-    ${isTransport ? `<button class="final-toggle-btn${item.isFinal ? " is-final" : ""}" id="finalToggleBtn">${item.isFinal ? "✓ 定案" : "標記定案"}</button>` : ""}
-    <button class="edit-info-btn" id="editDiscussItemBtn">✏ 編輯</button>`;
+    ${isTransport && !state.finalized ? `<button class="final-toggle-btn${item.isFinal ? " is-final" : ""}" id="finalToggleBtn">${item.isFinal ? "✓ 定案" : "標記定案"}</button>` : ""}
+    ${!state.finalized ? `<button class="edit-info-btn" id="editDiscussItemBtn">✏ 編輯</button>` : ""}`;
 
   // 下方詳細區塊
   if (hasFields) {
@@ -70,10 +70,13 @@ function renderDiscussView() {
     };
   }
 
-  document.getElementById("editDiscussItemBtn").onclick = () => {
-    if (isTransport) openEditTransportDialog(item.id);
-    else             openEditDialog(item.id);
-  };
+  const editBtn = document.getElementById("editDiscussItemBtn");
+  if (editBtn) {
+    editBtn.onclick = () => {
+      if (isTransport) openEditTransportDialog(item.id);
+      else             openEditDialog(item.id);
+    };
+  }
 
   // ── 留言列表 ──
   const msgsEl = document.getElementById("discussMsgs");
@@ -144,5 +147,5 @@ document.getElementById("discussForm").addEventListener("submit", e => {
 });
 
 document.getElementById("backBtn").addEventListener("click", () => {
-  discussContext?.backFn?.() ?? (location.hash = "#/");
+  discussContext?.backFn?.() ?? (location.hash = "#/trip");
 });

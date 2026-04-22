@@ -2,8 +2,10 @@
 // App 狀態
 // ─────────────────────────────────────────────
 const state = {
-  places: [],
+  places:    [],
   showRoute: false,
+  tripName:  "",
+  finalized: false,
 };
 
 // ─────────────────────────────────────────────
@@ -15,6 +17,7 @@ const locCountEl      = document.getElementById("locationsCount");
 const mainViewEl      = document.getElementById("mainView");
 const discussViewEl   = document.getElementById("discussView");
 const planViewEl      = document.getElementById("planView");
+const tripsViewEl     = document.getElementById("tripsView");
 const routeToggleBtn  = document.getElementById("routeToggleBtn");
 
 // ─────────────────────────────────────────────
@@ -22,33 +25,23 @@ const routeToggleBtn  = document.getElementById("routeToggleBtn");
 // ─────────────────────────────────────────────
 function saveState(sync = true) {
   localStorage.setItem(DATA_KEY, JSON.stringify(state.places));
+  localStorage.setItem(TRIP_META_KEY, JSON.stringify({
+    tripName:  state.tripName,
+    finalized: state.finalized,
+    showRoute: state.showRoute,
+  }));
   if (sync) cloudSave();
 }
 
 function loadState() {
   state.places = JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
   state.places.forEach(p => { if (!p.discussions) p.discussions = []; });
+  const meta = JSON.parse(localStorage.getItem(TRIP_META_KEY) || "{}");
+  state.tripName  = meta.tripName  || "";
+  state.finalized = meta.finalized || false;
+  state.showRoute = meta.showRoute || false;
 }
 
 function getPlace(id) {
   return state.places.find(p => p.id === id);
-}
-
-function ensureSeed() {
-  if (state.places.length) return;
-  state.places = [{
-    id: crypto.randomUUID(),
-    name: "台北車站",
-    lat: 25.0478,
-    lng: 121.517,
-    note: "可作為集合點",
-    budget: 0,
-    discussions: [{
-      id: crypto.randomUUID(),
-      author: "小美",
-      text: "這裡當集合點如何？",
-      createdAt: new Date().toISOString(),
-    }],
-  }];
-  saveState();
 }

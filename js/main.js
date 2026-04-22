@@ -18,32 +18,113 @@ document.getElementById("tabTransport").addEventListener("click", () => switchTa
 document.getElementById("tabPacking").addEventListener("click",   () => switchTab("tabPacking"));
 
 // ─────────────────────────────────────────────
+// 定案 UI
+// ─────────────────────────────────────────────
+function applyFinalizedUI() {
+  const f = state.finalized;
+
+  document.getElementById("finalizeBtn")?.classList.toggle("hidden", f);
+  document.getElementById("unfinalizeBtn")?.classList.toggle("hidden", !f);
+  document.getElementById("finalizedBadge")?.classList.toggle("hidden", !f);
+  document.getElementById("openPlanBtn")?.classList.toggle("hidden", f);
+  document.getElementById("addTransportBtn")?.classList.toggle("hidden", f);
+
+  const nameEl = document.getElementById("tripNameDisplay");
+  if (nameEl) nameEl.textContent = state.tripName || tripId || "旅程";
+
+  renderLocationsList();
+  renderTransportList();
+  renderPackingList();
+}
+
+// 旅程名稱
+document.getElementById("editTripNameBtn")?.addEventListener("click", () => {
+  const newName = prompt("旅程名稱", state.tripName || "");
+  if (newName === null) return;
+  state.tripName = newName.trim();
+  saveState();
+  updateTripHistory();
+  document.getElementById("tripNameDisplay").textContent = state.tripName || tripId || "旅程";
+});
+
+// 定案
+document.getElementById("finalizeBtn")?.addEventListener("click", () => {
+  if (!confirm("確定定案？\n定案後進入唯讀模式，可切換為攜帶清單打勾模式。")) return;
+  state.finalized = true;
+  saveState();
+  updateTripHistory({ finalized: true });
+  applyFinalizedUI();
+});
+
+// 解除定案
+document.getElementById("unfinalizeBtn")?.addEventListener("click", () => {
+  if (!confirm("確定解除定案，回到編輯模式？")) return;
+  state.finalized = false;
+  saveState();
+  updateTripHistory({ finalized: false });
+  applyFinalizedUI();
+});
+
+// 返回旅程列表
+document.getElementById("backToTripsBtn")?.addEventListener("click", () => {
+  location.hash = "#/";
+});
+
+// 修改使用者名稱
+document.getElementById("changeNameBtn")?.addEventListener("click", () => {
+  const newName = prompt("修改名稱", currentUser());
+  if (newName === null) return;
+  const trimmed = newName.trim();
+  if (!trimmed) return;
+  localStorage.setItem(AUTHOR_KEY, trimmed);
+  renderPackingList();
+});
+
+// ─────────────────────────────────────────────
 // 啟動
 // ─────────────────────────────────────────────
 (async () => {
-  // 1. 初始化 Firebase + 旅程代碼
-  initDb();
-  initTripId();
-
-  // 2. 先從 localStorage 快速載入（讓 UI 立即可用）
-  loadState();
-  loadTransport();
-  loadPacking();
-
-  // 3. 嘗試從雲端取得最新資料（覆蓋本地）
-  const fromCloud = await loadFromCloud();
-  if (!fromCloud) {
-    ensureSeed();     // 新旅程：建立範例資料
-    cloudSave();      // 把初始資料推上雲端
+  // 1. 確認使用者名稱
+  if (!localStorage.getItem(AUTHOR_KEY)) {
+    document.getElementById("nameDialog").showModal();
+    await new Promise(resolve => {
+      document.getElementById("confirmNameBtn").addEventListener("click", () => {
+        const name = document.getElementById("nameInput").value.trim();
+        if (!name) return;
+        localStorage.setItem(AUTHOR_KEY, name);
+        document.getElementById("nameDialog").close();
+        resolve();
+      }, { once: true });
+    });
   }
 
-  // 4. 渲染
+  // 2. 初始化 Firebase + 旅程代碼
+  initDb();
+  const fromUrl = initTripId();
+
+  // 3. 若有旅程代碼，載入資料
+  if (tripId) {
+    loadState();
+    loadTransport();
+    loadPacking();
+    const fromCloud = await loadFromCloud();
+    if (!fromCloud) cloudSave();
+    updateTripHistory();
+  }
+
+  // 4. 渲染（即便資料為空也先渲染）
   renderLocationsList();
   renderTransportList();
   renderPackingList();
   loadGoogleMap();
-  route();
 
-  // 5. 開始即時同步
-  subscribeTrip();
+  // 5. 路由：URL 帶 trip 代碼 → 直接進旅程；否則顯示列表
+  if (fromUrl) {
+    location.hash = "#/trip";
+  } else {
+    route();
+  }
+
+  // 6. 即時同步
+  if (tripId) subscribeTrip();
 })();

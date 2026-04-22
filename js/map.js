@@ -161,6 +161,7 @@ function setupMap() {
   }
 
   map.addListener("click", event => {
+    if (state.finalized) return;
     pendingLatLng = { lat: event.latLng.lat(), lng: event.latLng.lng() };
     if (event.placeId && _placesAllowed()) {
       event.stop();
