@@ -319,23 +319,6 @@ function initPlacesSearch() {
       map.setZoom(16);
     }
 
-    // Drop a highlighted marker so the location stays visible
-    _clearSearchMarker();
-    _searchMarker = new google.maps.Marker({
-      map,
-      position: { lat, lng },
-      title:    place.name || "",
-      animation: google.maps.Animation.DROP,
-    });
-
-    // Clicking the search marker opens the add dialog (same as map click)
-    _searchMarker.addListener("click", () => {
-      if (state.finalized) return;
-      pendingLatLng = { lat, lng };
-      const openHours = place.opening_hours?.weekday_text || null;
-      openAddDialog(place.name || "", openHours);
-    });
-
     input.value = "";
   });
 }
