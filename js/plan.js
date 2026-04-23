@@ -32,16 +32,12 @@ function _poolCardInner(p) {
       ${p.note   ? `<div class="plan-card-note">${esc(p.note)}</div>` : ""}
       ${p.budget > 0 ? `<div class="plan-card-budget">NT$${p.budget.toLocaleString()}</div>` : ""}
     </div>
-    <button class="plan-tap-add" title="加入行程">＋</button>
-    <div class="plan-drag-handle">⠿</div>`;
+    <button class="plan-tap-add" title="加入行程">＋</button>`;
 }
 
 function _listCardInner(p, num) {
   return `
-    <div style="display:flex;align-items:center;gap:6px;">
-      <div class="plan-card-num">${num}</div>
-      <div class="plan-drag-handle" style="margin-left:auto;">⠿</div>
-    </div>
+    <div class="plan-card-num">${num}</div>
     <div class="plan-card-info">
       <div class="plan-card-name">${esc(p.name)}</div>
       ${p.note   ? `<div class="plan-card-note">${esc(p.note)}</div>` : ""}
@@ -133,7 +129,7 @@ function _initPoolSortable() {
   _poolSortable = Sortable.create(poolEl, {
     group:     { name: "places", pull: true, put: ["places"] },
     animation: 150,
-    handle:    ".plan-drag-handle",
+    filter:    "button",
     draggable: "[data-id]",
     onAdd: (evt) => {
       const card = evt.item;
@@ -159,7 +155,7 @@ function _initListSortable() {
   _listSortable = Sortable.create(listEl, {
     group:     { name: "places", pull: true, put: ["places"] },
     animation: 150,
-    handle:    ".plan-drag-handle",
+    filter:    "button",
     draggable: ".plan-card[data-id]",
     onAdd: (evt) => {
       const card = evt.item;
@@ -202,8 +198,7 @@ function _rebuildTransportPool() {
       <div class="plan-card-info">
         <div class="plan-card-name">${transportIcon(t.method)} ${esc(t.method)}</div>
         ${t.route ? `<span class="transport-tag" style="margin-top:2px;display:inline-block;">${esc(t.route)}</span>` : ""}
-      </div>
-      <div class="plan-drag-handle">⠿</div>`;
+      </div>`;
     poolEl.appendChild(card);
   });
 
@@ -211,7 +206,7 @@ function _rebuildTransportPool() {
     _transportPoolSortable = Sortable.create(poolEl, {
       group:     { name: "transport", pull: "clone", put: false },
       animation: 150,
-      handle:    ".plan-drag-handle",
+      filter:    "button",
       draggable: "[data-transport-id]",
     });
   }
