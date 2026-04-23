@@ -276,81 +276,36 @@ function loadGoogleMap() {
   document.head.appendChild(script);
 }
 
-// ── Places Search（自訂下拉列表）──
-let _autocompleteService = null;
-let _searchDebounce      = null;
-
+// ── Places Search ──
 function initPlacesSearch() {
-  const input     = document.getElementById("mapSearch");
-  const clearBtn  = document.getElementById("mapSearchClear");
-  const resultBox = document.getElementById("mapSearchResults");
+  const input    = document.getElementById("mapSearch");
+  const clearBtn = document.getElementById("mapSearchClear");
   if (!window.google?.maps?.places || !input) return;
 
-  _autocompleteService = new google.maps.places.AutocompleteService();
+  const autocomplete = new google.maps.places.Autocomplete(input, {
+    fields: ["name", "geometry"],
+  });
+  autocomplete.bindTo("bounds", map);
 
-  function hideResults() {
-    resultBox.classList.add("hidden");
-    resultBox.innerHTML = "";
-  }
-
-  function showResult(prediction) {
-    const li = document.createElement("li");
-    li.className = "map-search-item";
-    li.innerHTML = `
-      <span class="map-search-item-main">${esc(prediction.structured_formatting?.main_text || prediction.description)}</span>
-      <span class="map-search-item-sub">${esc(prediction.structured_formatting?.secondary_text || "")}</span>`;
-    li.addEventListener("mousedown", e => {
-      // mousedown fires before blur; use it to prevent input blur hiding results
-      e.preventDefault();
-    });
-    li.addEventListener("click", () => {
-      input.value = prediction.structured_formatting?.main_text || prediction.description;
-      hideResults();
-      // Get coordinates via place details
-      _placesService.getDetails(
-        { placeId: prediction.place_id, fields: ["geometry", "name"] },
-        (place, status) => {
-          if (status !== google.maps.places.PlacesServiceStatus.OK || !place.geometry?.location) return;
-          if (place.geometry.viewport) {
-            map.fitBounds(place.geometry.viewport);
-          } else {
-            map.panTo({ lat: place.geometry.location.lat(), lng: place.geometry.location.lng() });
-            map.setZoom(16);
-          }
-        }
-      );
-    });
-    resultBox.appendChild(li);
-  }
-
-  input.addEventListener("input", () => {
-    const q = input.value.trim();
-    clearBtn.classList.toggle("hidden", !q);
-    clearTimeout(_searchDebounce);
-    if (!q) { hideResults(); return; }
-    _searchDebounce = setTimeout(() => {
-      _autocompleteService.getPlacePredictions(
-        { input: q, bounds: map.getBounds() || undefined },
-        (predictions, status) => {
-          resultBox.innerHTML = "";
-          if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions?.length) {
-            hideResults(); return;
-          }
-          predictions.forEach(showResult);
-          resultBox.classList.remove("hidden");
-        }
-      );
-    }, 250);
+  autocomplete.addListener("place_changed", () => {
+    const place = autocomplete.getPlace();
+    if (!place.geometry?.location) return;
+    if (place.geometry.viewport) {
+      map.fitBounds(place.geometry.viewport);
+    } else {
+      map.panTo({ lat: place.geometry.location.lat(), lng: place.geometry.location.lng() });
+      map.setZoom(16);
+    }
+    clearBtn.classList.remove("hidden");
   });
 
-  input.addEventListener("blur", () => {
-    setTimeout(hideResults, 150);
+  input.addEventListener("input", () => {
+    clearBtn.classList.toggle("hidden", !input.value.trim());
   });
 
   clearBtn.addEventListener("click", () => {
     input.value = "";
     clearBtn.classList.add("hidden");
-    hideResults();
     input.focus();
   });
 }
