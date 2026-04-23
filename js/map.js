@@ -192,6 +192,43 @@ function fitBounds() {
   map.fitBounds(bounds, { top: 60, right: 40, bottom: 40, left: 40 });
 }
 
+// ── Drop a search/click pin with info popup ──
+function _showMapPin(lat, lng, name, address, openHours) {
+  _clearSearchPin();
+  _searchMarker = new google.maps.Marker({
+    map,
+    position:  { lat, lng },
+    animation: google.maps.Animation.DROP,
+    title:     name || "",
+  });
+
+  const addBtn = state.finalized ? "" :
+    `<button id="_searchAddBtn" style="margin-top:8px;width:100%;padding:6px 10px;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.82rem;">＋ 加入行程</button>`;
+
+  _searchInfoWindow = new google.maps.InfoWindow({
+    content: `<div style="font-family:'Noto Sans TC',sans-serif;min-width:140px;max-width:220px;">
+      ${name ? `<div style="font-weight:600;font-size:.92rem;margin-bottom:2px;">${esc(name)}</div>` : ""}
+      ${address ? `<div style="font-size:.75rem;color:#666;margin-bottom:4px;">${esc(address)}</div>` : ""}
+      ${!name && !address ? `<div style="font-size:.82rem;color:#666;">點擊加入行程</div>` : ""}
+      ${addBtn}
+    </div>`,
+  });
+  _searchInfoWindow.open(map, _searchMarker);
+
+  google.maps.event.addListenerOnce(_searchInfoWindow, "domready", () => {
+    document.getElementById("_searchAddBtn")?.addEventListener("click", () => {
+      pendingLatLng = { lat, lng };
+      _clearSearchPin();
+      openAddDialog(name || "", openHours);
+    });
+  });
+
+  _searchMarker.addListener("click", () => _searchInfoWindow.open(map, _searchMarker));
+
+  // Close pin when clicking elsewhere on map
+  map.addListener("click", _clearSearchPin);
+}
+
 // ── Setup ──
 function setupMap() {
   map = new google.maps.Map(document.getElementById("map"), {
@@ -226,13 +263,14 @@ function setupMap() {
   window._placesIncrement = _placesIncrement;
 
   map.addListener("click", event => {
-    if (state.finalized) return;
-    pendingLatLng = { lat: event.latLng.lat(), lng: event.latLng.lng() };
+    const lat = event.latLng.lat();
+    const lng = event.latLng.lng();
+
     if (event.placeId && _placesAllowed()) {
       event.stop();
       _placesIncrement();
       _placesService.getDetails(
-        { placeId: event.placeId, fields: ["name", "types", "opening_hours"] },
+        { placeId: event.placeId, fields: ["name", "types", "opening_hours", "formatted_address"] },
         (place, status) => {
           const SKIP_TYPES = ["route", "street_address", "street_number",
             "intersection", "political", "country",
@@ -240,16 +278,15 @@ function setupMap() {
             "administrative_area_level_3", "locality", "sublocality",
             "sublocality_level_1", "postal_code", "neighborhood"];
           const isRoadOrArea = place?.types?.some(t => SKIP_TYPES.includes(t));
-          const ok = status === google.maps.places.PlacesServiceStatus.OK;
+          const ok        = status === google.maps.places.PlacesServiceStatus.OK;
           const name      = (ok && !isRoadOrArea) ? (place.name || "") : "";
-          const openHours = (ok && !isRoadOrArea)
-            ? (place?.opening_hours?.weekday_text || null)
-            : null;
-          openAddDialog(name, openHours);
+          const openHours = (ok && !isRoadOrArea) ? (place?.opening_hours?.weekday_text || null) : null;
+          const address   = (ok && !isRoadOrArea) ? (place?.formatted_address || "") : "";
+          _showMapPin(lat, lng, name, address, openHours);
         }
       );
     } else {
-      openAddDialog("", null);
+      _showMapPin(lat, lng, "", "", null);
     }
   });
 
@@ -309,38 +346,8 @@ function initPlacesSearch() {
       map.setZoom(16);
     }
 
-    // Drop search pin
-    _clearSearchPin();
-    _searchMarker = new google.maps.Marker({
-      map,
-      position:  { lat, lng },
-      title:     place.name || "",
-      animation: google.maps.Animation.DROP,
-    });
-
-    // Info popup
     const openHours = place.opening_hours?.weekday_text || null;
-    const addBtn    = state.finalized ? "" :
-      `<button id="_searchAddBtn" style="margin-top:8px;width:100%;padding:6px 10px;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.82rem;">＋ 加入行程</button>`;
-    _searchInfoWindow = new google.maps.InfoWindow({
-      content: `<div style="font-family:'Noto Sans TC',sans-serif;min-width:140px;max-width:220px;">
-        <div style="font-weight:600;font-size:.92rem;margin-bottom:2px;">${esc(place.name || "")}</div>
-        ${place.formatted_address ? `<div style="font-size:.75rem;color:#666;margin-bottom:4px;">${esc(place.formatted_address)}</div>` : ""}
-        ${addBtn}
-      </div>`,
-    });
-    _searchInfoWindow.open(map, _searchMarker);
-
-    // Wire up add button after InfoWindow renders
-    google.maps.event.addListenerOnce(_searchInfoWindow, "domready", () => {
-      document.getElementById("_searchAddBtn")?.addEventListener("click", () => {
-        pendingLatLng = { lat, lng };
-        _clearSearchPin();
-        openAddDialog(place.name || "", openHours);
-      });
-    });
-
-    _searchMarker.addListener("click", () => _searchInfoWindow.open(map, _searchMarker));
+    _showMapPin(lat, lng, place.name || "", place.formatted_address || "", openHours);
     clearBtn.classList.remove("hidden");
   });
 
