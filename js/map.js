@@ -200,16 +200,18 @@ function _showPlaceCard(name, address, openHours) {
   if (!card) return;
   document.getElementById("placeCardName").textContent    = name || "（未知地點）";
   document.getElementById("placeCardAddress").textContent = address || "";
-  // Today's hours
-  const todayHours = (() => {
-    if (!Array.isArray(openHours) || !openHours.length) return "";
-    const d   = new Date().getDay();
-    const idx = d === 0 ? 6 : d - 1;
-    const row = openHours[idx] || "";
-    const m   = row.match(/[：:]\s*(.+)$/);
-    return m ? m[1].trim() : row;
-  })();
-  document.getElementById("placeCardHours").textContent = todayHours;
+
+  // All 7 days, highlight today
+  const hoursEl = document.getElementById("placeCardHours");
+  if (Array.isArray(openHours) && openHours.length) {
+    const todayIdx = (() => { const d = new Date().getDay(); return d === 0 ? 6 : d - 1; })();
+    hoursEl.innerHTML = openHours.map((row, i) =>
+      `<div class="place-card-hour-row${i === todayIdx ? " today" : ""}">${esc(row)}</div>`
+    ).join("");
+  } else {
+    hoursEl.innerHTML = "";
+  }
+
   document.getElementById("placeCardAdd").classList.toggle("hidden", !!state.finalized);
   card.classList.remove("hidden");
 }

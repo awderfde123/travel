@@ -277,9 +277,11 @@ body {
   text-overflow: ellipsis;
 }
 .place-card-hours {
-  font-size: .78rem;
-  color: #16a34a;
+  font-size: .75rem;
+  margin-top: 4px;
 }
+.place-card-hour-row { color: var(--muted); line-height: 1.7; }
+.place-card-hour-row.today { color: #16a34a; font-weight: 600; }
 .place-card-close {
   background: var(--surface-2);
   border: none;
