@@ -140,11 +140,14 @@ function _rebuildSortables() {
 }
 
 function _syncFromDOM() {
-  planPool  = Array.from(document.querySelectorAll("#planPool  [data-id]")).map(el => el.dataset.id);
-  planOrder = Array.from(document.querySelectorAll("#planList  [data-id]")).map(el => el.dataset.id);
+  planPool  = Array.from(document.querySelectorAll("#planPool [data-id]")).map(el => el.dataset.id);
+  planOrder = Array.from(document.querySelectorAll("#planList [data-id]")).map(el => el.dataset.id);
+  // Remove placeholder text once items arrive in list
+  if (planOrder.length) {
+    document.querySelectorAll("#planList :not([data-id])").forEach(el => el.remove());
+  }
   renderPlanMarkers();
   updatePlanSummary();
-  // Renumber active cards
   document.querySelectorAll("#planList .plan-card-num").forEach((el, i) => { el.textContent = i + 1; });
 }
 
@@ -152,11 +155,12 @@ function _initPoolSortable() {
   if (!window.Sortable) return;
   if (_poolSortable) { _poolSortable.destroy(); _poolSortable = null; }
   const poolEl = document.getElementById("planPool");
-  if (!poolEl || !planPool.length) return;
+  if (!poolEl) return;
   _poolSortable = Sortable.create(poolEl, {
     group:     { name: "places", pull: true, put: true },
     animation: 150,
     handle:    ".plan-drag-handle",
+    draggable: "[data-id]",
     onSort:    _syncFromDOM,
   });
 }
@@ -165,11 +169,12 @@ function _initListSortable() {
   if (!window.Sortable) return;
   if (_listSortable) { _listSortable.destroy(); _listSortable = null; }
   const listEl = document.getElementById("planList");
-  if (!listEl || !planOrder.length) return;
+  if (!listEl) return;
   _listSortable = Sortable.create(listEl, {
     group:     { name: "places", pull: true, put: true },
     animation: 150,
     handle:    ".plan-drag-handle",
+    draggable: "[data-id]",
     onSort:    _syncFromDOM,
   });
 }

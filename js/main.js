@@ -67,14 +67,27 @@ document.getElementById("backToTripsBtn")?.addEventListener("click", () => {
   location.hash = "#/";
 });
 
-// 修改使用者名稱
-document.getElementById("changeNameBtn")?.addEventListener("click", () => {
-  const newName = prompt("修改名稱", currentUser());
-  if (newName === null) return;
-  const trimmed = newName.trim();
-  if (!trimmed) return;
-  localStorage.setItem(AUTHOR_KEY, trimmed);
+// 確認名稱（初次設定 & 修改皆用此 listener）
+document.getElementById("confirmNameBtn")?.addEventListener("click", () => {
+  const name = document.getElementById("nameInput").value.trim();
+  if (!name) return;
+  localStorage.setItem(AUTHOR_KEY, name);
+  document.getElementById("cancelNameBtn").classList.add("hidden");
+  document.getElementById("nameDialog").close();
+  const userEl = document.getElementById("packingUserName");
+  if (userEl) userEl.textContent = name;
   renderPackingList();
+});
+
+// 修改使用者名稱（重用 nameDialog，顯示取消按鈕）
+document.getElementById("changeNameBtn")?.addEventListener("click", () => {
+  document.getElementById("nameInput").value = currentUser();
+  document.getElementById("cancelNameBtn").classList.remove("hidden");
+  document.getElementById("nameDialog").showModal();
+  setTimeout(() => document.getElementById("nameInput").select(), 50);
+});
+document.getElementById("cancelNameBtn")?.addEventListener("click", () => {
+  document.getElementById("nameDialog").close();
 });
 
 // ─────────────────────────────────────────────
@@ -83,16 +96,10 @@ document.getElementById("changeNameBtn")?.addEventListener("click", () => {
 (async () => {
   // 1. 確認使用者名稱
   if (!localStorage.getItem(AUTHOR_KEY)) {
-    document.getElementById("nameDialog").showModal();
-    await new Promise(resolve => {
-      document.getElementById("confirmNameBtn").addEventListener("click", () => {
-        const name = document.getElementById("nameInput").value.trim();
-        if (!name) return;
-        localStorage.setItem(AUTHOR_KEY, name);
-        document.getElementById("nameDialog").close();
-        resolve();
-      }, { once: true });
-    });
+    const dlg = document.getElementById("nameDialog");
+    dlg.showModal();
+    // Wait for dialog to close (confirmNameBtn closes it)
+    await new Promise(resolve => dlg.addEventListener("close", resolve, { once: true }));
   }
 
   // 2. 初始化 Firebase + 旅程代碼

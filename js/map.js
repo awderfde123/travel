@@ -264,7 +264,7 @@ const GOOGLE_MAPS_KEY = "AIzaSyACPr5Rmw-vyFeNOO_oScADGSsxT3LR4D0";
 function loadGoogleMap() {
   if (window.google?.maps) return setupMap();
   const script = document.createElement("script");
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&callback=__initMap`;
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&language=zh-TW&callback=__initMap`;
   script.async = true;
   window.__initMap = setupMap;
   script.onerror = () => {
