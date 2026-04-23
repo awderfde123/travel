@@ -746,6 +746,12 @@ body {
   min-width: 0;
 }
 
+.discuss-author-label {
+  font-size: .8rem;
+  color: var(--muted);
+  padding: 2px 0;
+}
+
 .discuss-form button[type="submit"] {
   flex-shrink: 0;
   align-self: flex-end;

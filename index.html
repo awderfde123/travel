@@ -208,6 +208,9 @@
               </div>
             </div>
             <div id="planPool" class="plan-pool"></div>
+
+            <div class="plan-pool-section-head">🚌 交通方式 <span class="plan-pool-section-hint">拖曳至地點間</span></div>
+            <div id="planTransportPool" class="plan-transport-pool"></div>
           </div>
           <div class="plan-right-col">
             <div class="plan-map-wrap">
@@ -248,7 +251,7 @@
         <div id="discussMsgs" class="discuss-msgs"></div>
         <form id="discussForm" class="discuss-form">
           <div class="discuss-inputs">
-            <input id="dAuthor" type="text" placeholder="您的名稱" required />
+            <div class="discuss-author-label">👤 <span id="dAuthorDisplay"></span></div>
             <textarea id="dText" placeholder="輸入討論內容…" required></textarea>
           </div>
           <button type="submit" class="primary">💬 發表留言</button>

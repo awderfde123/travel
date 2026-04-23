@@ -127,20 +127,17 @@ function renderDiscussView() {
     renderDiscussView();
   });
 
-  const authorInput = document.getElementById("dAuthor");
-  if (authorInput && !authorInput.value) {
-    authorInput.value = localStorage.getItem(AUTHOR_KEY) || "";
-  }
+  const authorDisplay = document.getElementById("dAuthorDisplay");
+  if (authorDisplay) authorDisplay.textContent = localStorage.getItem(AUTHOR_KEY) || "";
 }
 
 // ─ 事件綁定 ─
 document.getElementById("discussForm").addEventListener("submit", e => {
   e.preventDefault();
   if (!discussContext) return;
-  const author = document.getElementById("dAuthor").value.trim();
+  const author = localStorage.getItem(AUTHOR_KEY) || "";
   const text   = document.getElementById("dText").value.trim();
   if (!author || !text) return;
-  localStorage.setItem(AUTHOR_KEY, author);
   if (!discussContext.item.discussions) discussContext.item.discussions = [];
   discussContext.item.discussions.push({
     id: crypto.randomUUID(), author, text, createdAt: new Date().toISOString(),
