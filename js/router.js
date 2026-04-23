@@ -3,13 +3,24 @@
 // ─────────────────────────────────────────────
 const ALL_VIEWS = [tripsViewEl, mainViewEl, discussViewEl, planViewEl];
 
+let _focusPlaceId = null;   // pan map to this place when returning to #/trip
+
 function showOnly(el) {
   ALL_VIEWS.forEach(v => v.classList.add("hidden"));
   el.classList.remove("hidden");
 }
 
-function openDiscussPage(id)          { location.hash = `#/discuss/${id}`; }
+function openDiscussPage(id)          { _focusPlaceId = id; location.hash = `#/discuss/${id}`; }
 function openTransportDiscussPage(id) { location.hash = `#/t-discuss/${id}`; }
+
+function _panToFocusPlace() {
+  if (!_focusPlaceId || !map) return;
+  const p = getPlace(_focusPlaceId);
+  _focusPlaceId = null;
+  if (!p) return;
+  map.panTo({ lat: p.lat, lng: p.lng });
+  map.setZoom(16);
+}
 
 function route() {
   const hash = location.hash;
@@ -25,6 +36,7 @@ function route() {
   if (hash === "#/trip") {
     showOnly(mainViewEl);
     if (typeof applyFinalizedUI === "function") applyFinalizedUI();
+    _panToFocusPlace();
     return;
   }
 
