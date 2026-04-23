@@ -44,6 +44,7 @@ function nearbyMarkerSvg() {
 function clearMarkers() {
   markers.forEach(m => m.setMap(null));
   markers = [];
+  _clearSearchMarker();
 }
 
 function renderMarkers() {
@@ -276,20 +277,65 @@ function loadGoogleMap() {
 }
 
 // ── Places Autocomplete ──
+let _searchMarker = null;
+
+function _clearSearchMarker() {
+  if (_searchMarker) { _searchMarker.setMap(null); _searchMarker = null; }
+}
+
+function _searchMarkerSvg() {
+  const s = 34, f = 18;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s+8}">
+    <circle cx="${s/2}" cy="${s/2-2}" r="${s/2-2}" fill="#ef4444" stroke="white" stroke-width="2.5"/>
+    <text x="${s/2}" y="${s/2+5}" text-anchor="middle" fill="white"
+          font-family="Arial,sans-serif" font-size="${f}" font-weight="bold">📍</text>
+  </svg>`;
+  return {
+    url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
+    scaledSize: new google.maps.Size(s, s + 8),
+    anchor:     new google.maps.Point(s / 2, s + 4),
+  };
+}
+
 function initPlacesSearch() {
   const input = document.getElementById("mapSearch");
   if (!window.google?.maps?.places || !input) return;
-  const autocomplete = new google.maps.places.Autocomplete(input, { fields: ["name", "geometry"] });
+  const autocomplete = new google.maps.places.Autocomplete(input, {
+    fields: ["name", "geometry", "place_id", "opening_hours"],
+  });
   autocomplete.bindTo("bounds", map);
   autocomplete.addListener("place_changed", () => {
     const place = autocomplete.getPlace();
     if (!place.geometry?.location) return;
+
+    const lat = place.geometry.location.lat();
+    const lng = place.geometry.location.lng();
+
+    // Pan / zoom to result
     if (place.geometry.viewport) {
       map.fitBounds(place.geometry.viewport);
     } else {
-      map.panTo({ lat: place.geometry.location.lat(), lng: place.geometry.location.lng() });
+      map.panTo({ lat, lng });
       map.setZoom(16);
     }
+
+    // Drop a highlighted marker so the location stays visible
+    _clearSearchMarker();
+    _searchMarker = new google.maps.Marker({
+      map,
+      position: { lat, lng },
+      title:    place.name || "",
+      animation: google.maps.Animation.DROP,
+    });
+
+    // Clicking the search marker opens the add dialog (same as map click)
+    _searchMarker.addListener("click", () => {
+      if (state.finalized) return;
+      pendingLatLng = { lat, lng };
+      const openHours = place.opening_hours?.weekday_text || null;
+      openAddDialog(place.name || "", openHours);
+    });
+
     input.value = "";
   });
 }
