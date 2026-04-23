@@ -76,14 +76,13 @@ function cloudSave() {
   _saveTimer = setTimeout(async () => {
     try {
       await ref.set({
-        tripName:        state.tripName       || "",
-        finalized:       state.finalized      || false,
-        showRoute:       state.showRoute      || false,
-        places:          JSON.parse(JSON.stringify(state.places)),
-        transport:       JSON.parse(JSON.stringify(transportItems)),
-        packingShared:   JSON.parse(JSON.stringify(packingShared)),
-        packingPersonal: JSON.parse(JSON.stringify(packingPersonal)),
-        updatedAt:       firebase.firestore.FieldValue.serverTimestamp(),
+        tripName:      state.tripName       || "",
+        finalized:     state.finalized      || false,
+        showRoute:     state.showRoute      || false,
+        places:        JSON.parse(JSON.stringify(state.places)),
+        transport:     JSON.parse(JSON.stringify(transportItems)),
+        packingShared: JSON.parse(JSON.stringify(packingShared)),
+        updatedAt:     firebase.firestore.FieldValue.serverTimestamp(),
       });
       updateTripHistory();
     } catch (e) {
@@ -111,7 +110,7 @@ async function loadFromCloud() {
     } else if (Array.isArray(data.packing)) {
       packingShared = data.packing.map(p => ({ id: p.id, name: p.name, checked: false }));
     }
-    if (Array.isArray(data.packingPersonal)) packingPersonal = data.packingPersonal;
+    // packingPersonal is intentionally NOT synced — each user keeps their own local list
     saveState(false);
     saveTransport(false);
     savePacking(false);
@@ -140,8 +139,8 @@ function subscribeTrip() {
       if (data.showRoute !== undefined) state.showRoute = data.showRoute;
       if (Array.isArray(data.places))    state.places   = data.places;
       if (Array.isArray(data.transport)) transportItems = data.transport;
-      if (Array.isArray(data.packingShared))   packingShared   = data.packingShared;
-      if (Array.isArray(data.packingPersonal)) packingPersonal = data.packingPersonal;
+      if (Array.isArray(data.packingShared)) packingShared = data.packingShared;
+      // packingPersonal is intentionally NOT synced — each user keeps their own local list
       saveState(false);
       saveTransport(false);
       savePacking(false);

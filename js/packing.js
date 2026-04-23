@@ -4,9 +4,13 @@
 let packingShared   = [];   // { id, name, checked }
 let packingPersonal = [];   // { id, name, checkedBy: { username: bool } }
 
+function _personalKey() {
+  return `${PACKING_PERSONAL_KEY}-${tripId || "default"}`;
+}
+
 function loadPacking() {
-  packingShared   = JSON.parse(localStorage.getItem(PACKING_SHARED_KEY)   || "[]");
-  packingPersonal = JSON.parse(localStorage.getItem(PACKING_PERSONAL_KEY) || "[]");
+  packingShared   = JSON.parse(localStorage.getItem(PACKING_SHARED_KEY) || "[]");
+  packingPersonal = JSON.parse(localStorage.getItem(_personalKey())     || "[]");
   // 舊版資料遷移（trip-packing-v1 → packingShared）
   const old = JSON.parse(localStorage.getItem("trip-packing-v1") || "[]");
   if (old.length && !packingShared.length) {
@@ -16,8 +20,8 @@ function loadPacking() {
 }
 
 function savePacking(sync = true) {
-  localStorage.setItem(PACKING_SHARED_KEY,   JSON.stringify(packingShared));
-  localStorage.setItem(PACKING_PERSONAL_KEY, JSON.stringify(packingPersonal));
+  localStorage.setItem(PACKING_SHARED_KEY, JSON.stringify(packingShared));
+  localStorage.setItem(_personalKey(),     JSON.stringify(packingPersonal));
   if (sync) cloudSave();
 }
 
