@@ -133,26 +133,33 @@ function subscribeTrip() {
       if (doc.metadata.hasPendingWrites) return;
       if (!doc.exists) return;
       const data = doc.data();
-      const wasFinalized = state.finalized;
+      const wasFinalized  = state.finalized;
+      const prevPlacesStr = JSON.stringify(state.places);
+      const prevTransport = JSON.stringify(transportItems);
+      const prevPacking   = JSON.stringify(packingShared);
+
       if (data.tripName  !== undefined) state.tripName  = data.tripName;
       if (data.finalized !== undefined) state.finalized = data.finalized;
       if (data.showRoute !== undefined) state.showRoute = data.showRoute;
-      if (Array.isArray(data.places))    state.places   = data.places;
-      if (Array.isArray(data.transport)) transportItems = data.transport;
-      if (Array.isArray(data.packingShared)) packingShared = data.packingShared;
+      if (Array.isArray(data.places))        state.places   = data.places;
+      if (Array.isArray(data.transport))     transportItems = data.transport;
+      if (Array.isArray(data.packingShared)) packingShared  = data.packingShared;
       // packingPersonal is intentionally NOT synced — each user keeps their own local list
       saveState(false);
       saveTransport(false);
       savePacking(false);
       updateTripHistory();
-      // 重新渲染
-      renderLocationsList();
-      renderMarkers();
-      renderTransportList();
-      renderPackingList();
+
+      const placesChanged    = JSON.stringify(state.places)  !== prevPlacesStr;
+      const transportChanged = JSON.stringify(transportItems) !== prevTransport;
+      const packingChanged   = JSON.stringify(packingShared)  !== prevPacking;
+
+      if (placesChanged) { renderLocationsList(); renderMarkers(); }
+      if (transportChanged) renderTransportList();
+      if (packingChanged)   renderPackingList();
+
       const nameEl = document.getElementById("tripNameDisplay");
       if (nameEl) nameEl.textContent = state.tripName || tripId;
-      // finalized 狀態改變時更新 UI
       if (wasFinalized !== state.finalized && typeof applyFinalizedUI === "function") {
         applyFinalizedUI();
       }
