@@ -192,41 +192,47 @@ function fitBounds() {
   map.fitBounds(bounds, { top: 60, right: 40, bottom: 40, left: 40 });
 }
 
-// ── Drop a search/click pin with info popup ──
+// ── Drop a search/click pin with bottom card ──
+let _placeCardLat = null, _placeCardLng = null, _placeCardOpenHours = null;
+
+function _showPlaceCard(name, address, openHours) {
+  const card = document.getElementById("placeCard");
+  if (!card) return;
+  document.getElementById("placeCardName").textContent    = name || "（未知地點）";
+  document.getElementById("placeCardAddress").textContent = address || "";
+  // Today's hours
+  const todayHours = (() => {
+    if (!Array.isArray(openHours) || !openHours.length) return "";
+    const d   = new Date().getDay();
+    const idx = d === 0 ? 6 : d - 1;
+    const row = openHours[idx] || "";
+    const m   = row.match(/[：:]\s*(.+)$/);
+    return m ? m[1].trim() : row;
+  })();
+  document.getElementById("placeCardHours").textContent = todayHours;
+  document.getElementById("placeCardAdd").classList.toggle("hidden", !!state.finalized);
+  card.classList.remove("hidden");
+}
+
+function _hidePlaceCard() {
+  document.getElementById("placeCard")?.classList.add("hidden");
+}
+
 function _showMapPin(lat, lng, name, address, openHours) {
   _clearSearchPin();
+  _placeCardLat      = lat;
+  _placeCardLng      = lng;
+  _placeCardOpenHours = openHours;
+
   _searchMarker = new google.maps.Marker({
     map,
     position:  { lat, lng },
     animation: google.maps.Animation.DROP,
     title:     name || "",
   });
+  _searchMarker.addListener("click", () => _showPlaceCard(name, address, openHours));
 
-  const addBtn = state.finalized ? "" :
-    `<button id="_searchAddBtn" style="margin-top:8px;width:100%;padding:6px 10px;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.82rem;">＋ 加入行程</button>`;
-
-  _searchInfoWindow = new google.maps.InfoWindow({
-    content: `<div style="font-family:'Noto Sans TC',sans-serif;min-width:140px;max-width:220px;">
-      ${name ? `<div style="font-weight:600;font-size:.92rem;margin-bottom:2px;">${esc(name)}</div>` : ""}
-      ${address ? `<div style="font-size:.75rem;color:#666;margin-bottom:4px;">${esc(address)}</div>` : ""}
-      ${!name && !address ? `<div style="font-size:.82rem;color:#666;">點擊加入行程</div>` : ""}
-      ${addBtn}
-    </div>`,
-  });
-  _searchInfoWindow.open(map, _searchMarker);
-
-  google.maps.event.addListenerOnce(_searchInfoWindow, "domready", () => {
-    document.getElementById("_searchAddBtn")?.addEventListener("click", () => {
-      pendingLatLng = { lat, lng };
-      _clearSearchPin();
-      openAddDialog(name || "", openHours);
-    });
-  });
-
-  _searchMarker.addListener("click", () => _searchInfoWindow.open(map, _searchMarker));
-
-  // Close pin when clicking elsewhere on map
-  map.addListener("click", _clearSearchPin);
+  _showPlaceCard(name, address, openHours);
 }
 
 // ── Setup ──
@@ -290,6 +296,19 @@ function setupMap() {
     }
   });
 
+  // Close card when clicking empty map area
+  map.addListener("click", () => _clearSearchPin());
+
+  // Place card buttons
+  document.getElementById("placeCardClose")?.addEventListener("click", _clearSearchPin);
+  document.getElementById("placeCardAdd")?.addEventListener("click", () => {
+    if (_placeCardLat === null) return;
+    pendingLatLng = { lat: _placeCardLat, lng: _placeCardLng };
+    const name = document.getElementById("placeCardName").textContent;
+    _clearSearchPin();
+    openAddDialog(name === "（未知地點）" ? "" : name, _placeCardOpenHours);
+  });
+
   renderMarkers();
   if (state.places.length) fitBounds();
   initPlacesSearch();
@@ -317,8 +336,8 @@ let _searchMarker     = null;
 let _searchInfoWindow = null;
 
 function _clearSearchPin() {
-  if (_searchMarker)     { _searchMarker.setMap(null);  _searchMarker     = null; }
-  if (_searchInfoWindow) { _searchInfoWindow.close();   _searchInfoWindow = null; }
+  if (_searchMarker) { _searchMarker.setMap(null); _searchMarker = null; }
+  _hidePlaceCard();
 }
 
 function initPlacesSearch() {

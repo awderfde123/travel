@@ -147,6 +147,7 @@ body {
   background: var(--surface);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
+  position: relative;
 }
 
 .map-toolbar {
@@ -239,6 +240,71 @@ body {
 .map-toolbar-btns { display: flex; gap: 6px; flex-shrink: 0; }
 
 #map { flex: 1; min-height: 0; width: 100%; }
+
+/* ── 地點資訊卡 ── */
+.place-card {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 20px rgba(0,0,0,.13);
+  padding: 16px 16px 20px;
+  z-index: 10;
+  transform: translateY(0);
+  transition: transform .25s ease;
+}
+.place-card.hidden { transform: translateY(110%); display: flex !important; }
+.place-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.place-card-info { flex: 1; min-width: 0; }
+.place-card-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 3px;
+  line-height: 1.3;
+}
+.place-card-address {
+  font-size: .78rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.place-card-hours {
+  font-size: .78rem;
+  color: #16a34a;
+}
+.place-card-close {
+  background: var(--surface-2);
+  border: none;
+  border-radius: 50%;
+  width: 28px; height: 28px;
+  cursor: pointer;
+  font-size: .8rem;
+  color: var(--muted);
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.place-card-actions { margin-top: 12px; }
+.place-card-add-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: "Noto Sans TC", sans-serif;
+}
+.place-card-add-btn:active { opacity: .85; }
 
 .map-empty {
   flex: 1;

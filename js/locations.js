@@ -104,7 +104,6 @@ function openAddDialog(placeName = "", openHours = null) {
   pendingOpenHours = openHours;
   document.getElementById("newPlaceName").value   = placeName;
   document.getElementById("newPlaceBudget").value = "";
-  document.getElementById("newPlaceNote").value   = "";
   document.getElementById("addPlaceDialog").showModal();
   setTimeout(() => {
     const nameEl = document.getElementById("newPlaceName");
@@ -118,7 +117,6 @@ function openEditDialog(id) {
   const place = getPlace(id);
   document.getElementById("editPlaceName").value   = place.name;
   document.getElementById("editPlaceBudget").value = place.budget || "";
-  document.getElementById("editPlaceNote").value   = place.note || "";
   document.getElementById("editPlaceDialog").showModal();
   setTimeout(() => document.getElementById("editPlaceName").focus(), 50);
 }
@@ -138,9 +136,8 @@ document.getElementById("confirmAddPlaceBtn").addEventListener("click", () => {
   if (!pendingLatLng) return alert("座標取得失敗，請重新點擊地圖");
   const { lat, lng } = pendingLatLng;
   const budget = Math.max(0, parseFloat(document.getElementById("newPlaceBudget").value) || 0);
-  const note   = document.getElementById("newPlaceNote").value.trim();
   state.places.push({
-    id: crypto.randomUUID(), name, lat, lng, note, budget, discussions: [],
+    id: crypto.randomUUID(), name, lat, lng, note: "", budget, discussions: [],
     openHours: pendingOpenHours || null,
   });
   pendingLatLng    = null;
@@ -158,7 +155,6 @@ document.getElementById("saveEditBtn").addEventListener("click", () => {
   if (!name) return alert("地點名稱不能為空");
   place.name   = name;
   place.budget = Math.max(0, parseFloat(document.getElementById("editPlaceBudget").value) || 0);
-  place.note   = document.getElementById("editPlaceNote").value.trim();
   saveState();
   renderLocationsList();
   document.getElementById("editPlaceDialog").close();

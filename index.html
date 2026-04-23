@@ -83,6 +83,20 @@
                 <button class="nearby-btn" data-type="lodging">🏨 住宿</button>
               </div>
               <div id="map"></div>
+              <!-- 地點資訊卡（底部滑出）-->
+              <div id="placeCard" class="place-card hidden">
+                <div class="place-card-top">
+                  <div class="place-card-info">
+                    <div id="placeCardName" class="place-card-name"></div>
+                    <div id="placeCardAddress" class="place-card-address"></div>
+                    <div id="placeCardHours" class="place-card-hours"></div>
+                  </div>
+                  <button id="placeCardClose" class="place-card-close">✕</button>
+                </div>
+                <div class="place-card-actions">
+                  <button id="placeCardAdd" class="place-card-add-btn">＋ 加入行程</button>
+                </div>
+              </div>
               <div id="mapHint" class="map-empty hidden">
                 <div class="map-empty-icon">🗺</div>
                 <p>Google Maps 載入失敗，請確認網路連線。</p>
@@ -270,10 +284,6 @@
             <label>預算金額（選填）</label>
             <input id="newPlaceBudget" type="number" min="0" placeholder="0" />
           </div>
-          <div class="field">
-            <label>備註（選填）</label>
-            <input id="newPlaceNote" type="text" placeholder="交通、門票…" />
-          </div>
         </div>
       </div>
       <menu class="dialog-footer">
@@ -293,10 +303,6 @@
           <div class="field">
             <label>預算金額</label>
             <input id="editPlaceBudget" type="number" min="0" placeholder="0" />
-          </div>
-          <div class="field">
-            <label>備註（選填）</label>
-            <input id="editPlaceNote" type="text" placeholder="交通、門票…" />
           </div>
         </div>
       </div>
