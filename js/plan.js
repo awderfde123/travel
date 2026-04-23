@@ -6,7 +6,6 @@ let planPool  = [];
 let planMap   = null;
 let planMarkers  = [];
 let planPolyline = null;
-
 let _poolSortable = null;
 let _listSortable = null;
 
@@ -20,6 +19,164 @@ function renderPlanPage() {
   updatePlanSummary();
 }
 
+// ── Card HTML helpers ──
+function _poolCardInner(p) {
+  return `
+    <div class="plan-card-info">
+      <div class="plan-card-name">${esc(p.name)}</div>
+      ${p.note   ? `<div class="plan-card-note">${esc(p.note)}</div>` : ""}
+      ${p.budget > 0 ? `<div class="plan-card-budget">NT$${p.budget.toLocaleString()}</div>` : ""}
+    </div>
+    <button class="plan-tap-add" title="加入行程">＋</button>
+    <div class="plan-drag-handle">⠿</div>`;
+}
+
+function _listCardInner(p, num) {
+  return `
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div class="plan-card-num">${num}</div>
+      <div class="plan-drag-handle" style="margin-left:auto;">⠿</div>
+    </div>
+    <div class="plan-card-info">
+      <div class="plan-card-name">${esc(p.name)}</div>
+      ${p.note   ? `<div class="plan-card-note">${esc(p.note)}</div>` : ""}
+      ${p.budget > 0 ? `<div class="plan-card-budget">NT$${p.budget.toLocaleString()}</div>` : ""}
+    </div>
+    <button class="plan-tap-remove" title="移除">✕</button>`;
+}
+
+function _attachPoolEvents(card, id) {
+  card.querySelector(".plan-tap-add").addEventListener("click", () => {
+    planPool  = planPool.filter(x => x !== id);
+    planOrder.push(id);
+    renderPoolCards(); renderPlanCards(); renderPlanMarkers(); updatePlanSummary();
+  });
+}
+
+function _attachListEvents(card, id) {
+  card.querySelector(".plan-tap-remove").addEventListener("click", () => {
+    planOrder = planOrder.filter(x => x !== id);
+    planPool.push(id);
+    renderPoolCards(); renderPlanCards(); renderPlanMarkers(); updatePlanSummary();
+  });
+}
+
+// ── Pool cards ──
+function renderPoolCards() {
+  if (_poolSortable) { _poolSortable.destroy(); _poolSortable = null; }
+  const poolEl = document.getElementById("planPool");
+  poolEl.innerHTML = "";
+
+  if (!planPool.length) {
+    poolEl.innerHTML = `<div class="empty-state" style="flex:1;"><div class="empty-icon">✅</div><p>所有地點已加入行程</p></div>`;
+  } else {
+    planPool.forEach(id => {
+      const p = getPlace(id);
+      if (!p) return;
+      const card = document.createElement("div");
+      card.className = "plan-card pool-card";
+      card.dataset.id = id;
+      card.innerHTML = _poolCardInner(p);
+      _attachPoolEvents(card, id);
+      poolEl.appendChild(card);
+    });
+  }
+  _initPoolSortable();
+}
+
+// ── Active cards ──
+function renderPlanCards() {
+  if (_listSortable) { _listSortable.destroy(); _listSortable = null; }
+  const listEl = document.getElementById("planList");
+  listEl.innerHTML = "";
+
+  if (!planOrder.length) {
+    listEl.innerHTML = `<div class="plan-empty-hint">← 從左側拖入地點</div>`;
+  } else {
+    planOrder.forEach((id, i) => {
+      const p = getPlace(id);
+      if (!p) return;
+      const card = document.createElement("div");
+      card.className = "plan-card";
+      card.dataset.id = id;
+      card.innerHTML = _listCardInner(p, i + 1);
+      _attachListEvents(card, id);
+      listEl.appendChild(card);
+    });
+  }
+  _initListSortable();
+}
+
+// ── SortableJS: fix card HTML in-place on drop, no full re-render ──
+function _renumberList() {
+  document.querySelectorAll("#planList .plan-card-num").forEach((el, i) => { el.textContent = i + 1; });
+}
+
+function _readState() {
+  planPool  = Array.from(document.querySelectorAll("#planPool [data-id]")).map(el => el.dataset.id);
+  planOrder = Array.from(document.querySelectorAll("#planList [data-id]")).map(el => el.dataset.id);
+}
+
+function _initPoolSortable() {
+  if (!window.Sortable) return;
+  const poolEl = document.getElementById("planPool");
+  if (!poolEl) return;
+  _poolSortable = Sortable.create(poolEl, {
+    group:     { name: "places", pull: true, put: true },
+    animation: 150,
+    handle:    ".plan-drag-handle",
+    draggable: "[data-id]",
+    // Item moved INTO pool from list: rebuild as pool card in-place
+    onAdd: (evt) => {
+      const card = evt.item;
+      const id   = card.dataset.id;
+      const p    = getPlace(id);
+      if (!p) return;
+      card.className = "plan-card pool-card";
+      card.innerHTML  = _poolCardInner(p);
+      _attachPoolEvents(card, id);
+      _readState();
+      _renumberList();
+      renderPlanMarkers(); updatePlanSummary();
+    },
+    // Reordered within pool
+    onUpdate: () => { _readState(); },
+  });
+}
+
+function _initListSortable() {
+  if (!window.Sortable) return;
+  const listEl = document.getElementById("planList");
+  if (!listEl) return;
+  _listSortable = Sortable.create(listEl, {
+    group:     { name: "places", pull: true, put: true },
+    animation: 150,
+    handle:    ".plan-drag-handle",
+    draggable: "[data-id]",
+    // Item moved INTO list from pool: rebuild as list card in-place
+    onAdd: (evt) => {
+      const card = evt.item;
+      const id   = card.dataset.id;
+      const p    = getPlace(id);
+      if (!p) return;
+      card.className = "plan-card";
+      // Temporarily set num = 0, renumber will fix it
+      card.innerHTML  = _listCardInner(p, 0);
+      _attachListEvents(card, id);
+      // Remove the placeholder hint if present
+      document.querySelectorAll("#planList .plan-empty-hint").forEach(el => el.remove());
+      _readState();
+      _renumberList();
+      renderPlanMarkers(); updatePlanSummary();
+    },
+    // Reordered within list
+    onUpdate: () => {
+      _readState(); _renumberList(); renderPlanMarkers(); updatePlanSummary();
+    },
+  });
+}
+
+// ── Plan transport section ──
 function renderPlanTransport() {
   const finals  = (typeof transportItems !== "undefined" ? transportItems : []).filter(t => t.isFinal);
   const section = document.getElementById("planTransportSection");
@@ -37,6 +194,7 @@ function renderPlanTransport() {
     </div>`).join("");
 }
 
+// ── Plan map ──
 function initPlanMap() {
   if (!window.google?.maps) {
     document.getElementById("planMapHint").classList.remove("hidden");
@@ -54,132 +212,6 @@ function initPlanMap() {
   renderPlanMarkers();
 }
 
-// ── Pool cards (left column) ──
-function renderPoolCards() {
-  const poolEl = document.getElementById("planPool");
-  poolEl.innerHTML = "";
-
-  if (!planPool.length) {
-    poolEl.innerHTML = `<div class="empty-state" style="flex:1;"><div class="empty-icon">✅</div><p>所有地點已加入行程</p></div>`;
-  } else {
-    planPool.forEach(id => {
-      const p = getPlace(id);
-      if (!p) return;
-      const card = document.createElement("div");
-      card.className = "plan-card pool-card";
-      card.dataset.id = id;
-      card.innerHTML = `
-        <div class="plan-card-info">
-          <div class="plan-card-name">${esc(p.name)}</div>
-          ${p.note   ? `<div class="plan-card-note">${esc(p.note)}</div>` : ""}
-          ${p.budget > 0 ? `<div class="plan-card-budget">NT$${p.budget.toLocaleString()}</div>` : ""}
-        </div>
-        <button class="plan-tap-add" title="加入行程">＋</button>
-        <div class="plan-drag-handle">⠿</div>`;
-      card.querySelector(".plan-tap-add").addEventListener("click", () => {
-        planPool  = planPool.filter(x => x !== id);
-        planOrder.push(id);
-        _rebuildSortables();
-        renderPoolCards();
-        renderPlanCards();
-        renderPlanMarkers();
-        updatePlanSummary();
-      });
-      poolEl.appendChild(card);
-    });
-  }
-
-  _initPoolSortable();
-}
-
-// ── Active cards (right column) ──
-function renderPlanCards() {
-  const listEl = document.getElementById("planList");
-  listEl.innerHTML = "";
-
-  if (!planOrder.length) {
-    listEl.innerHTML = `<div style="display:flex;align-items:center;color:var(--muted);font-size:.8rem;padding:0 4px;white-space:nowrap;">← 從左側拖入地點</div>`;
-  } else {
-    planOrder.forEach((id, i) => {
-      const p = getPlace(id);
-      if (!p) return;
-      const card = document.createElement("div");
-      card.className = "plan-card";
-      card.dataset.id = id;
-      card.innerHTML = `
-        <div style="display:flex;align-items:center;gap:6px;">
-          <div class="plan-card-num">${i + 1}</div>
-          <div class="plan-drag-handle" style="margin-left:auto;">⠿</div>
-        </div>
-        <div class="plan-card-info">
-          <div class="plan-card-name">${esc(p.name)}</div>
-          ${p.note   ? `<div class="plan-card-note">${esc(p.note)}</div>` : ""}
-          ${p.budget > 0 ? `<div class="plan-card-budget">NT$${p.budget.toLocaleString()}</div>` : ""}
-        </div>
-        <button class="plan-tap-remove" title="移除">✕</button>`;
-      card.querySelector(".plan-tap-remove").addEventListener("click", () => {
-        planOrder = planOrder.filter(x => x !== id);
-        planPool.push(id);
-        _rebuildSortables();
-        renderPoolCards();
-        renderPlanCards();
-        renderPlanMarkers();
-        updatePlanSummary();
-      });
-      listEl.appendChild(card);
-    });
-  }
-
-  _initListSortable();
-}
-
-// ── SortableJS init ──
-function _rebuildSortables() {
-  if (_poolSortable) { _poolSortable.destroy(); _poolSortable = null; }
-  if (_listSortable) { _listSortable.destroy(); _listSortable = null; }
-}
-
-function _syncFromDOM() {
-  planPool  = Array.from(document.querySelectorAll("#planPool [data-id]")).map(el => el.dataset.id);
-  planOrder = Array.from(document.querySelectorAll("#planList [data-id]")).map(el => el.dataset.id);
-  // Remove placeholder text once items arrive in list
-  if (planOrder.length) {
-    document.querySelectorAll("#planList :not([data-id])").forEach(el => el.remove());
-  }
-  renderPlanMarkers();
-  updatePlanSummary();
-  document.querySelectorAll("#planList .plan-card-num").forEach((el, i) => { el.textContent = i + 1; });
-}
-
-function _initPoolSortable() {
-  if (!window.Sortable) return;
-  if (_poolSortable) { _poolSortable.destroy(); _poolSortable = null; }
-  const poolEl = document.getElementById("planPool");
-  if (!poolEl) return;
-  _poolSortable = Sortable.create(poolEl, {
-    group:     { name: "places", pull: true, put: true },
-    animation: 150,
-    handle:    ".plan-drag-handle",
-    draggable: "[data-id]",
-    onSort:    _syncFromDOM,
-  });
-}
-
-function _initListSortable() {
-  if (!window.Sortable) return;
-  if (_listSortable) { _listSortable.destroy(); _listSortable = null; }
-  const listEl = document.getElementById("planList");
-  if (!listEl) return;
-  _listSortable = Sortable.create(listEl, {
-    group:     { name: "places", pull: true, put: true },
-    animation: 150,
-    handle:    ".plan-drag-handle",
-    draggable: "[data-id]",
-    onSort:    _syncFromDOM,
-  });
-}
-
-// ── Plan map markers ──
 function renderPlanMarkers() {
   planMarkers.forEach(m => m.setMap(null));
   planMarkers = [];
@@ -188,13 +220,12 @@ function renderPlanMarkers() {
 
   const places = planOrder.map(id => getPlace(id)).filter(Boolean);
   places.forEach((p, i) => {
-    const marker = new google.maps.Marker({
+    planMarkers.push(new google.maps.Marker({
       map: planMap,
       position: { lat: p.lat, lng: p.lng },
       title: p.name,
       icon: markerSvg(i + 1),
-    });
-    planMarkers.push(marker);
+    }));
   });
 
   if (places.length >= 2) {
