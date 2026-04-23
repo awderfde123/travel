@@ -105,6 +105,8 @@ document.getElementById("cancelNameBtn")?.addEventListener("click", () => {
   // 2. 初始化 Firebase + 旅程代碼
   initDb();
   const fromUrl = initTripId();
+  const codeEl = document.getElementById("tripCodeDisplay");
+  if (codeEl && tripId) codeEl.textContent = tripId;
 
   // 3. 若有旅程代碼，載入資料
   if (tripId) {
