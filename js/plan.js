@@ -3,18 +3,23 @@
 // ─────────────────────────────────────────────
 let planOrder = [];
 let planPool  = [];
+let planLegs  = {};  // key: "fromId__toId", value: transportItemId
 let planMap   = null;
 let planMarkers  = [];
 let planPolyline = null;
-let _poolSortable = null;
-let _listSortable = null;
+let _poolSortable          = null;
+let _listSortable          = null;
+let _legSortables          = [];
+let _transportPoolSortable = null;
 
 function renderPlanPage() {
   planPool  = state.places.map(p => p.id);
   planOrder = [];
+  planLegs  = {};
   renderPoolCards();
   renderPlanCards();
   renderPlanTransport();
+  _rebuildTransportPool();
   initPlanMap();
   updatePlanSummary();
 }
@@ -87,6 +92,9 @@ function renderPoolCards() {
 // ── Active cards ──
 function renderPlanCards() {
   if (_listSortable) { _listSortable.destroy(); _listSortable = null; }
+  _legSortables.forEach(s => { try { s.destroy(); } catch(e) {} });
+  _legSortables = [];
+
   const listEl = document.getElementById("planList");
   listEl.innerHTML = "";
 
@@ -105,16 +113,17 @@ function renderPlanCards() {
     });
   }
   _initListSortable();
+  _rebuildLegs();
 }
 
-// ── SortableJS: fix card HTML in-place on drop, no full re-render ──
+// ── SortableJS helpers ──
 function _renumberList() {
   document.querySelectorAll("#planList .plan-card-num").forEach((el, i) => { el.textContent = i + 1; });
 }
 
 function _readState() {
   planPool  = Array.from(document.querySelectorAll("#planPool [data-id]")).map(el => el.dataset.id);
-  planOrder = Array.from(document.querySelectorAll("#planList [data-id]")).map(el => el.dataset.id);
+  planOrder = Array.from(document.querySelectorAll("#planList .plan-card[data-id]")).map(el => el.dataset.id);
 }
 
 function _initPoolSortable() {
@@ -122,11 +131,10 @@ function _initPoolSortable() {
   const poolEl = document.getElementById("planPool");
   if (!poolEl) return;
   _poolSortable = Sortable.create(poolEl, {
-    group:     { name: "places", pull: true, put: true },
+    group:     { name: "places", pull: true, put: ["places"] },
     animation: 150,
     handle:    ".plan-drag-handle",
     draggable: "[data-id]",
-    // Item moved INTO pool from list: rebuild as pool card in-place
     onAdd: (evt) => {
       const card = evt.item;
       const id   = card.dataset.id;
@@ -137,9 +145,9 @@ function _initPoolSortable() {
       _attachPoolEvents(card, id);
       _readState();
       _renumberList();
+      _rebuildLegs();
       renderPlanMarkers(); updatePlanSummary();
     },
-    // Reordered within pool
     onUpdate: () => { _readState(); },
   });
 }
@@ -149,30 +157,127 @@ function _initListSortable() {
   const listEl = document.getElementById("planList");
   if (!listEl) return;
   _listSortable = Sortable.create(listEl, {
-    group:     { name: "places", pull: true, put: true },
+    group:     { name: "places", pull: true, put: ["places"] },
     animation: 150,
     handle:    ".plan-drag-handle",
-    draggable: "[data-id]",
-    // Item moved INTO list from pool: rebuild as list card in-place
+    draggable: ".plan-card[data-id]",
     onAdd: (evt) => {
       const card = evt.item;
       const id   = card.dataset.id;
       const p    = getPlace(id);
       if (!p) return;
       card.className = "plan-card";
-      // Temporarily set num = 0, renumber will fix it
       card.innerHTML  = _listCardInner(p, 0);
       _attachListEvents(card, id);
-      // Remove the placeholder hint if present
       document.querySelectorAll("#planList .plan-empty-hint").forEach(el => el.remove());
       _readState();
       _renumberList();
+      _rebuildLegs();
       renderPlanMarkers(); updatePlanSummary();
     },
-    // Reordered within list
     onUpdate: () => {
-      _readState(); _renumberList(); renderPlanMarkers(); updatePlanSummary();
+      _readState(); _renumberList(); _rebuildLegs(); renderPlanMarkers(); updatePlanSummary();
     },
+  });
+}
+
+// ── Transport pool (left column) ──
+function _rebuildTransportPool() {
+  if (_transportPoolSortable) { _transportPoolSortable.destroy(); _transportPoolSortable = null; }
+  const poolEl = document.getElementById("planTransportPool");
+  if (!poolEl) return;
+
+  const items = typeof transportItems !== "undefined" ? transportItems : [];
+  if (!items.length) {
+    poolEl.innerHTML = `<div class="plan-transport-pool-empty">尚無票券</div>`;
+    return;
+  }
+
+  poolEl.innerHTML = "";
+  items.forEach(t => {
+    const card = document.createElement("div");
+    card.className = "plan-card plan-transport-pool-card";
+    card.dataset.transportId = t.id;
+    card.innerHTML = `
+      <div class="plan-card-info">
+        <div class="plan-card-name">${transportIcon(t.method)} ${esc(t.method)}</div>
+        ${t.route ? `<span class="transport-tag" style="margin-top:2px;display:inline-block;">${esc(t.route)}</span>` : ""}
+      </div>
+      <div class="plan-drag-handle">⠿</div>`;
+    poolEl.appendChild(card);
+  });
+
+  if (window.Sortable) {
+    _transportPoolSortable = Sortable.create(poolEl, {
+      group:     { name: "transport", pull: "clone", put: false },
+      animation: 150,
+      handle:    ".plan-drag-handle",
+      draggable: "[data-transport-id]",
+    });
+  }
+}
+
+// ── Leg connectors between place cards ──
+function _createLegEl(key, fromId, toId) {
+  const legEl = document.createElement("div");
+  legEl.className = "plan-leg";
+  legEl.dataset.from = fromId;
+  legEl.dataset.to   = toId;
+
+  const assignedId  = planLegs[key];
+  const allTransport = typeof transportItems !== "undefined" ? transportItems : [];
+  const transport    = assignedId ? allTransport.find(t => t.id === assignedId) : null;
+
+  if (transport) {
+    legEl.innerHTML = `
+      <div class="plan-leg-assigned">
+        <span class="plan-leg-transport">${transportIcon(transport.method)} ${esc(transport.method)}</span>
+        <button class="plan-leg-clear" title="清除（步行）">✕</button>
+      </div>`;
+    legEl.querySelector(".plan-leg-clear").addEventListener("click", () => {
+      delete planLegs[key];
+      _rebuildLegs();
+    });
+  } else {
+    const dropEl = document.createElement("div");
+    dropEl.className = "plan-leg-drop";
+    dropEl.innerHTML = `<span class="plan-leg-walk">🚶</span>`;
+    legEl.appendChild(dropEl);
+
+    if (window.Sortable) {
+      const s = Sortable.create(dropEl, {
+        group:     { name: "transport", pull: false, put: true },
+        animation: 150,
+        draggable: "[data-transport-id]",
+        onAdd: (evt) => {
+          const tId = evt.item.dataset.transportId;
+          evt.item.remove();
+          planLegs[key] = tId;
+          _rebuildLegs();
+        },
+      });
+      _legSortables.push(s);
+    }
+  }
+
+  return legEl;
+}
+
+function _rebuildLegs() {
+  _legSortables.forEach(s => { try { s.destroy(); } catch(e) {} });
+  _legSortables = [];
+
+  document.querySelectorAll("#planList .plan-leg").forEach(el => el.remove());
+
+  const cards = Array.from(document.querySelectorAll("#planList .plan-card[data-id]"));
+  if (cards.length < 2) return;
+
+  cards.forEach((card, i) => {
+    if (i >= cards.length - 1) return;
+    const fromId = card.dataset.id;
+    const toId   = cards[i + 1].dataset.id;
+    const key    = `${fromId}__${toId}`;
+    card.after(_createLegEl(key, fromId, toId));
   });
 }
 
