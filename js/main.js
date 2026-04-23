@@ -79,16 +79,6 @@ document.getElementById("confirmNameBtn")?.addEventListener("click", () => {
   renderPackingList();
 });
 
-// 修改使用者名稱（重用 nameDialog，顯示取消按鈕）
-document.getElementById("changeNameBtn")?.addEventListener("click", () => {
-  document.getElementById("nameInput").value = currentUser();
-  document.getElementById("cancelNameBtn").classList.remove("hidden");
-  document.getElementById("nameDialog").showModal();
-  setTimeout(() => document.getElementById("nameInput").select(), 50);
-});
-document.getElementById("cancelNameBtn")?.addEventListener("click", () => {
-  document.getElementById("nameDialog").close();
-});
 
 // ─────────────────────────────────────────────
 // 啟動
