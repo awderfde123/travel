@@ -276,25 +276,71 @@ function loadGoogleMap() {
 }
 
 // ── Places Search ──
+let _searchMarker     = null;
+let _searchInfoWindow = null;
+
+function _clearSearchPin() {
+  if (_searchMarker)     { _searchMarker.setMap(null);  _searchMarker     = null; }
+  if (_searchInfoWindow) { _searchInfoWindow.close();   _searchInfoWindow = null; }
+}
+
 function initPlacesSearch() {
   const input    = document.getElementById("mapSearch");
   const clearBtn = document.getElementById("mapSearchClear");
   if (!window.google?.maps?.places || !input) return;
 
   const autocomplete = new google.maps.places.Autocomplete(input, {
-    fields: ["name", "geometry"],
+    fields: ["name", "geometry", "opening_hours", "formatted_address"],
   });
   autocomplete.bindTo("bounds", map);
 
   autocomplete.addListener("place_changed", () => {
     const place = autocomplete.getPlace();
     if (!place.geometry?.location) return;
+
+    const lat = place.geometry.location.lat();
+    const lng = place.geometry.location.lng();
+
+    // Pan / zoom
     if (place.geometry.viewport) {
       map.fitBounds(place.geometry.viewport);
     } else {
-      map.panTo({ lat: place.geometry.location.lat(), lng: place.geometry.location.lng() });
+      map.panTo({ lat, lng });
       map.setZoom(16);
     }
+
+    // Drop search pin
+    _clearSearchPin();
+    _searchMarker = new google.maps.Marker({
+      map,
+      position:  { lat, lng },
+      title:     place.name || "",
+      animation: google.maps.Animation.DROP,
+    });
+
+    // Info popup
+    const openHours = place.opening_hours?.weekday_text || null;
+    const addBtn    = state.finalized ? "" :
+      `<button id="_searchAddBtn" style="margin-top:8px;width:100%;padding:6px 10px;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.82rem;">＋ 加入行程</button>`;
+    _searchInfoWindow = new google.maps.InfoWindow({
+      content: `<div style="font-family:'Noto Sans TC',sans-serif;min-width:140px;max-width:220px;">
+        <div style="font-weight:600;font-size:.92rem;margin-bottom:2px;">${esc(place.name || "")}</div>
+        ${place.formatted_address ? `<div style="font-size:.75rem;color:#666;margin-bottom:4px;">${esc(place.formatted_address)}</div>` : ""}
+        ${addBtn}
+      </div>`,
+    });
+    _searchInfoWindow.open(map, _searchMarker);
+
+    // Wire up add button after InfoWindow renders
+    google.maps.event.addListenerOnce(_searchInfoWindow, "domready", () => {
+      document.getElementById("_searchAddBtn")?.addEventListener("click", () => {
+        pendingLatLng = { lat, lng };
+        _clearSearchPin();
+        openAddDialog(place.name || "", openHours);
+      });
+    });
+
+    _searchMarker.addListener("click", () => _searchInfoWindow.open(map, _searchMarker));
     clearBtn.classList.remove("hidden");
   });
 
@@ -305,6 +351,7 @@ function initPlacesSearch() {
   clearBtn.addEventListener("click", () => {
     input.value = "";
     clearBtn.classList.add("hidden");
+    _clearSearchPin();
     input.focus();
   });
 }
