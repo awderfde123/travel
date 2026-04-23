@@ -1,26 +1,23 @@
-name: Deploy to Netlify
+name: Deploy to Cloudflare Pages
 
 on:
   push:
-    branches: [main]
-  pull_request:
     branches: [main]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Deploy to Netlify
-        uses: netlify/actions/cli@master
+      - uses: actions/setup-node@v4
         with:
-          args: >
-            deploy
-            --dir=.
-            --message="Deploy from ${{ github.sha }}"
-            ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
+          node-version: '20'
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy
+        run: npx wrangler pages deploy dist --project-name=travel --branch=main
         env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID:    ${{ secrets.NETLIFY_SITE_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
