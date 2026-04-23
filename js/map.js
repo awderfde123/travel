@@ -276,50 +276,82 @@ function loadGoogleMap() {
   document.head.appendChild(script);
 }
 
-// ── Places Autocomplete ──
-let _searchMarker = null;
-
-function _clearSearchMarker() {
-  if (_searchMarker) { _searchMarker.setMap(null); _searchMarker = null; }
-}
-
-function _searchMarkerSvg() {
-  const s = 34, f = 18;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s+8}">
-    <circle cx="${s/2}" cy="${s/2-2}" r="${s/2-2}" fill="#ef4444" stroke="white" stroke-width="2.5"/>
-    <text x="${s/2}" y="${s/2+5}" text-anchor="middle" fill="white"
-          font-family="Arial,sans-serif" font-size="${f}" font-weight="bold">📍</text>
-  </svg>`;
-  return {
-    url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
-    scaledSize: new google.maps.Size(s, s + 8),
-    anchor:     new google.maps.Point(s / 2, s + 4),
-  };
-}
+// ── Places Search（自訂下拉列表）──
+let _autocompleteService = null;
+let _searchDebounce      = null;
 
 function initPlacesSearch() {
-  const input = document.getElementById("mapSearch");
+  const input     = document.getElementById("mapSearch");
+  const clearBtn  = document.getElementById("mapSearchClear");
+  const resultBox = document.getElementById("mapSearchResults");
   if (!window.google?.maps?.places || !input) return;
-  const autocomplete = new google.maps.places.Autocomplete(input, {
-    fields: ["name", "geometry", "place_id", "opening_hours"],
+
+  _autocompleteService = new google.maps.places.AutocompleteService();
+
+  function hideResults() {
+    resultBox.classList.add("hidden");
+    resultBox.innerHTML = "";
+  }
+
+  function showResult(prediction) {
+    const li = document.createElement("li");
+    li.className = "map-search-item";
+    li.innerHTML = `
+      <span class="map-search-item-main">${esc(prediction.structured_formatting?.main_text || prediction.description)}</span>
+      <span class="map-search-item-sub">${esc(prediction.structured_formatting?.secondary_text || "")}</span>`;
+    li.addEventListener("mousedown", e => {
+      // mousedown fires before blur; use it to prevent input blur hiding results
+      e.preventDefault();
+    });
+    li.addEventListener("click", () => {
+      input.value = prediction.structured_formatting?.main_text || prediction.description;
+      hideResults();
+      // Get coordinates via place details
+      _placesService.getDetails(
+        { placeId: prediction.place_id, fields: ["geometry", "name"] },
+        (place, status) => {
+          if (status !== google.maps.places.PlacesServiceStatus.OK || !place.geometry?.location) return;
+          if (place.geometry.viewport) {
+            map.fitBounds(place.geometry.viewport);
+          } else {
+            map.panTo({ lat: place.geometry.location.lat(), lng: place.geometry.location.lng() });
+            map.setZoom(16);
+          }
+        }
+      );
+    });
+    resultBox.appendChild(li);
+  }
+
+  input.addEventListener("input", () => {
+    const q = input.value.trim();
+    clearBtn.classList.toggle("hidden", !q);
+    clearTimeout(_searchDebounce);
+    if (!q) { hideResults(); return; }
+    _searchDebounce = setTimeout(() => {
+      _autocompleteService.getPlacePredictions(
+        { input: q, bounds: map.getBounds(), language: "zh-TW" },
+        (predictions, status) => {
+          resultBox.innerHTML = "";
+          if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions?.length) {
+            hideResults(); return;
+          }
+          predictions.forEach(showResult);
+          resultBox.classList.remove("hidden");
+        }
+      );
+    }, 250);
   });
-  autocomplete.bindTo("bounds", map);
-  autocomplete.addListener("place_changed", () => {
-    const place = autocomplete.getPlace();
-    if (!place.geometry?.location) return;
 
-    const lat = place.geometry.location.lat();
-    const lng = place.geometry.location.lng();
+  input.addEventListener("blur", () => {
+    setTimeout(hideResults, 150);
+  });
 
-    // Pan / zoom to result
-    if (place.geometry.viewport) {
-      map.fitBounds(place.geometry.viewport);
-    } else {
-      map.panTo({ lat, lng });
-      map.setZoom(16);
-    }
-
+  clearBtn.addEventListener("click", () => {
     input.value = "";
+    clearBtn.classList.add("hidden");
+    hideResults();
+    input.focus();
   });
 }
 
