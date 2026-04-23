@@ -9,6 +9,7 @@ function switchTab(activeTab) {
     document.getElementById(id).classList.toggle("active", id === activeTab);
     document.getElementById(SIDEBAR_PANELS[i]).classList.toggle("hidden", id !== activeTab);
   });
+  if (activeTab === "tabLocations") renderTripTransportList();
   if (activeTab === "tabTransport") renderTransportList();
   if (activeTab === "tabPacking")   renderPackingList();
 }
@@ -110,6 +111,7 @@ document.getElementById("confirmNameBtn")?.addEventListener("click", () => {
 
   // 4. 渲染（即便資料為空也先渲染）
   renderLocationsList();
+  renderTripTransportList();
   renderTransportList();
   renderPackingList();
   loadGoogleMap();

@@ -108,13 +108,14 @@
           <div class="sidebar">
             <div class="sidebar-panel">
               <div class="sidebar-tabs">
-                <button class="tab-btn active" id="tabLocations">📍 地點</button>
+                <button class="tab-btn active" id="tabLocations">🗺 旅程</button>
                 <button class="tab-btn" id="tabTransport">🎫 票券</button>
                 <button class="tab-btn" id="tabPacking">🎒 清單</button>
               </div>
 
-              <!-- Locations tab -->
+              <!-- 旅程 tab (地點 + 交通) -->
               <div id="locationsPanel" class="tab-panel">
+                <!-- 地點列表 -->
                 <div class="panel-header">
                   <h2>📍 地點列表
                     <span id="locationsCount" class="loc-count-badge">共 0 個地點</span>
@@ -125,6 +126,15 @@
                   <input id="locSearch" type="text" placeholder="搜尋地點…" autocomplete="off" />
                 </div>
                 <div id="locationsList" class="locations-list"></div>
+
+                <!-- 交通列表 -->
+                <div class="panel-header" style="margin-top:12px;display:flex;align-items:center;justify-content:space-between;">
+                  <h2>🚌 交通列表
+                    <span id="tripTransportBadge" class="loc-count-badge"></span>
+                  </h2>
+                  <button id="addTripTransportBtn" class="primary" style="font-size:.78rem;padding:5px 11px;">＋ 新增</button>
+                </div>
+                <div id="tripTransportList" class="locations-list"></div>
               </div>
 
               <!-- Transport tab -->
