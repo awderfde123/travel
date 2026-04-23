@@ -44,7 +44,6 @@ function nearbyMarkerSvg() {
 function clearMarkers() {
   markers.forEach(m => m.setMap(null));
   markers = [];
-  _clearSearchMarker();
 }
 
 function renderMarkers() {
