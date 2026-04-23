@@ -330,7 +330,7 @@ function initPlacesSearch() {
     if (!q) { hideResults(); return; }
     _searchDebounce = setTimeout(() => {
       _autocompleteService.getPlacePredictions(
-        { input: q, bounds: map.getBounds(), language: "zh-TW" },
+        { input: q, bounds: map.getBounds() || undefined },
         (predictions, status) => {
           resultBox.innerHTML = "";
           if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions?.length) {
