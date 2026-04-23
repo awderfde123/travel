@@ -49,7 +49,7 @@ function renderTransportList() {
     listEl.innerHTML = `
       <div class="empty-state">
         <div class="empty-icon">🚌</div>
-        <p>尚無交通資訊<br>點擊「＋ 新增」</p>
+        <p>尚無票券資訊<br>點擊「＋ 新增」</p>
       </div>`;
     return;
   }
