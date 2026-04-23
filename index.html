@@ -50,7 +50,6 @@
           <div class="topbar-right">
             <span id="finalizedBadge" class="finalized-status-badge hidden">✓ 已定案</span>
             <button id="unfinalizeBtn" class="tool-btn topbar-tool hidden">解除定案</button>
-            <button id="finalizeBtn" class="tool-btn topbar-tool">定案</button>
             <div class="trip-code-chip">
               <code id="tripCodeDisplay">------</code>
               <button id="copyTripBtn" title="複製邀請連結">📋</button>
@@ -74,6 +73,14 @@
                   <button id="routeToggleBtn" class="tool-btn hidden">🛣 顯示路線</button>
                 </div>
               </div>
+              <div class="nearby-bar">
+                <span class="nearby-label">附近：</span>
+                <button class="nearby-btn" data-type="restaurant">🍽 餐廳</button>
+                <button class="nearby-btn" data-type="cafe">☕ 咖啡</button>
+                <button class="nearby-btn" data-type="tourist_attraction">🎯 景點</button>
+                <button class="nearby-btn" data-type="convenience_store">🏪 超商</button>
+                <button class="nearby-btn" data-type="lodging">🏨 住宿</button>
+              </div>
               <div id="map"></div>
               <div id="mapHint" class="map-empty hidden">
                 <div class="map-empty-icon">🗺</div>
@@ -87,7 +94,7 @@
             <div class="sidebar-panel">
               <div class="sidebar-tabs">
                 <button class="tab-btn active" id="tabLocations">📍 地點</button>
-                <button class="tab-btn" id="tabTransport">🚌 交通</button>
+                <button class="tab-btn" id="tabTransport">🎫 票券</button>
                 <button class="tab-btn" id="tabPacking">🎒 清單</button>
               </div>
 
@@ -186,7 +193,7 @@
                   <span class="plan-summary-sep">｜</span>
                   <span id="planBudget">NT$0</span>
                 </div>
-                <button id="confirmPlanBtn" class="primary">✅ 定案</button>
+                <button id="confirmPlanBtn" class="primary">✅ 定案行程</button>
               </div>
               <div id="planList" class="plan-list"></div>
               <div id="planTransportSection" class="plan-transport-section hidden">
@@ -218,6 +225,20 @@
     </div>
 
     <!-- ── Dialogs ── -->
+
+    <dialog id="editTripNameDialog">
+      <div class="dialog-header"><h3>✏ 修改旅程名稱</h3></div>
+      <div class="dialog-body">
+        <div class="field">
+          <label>旅程名稱</label>
+          <input id="editTripNameInput" type="text" placeholder="例：東京五日遊" autocomplete="off" />
+        </div>
+      </div>
+      <menu class="dialog-footer">
+        <button id="confirmEditTripNameBtn" class="primary">儲存</button>
+        <button id="cancelEditTripNameBtn">取消</button>
+      </menu>
+    </dialog>
 
     <dialog id="nameDialog">
       <div class="dialog-header">
@@ -363,6 +384,8 @@
       </menu>
     </dialog>
 
+    <!-- SortableJS（拖移，支援手機觸控）-->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
     <!-- 載入順序不可更動 -->
     <script src="js/utils.js"></script>
     <script src="js/state.js"></script>

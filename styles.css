@@ -1097,31 +1097,9 @@ dialog::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(6px); }
 }
 .plan-tap-remove:hover { background: #fee2e2; }
 
-/* ── 手機版 Header RWD ── */
+/* ── 手機版 RWD ── */
 @media (max-width: 640px) {
-  .topbar {
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 10px 14px;
-  }
-
-  /* 第一行：品牌 + 規劃行程按鈕 */
-  .topbar-brand { flex: 1; min-width: 0; }
-  .topbar p { display: none; }
-  .topbar h1 { font-size: 1rem; }
-  .brand-icon { width: 36px; height: 36px; font-size: 1.2rem; border-radius: 9px; }
-  .actions { flex-shrink: 0; }
-  .actions button { font-size: .78rem; padding: 6px 10px; }
-
-  /* 第二行：旅程代碼（獨佔一行）*/
-  .trip-code-chip {
-    order: 10;
-    width: 100%;
-    justify-content: center;
-    padding: 5px 12px;
-  }
-
-  /* 討論頁 header 在手機上允許換行 */
+  /* 討論頁 header */
   .discuss-header { flex-wrap: wrap; gap: 8px; }
   .discuss-info-inline { min-width: 0; }
   .dic-name { max-width: 160px; }
@@ -1142,11 +1120,11 @@ dialog::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(6px); }
     flex-direction: column;
     overflow-x: hidden;
     overflow-y: auto;
-    max-height: 200px;
+    max-height: 220px;
   }
   .plan-list .plan-card { width: 100%; flex-direction: row; align-items: center; }
 
-  /* 讓容器可以單指捲動（不被 map touch 搶走）*/
+  /* 讓容器可以單指捲動 */
   .plan-pool, .locations-list, .discuss-msgs { touch-action: pan-y; }
 }
 
@@ -1509,23 +1487,113 @@ dialog::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(6px); }
   }
 }
 
+/* ── Location card: hours + discuss button ── */
+.loc-hours {
+  font-size: .72rem;
+  color: var(--muted);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+.loc-discuss-btn {
+  font-size: .72rem;
+  color: var(--accent);
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  opacity: .75;
+  box-shadow: none;
+  border-radius: 0;
+  gap: 0;
+}
+.loc-discuss-btn:hover { opacity: 1; background: transparent; border: none; transform: none; box-shadow: none; text-decoration: underline; }
+
+/* ── Nearby search bar ── */
+.nearby-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.nearby-bar::-webkit-scrollbar { display: none; }
+
+.nearby-label {
+  font-size: .7rem;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.nearby-btn {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  font-size: .75rem;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-light);
+  box-shadow: none;
+  white-space: nowrap;
+  transition: background .15s, border-color .15s, color .15s;
+  gap: 3px;
+}
+.nearby-btn:hover  { background: var(--accent-bg); border-color: rgba(37,99,235,.3); color: var(--accent); }
+.nearby-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ── Discuss view: opening hours ── */
+.dic-detail-full {
+  width: 100%;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+.dic-hours-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 3px;
+}
+.dic-hours-row {
+  font-size: .78rem;
+  color: var(--text-light);
+  line-height: 1.6;
+}
+
 /* ── Trips & main page responsive ── */
 @media (max-width: 640px) {
-  .trips-header {
-    padding: 12px 14px;
-    gap: 10px;
-  }
+  .trips-header { padding: 12px 14px; gap: 10px; }
   .trips-header h1 { font-size: 1rem; }
   .trips-actions { width: 100%; }
   .trips-actions button { flex: 1; justify-content: center; font-size: .82rem; }
-
   .trips-list { padding: 10px 0; gap: 8px; }
   .trip-list-card { padding: 12px 14px; }
 
-  /* New topbar: wrap to two lines on small screens */
-  .topbar-left { flex: 1; min-width: 0; }
-  .topbar-right { flex-wrap: wrap; gap: 6px; }
-  .trip-name-display { max-width: 120px; }
-  .trip-code-chip { order: 5; }
-  .topbar-right #openPlanBtn { order: 1; }
+  /* Topbar: two-row layout on mobile */
+  .topbar {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .topbar-left {
+    flex: 1;
+    min-width: 0;
+    order: 1;
+  }
+  .topbar-right {
+    order: 2;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-end;
+  }
+  .trip-name-display { max-width: 150px; }
+  .trip-code-chip { flex: 1; justify-content: center; }
+  #openPlanBtn { flex: 1; justify-content: center; }
 }

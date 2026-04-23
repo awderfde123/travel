@@ -23,7 +23,6 @@ document.getElementById("tabPacking").addEventListener("click",   () => switchTa
 function applyFinalizedUI() {
   const f = state.finalized;
 
-  document.getElementById("finalizeBtn")?.classList.toggle("hidden", f);
   document.getElementById("unfinalizeBtn")?.classList.toggle("hidden", !f);
   document.getElementById("finalizedBadge")?.classList.toggle("hidden", !f);
   document.getElementById("openPlanBtn")?.classList.toggle("hidden", f);
@@ -37,23 +36,21 @@ function applyFinalizedUI() {
   renderPackingList();
 }
 
-// 旅程名稱
+// 旅程名稱（使用 dialog 而非 prompt，相容 iOS WebView）
 document.getElementById("editTripNameBtn")?.addEventListener("click", () => {
-  const newName = prompt("旅程名稱", state.tripName || "");
-  if (newName === null) return;
-  state.tripName = newName.trim();
+  document.getElementById("editTripNameInput").value = state.tripName || "";
+  document.getElementById("editTripNameDialog").showModal();
+  setTimeout(() => document.getElementById("editTripNameInput").select(), 50);
+});
+document.getElementById("confirmEditTripNameBtn")?.addEventListener("click", () => {
+  state.tripName = document.getElementById("editTripNameInput").value.trim();
   saveState();
   updateTripHistory();
   document.getElementById("tripNameDisplay").textContent = state.tripName || tripId || "旅程";
+  document.getElementById("editTripNameDialog").close();
 });
-
-// 定案
-document.getElementById("finalizeBtn")?.addEventListener("click", () => {
-  if (!confirm("確定定案？\n定案後進入唯讀模式，可切換為攜帶清單打勾模式。")) return;
-  state.finalized = true;
-  saveState();
-  updateTripHistory({ finalized: true });
-  applyFinalizedUI();
+document.getElementById("cancelEditTripNameBtn")?.addEventListener("click", () => {
+  document.getElementById("editTripNameDialog").close();
 });
 
 // 解除定案

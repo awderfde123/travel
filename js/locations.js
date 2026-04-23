@@ -1,7 +1,19 @@
 // ─────────────────────────────────────────────
 // 地點列表
 // ─────────────────────────────────────────────
-let editingId = null;
+let editingId     = null;
+let pendingOpenHours = null;
+
+// 取得今日營業時間（簡短格式：去掉前綴「星期X: 」）
+function todayOpenHours(openHours) {
+  if (!Array.isArray(openHours) || !openHours.length) return null;
+  const day = new Date().getDay(); // 0=Sun, 1=Mon
+  const idx = day === 0 ? 6 : day - 1; // Places API: 0=Mon … 6=Sun
+  const entry = openHours[idx];
+  if (!entry) return null;
+  const m = entry.match(/[：:]\s*(.+)$/);
+  return m ? m[1].trim() : entry;
+}
 
 function renderLocationsList() {
   locCountEl.textContent = `共 ${state.places.length} 個地點`;
@@ -32,18 +44,20 @@ function renderLocationsList() {
 
   const finalized = state.finalized;
   filtered.forEach((place, i) => {
-    const count  = place.discussions?.length ?? 0;
-    const budget = place.budget || 0;
-    const row    = document.createElement("div");
-    row.className = "loc-item";
-    row.innerHTML = `
-      <div class="loc-num">${i + 1}</div>
+    const count    = place.discussions?.length ?? 0;
+    const budget   = place.budget || 0;
+    const todayHrs = todayOpenHours(place.openHours);
+    const row      = document.createElement("div");
+    row.className  = "loc-item";
+    row.innerHTML  = `
+      <div class="loc-num">${state.places.indexOf(place) + 1}</div>
       <div class="loc-info">
         <div class="loc-name">${esc(place.name)}</div>
-        ${place.note ? `<div class="loc-note">${esc(place.note)}</div>` : ""}
+        ${place.note   ? `<div class="loc-note">${esc(place.note)}</div>` : ""}
+        ${todayHrs     ? `<div class="loc-hours">🕐 ${esc(todayHrs)}</div>` : ""}
         <div class="loc-meta-row">
           ${budget > 0 ? `<span class="loc-budget">NT$${budget.toLocaleString()}</span>` : ""}
-          <span class="loc-discuss-count">💬 ${count > 0 ? `${count} 則討論` : "查看討論"}</span>
+          <button class="loc-discuss-btn">💬 ${count > 0 ? `${count} 則討論` : "查看討論"}</button>
         </div>
       </div>
       ${!finalized ? `
@@ -52,8 +66,23 @@ function renderLocationsList() {
         <button class="icon-btn del danger" title="刪除">✕</button>
       </div>` : ""}`;
 
-    row.querySelector(".loc-info").addEventListener("click", () => openDiscussPage(place.id));
-    row.querySelector(".loc-num").addEventListener("click",  () => openDiscussPage(place.id));
+    // 點卡片本體 → 地圖定位
+    row.addEventListener("click", () => {
+      if (map && place.lat != null && place.lng != null) {
+        map.panTo({ lat: place.lat, lng: place.lng });
+        map.setZoom(Math.max(map.getZoom(), 16));
+      }
+    });
+    // 點序號 → 討論頁（優先動作）
+    row.querySelector(".loc-num").addEventListener("click", e => {
+      e.stopPropagation();
+      openDiscussPage(place.id);
+    });
+    // 點 💬 按鈕 → 討論頁
+    row.querySelector(".loc-discuss-btn").addEventListener("click", e => {
+      e.stopPropagation();
+      openDiscussPage(place.id);
+    });
     if (!finalized) {
       row.querySelector(".icon-btn.edit").addEventListener("click", e => { e.stopPropagation(); openEditDialog(place.id); });
       row.querySelector(".icon-btn.del").addEventListener("click",  e => { e.stopPropagation(); deletePlace(place.id); });
@@ -71,7 +100,8 @@ function deletePlace(id) {
   renderMarkers();
 }
 
-function openAddDialog(placeName = "") {
+function openAddDialog(placeName = "", openHours = null) {
+  pendingOpenHours = openHours;
   document.getElementById("newPlaceName").value   = placeName;
   document.getElementById("newPlaceBudget").value = "";
   document.getElementById("newPlaceNote").value   = "";
@@ -97,7 +127,8 @@ function openEditDialog(id) {
 document.getElementById("locSearch").addEventListener("input", renderLocationsList);
 
 document.getElementById("cancelAddPlaceBtn").addEventListener("click", () => {
-  pendingLatLng = null;
+  pendingLatLng    = null;
+  pendingOpenHours = null;
   document.getElementById("addPlaceDialog").close();
 });
 
@@ -108,8 +139,12 @@ document.getElementById("confirmAddPlaceBtn").addEventListener("click", () => {
   const { lat, lng } = pendingLatLng;
   const budget = Math.max(0, parseFloat(document.getElementById("newPlaceBudget").value) || 0);
   const note   = document.getElementById("newPlaceNote").value.trim();
-  state.places.push({ id: crypto.randomUUID(), name, lat, lng, note, budget, discussions: [] });
-  pendingLatLng = null;
+  state.places.push({
+    id: crypto.randomUUID(), name, lat, lng, note, budget, discussions: [],
+    openHours: pendingOpenHours || null,
+  });
+  pendingLatLng    = null;
+  pendingOpenHours = null;
   saveState();
   document.getElementById("addPlaceDialog").close();
   renderLocationsList();

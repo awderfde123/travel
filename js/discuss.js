@@ -26,8 +26,12 @@ function renderDiscussView() {
     if (item.price > 0) fields.push(`<div class="dic-detail-field"><span class="dic-label">金額</span><span class="dic-val dic-price">NT$${item.price.toLocaleString()}</span></div>`);
     fields.push(`<div class="dic-detail-field"><span class="dic-label">狀態</span><span class="dic-val ${item.purchased ? "dic-purchased" : "dic-unpurchased"}">${item.purchased ? "✅ 已購買" : "🛒 未購買"}</span></div>`);
   } else {
-    if (item.note)       fields.push(`<div class="dic-detail-field"><span class="dic-label">備註</span><span class="dic-val">${esc(item.note)}</span></div>`);
-    if (item.budget > 0) fields.push(`<div class="dic-detail-field"><span class="dic-label">預算</span><span class="dic-val dic-price">NT$${item.budget.toLocaleString()}</span></div>`);
+    if (item.note)        fields.push(`<div class="dic-detail-field"><span class="dic-label">備註</span><span class="dic-val">${esc(item.note)}</span></div>`);
+    if (item.budget > 0)  fields.push(`<div class="dic-detail-field"><span class="dic-label">預算</span><span class="dic-val dic-price">NT$${item.budget.toLocaleString()}</span></div>`);
+    if (item.openHours?.length) {
+      const rows = item.openHours.map(h => `<div class="dic-hours-row">${esc(h)}</div>`).join("");
+      fields.push(`<div class="dic-detail-field dic-detail-full"><span class="dic-label">營業時間</span><div class="dic-val dic-hours-list">${rows}</div></div>`);
+    }
   }
 
   const hasFields = fields.length > 0;

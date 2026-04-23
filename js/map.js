@@ -4,28 +4,45 @@
 let map;
 let markers = [];
 let directionsRenderer = null;
-let routePolyline = null;
-let pendingLatLng = null;
+let routePolyline      = null;
+let pendingLatLng      = null;
+let _placesService     = null;
 
-// ── Marker SVG ──
+// ── Nearby search ──
+let nearbyMarkers    = [];
+let nearbyInfoWindow = null;
+let activeNearbyType = null;
+
+// ── Marker SVGs ──
 function markerSvg(num) {
-  const s = 28,
-    f = 11;
+  const s = 28, f = 11;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}">
-    <circle cx="${s / 2}" cy="${s / 2}" r="${s / 2 - 2}" fill="#2563eb" stroke="white" stroke-width="2.5"/>
-    <text x="${s / 2}" y="${s / 2 + 4}" text-anchor="middle" fill="white"
+    <circle cx="${s/2}" cy="${s/2}" r="${s/2-2}" fill="#2563eb" stroke="white" stroke-width="2.5"/>
+    <text x="${s/2}" y="${s/2+4}" text-anchor="middle" fill="white"
           font-family="Arial,sans-serif" font-size="${f}" font-weight="bold">${num}</text>
   </svg>`;
   return {
     url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
     scaledSize: new google.maps.Size(s, s),
-    anchor: new google.maps.Point(s / 2, s / 2),
+    anchor: new google.maps.Point(s/2, s/2),
   };
 }
 
-// ── Markers ──
+function nearbyMarkerSvg() {
+  const s = 18;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}">
+    <circle cx="${s/2}" cy="${s/2}" r="${s/2-1.5}" fill="#f97316" stroke="white" stroke-width="2"/>
+  </svg>`;
+  return {
+    url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
+    scaledSize: new google.maps.Size(s, s),
+    anchor: new google.maps.Point(s/2, s/2),
+  };
+}
+
+// ── Regular markers ──
 function clearMarkers() {
-  markers.forEach((m) => m.setMap(null));
+  markers.forEach(m => m.setMap(null));
   markers = [];
 }
 
@@ -43,6 +60,71 @@ function renderMarkers() {
     markers.push(marker);
   });
   renderRoute();
+}
+
+// ── Nearby search markers ──
+function clearNearbyMarkers() {
+  nearbyMarkers.forEach(m => m.setMap(null));
+  nearbyMarkers = [];
+  if (nearbyInfoWindow) { nearbyInfoWindow.close(); nearbyInfoWindow = null; }
+}
+
+function searchNearby(type) {
+  if (!map || !_placesService) return;
+
+  // Toggle off if already active
+  if (activeNearbyType === type) {
+    clearNearbyMarkers();
+    activeNearbyType = null;
+    document.querySelectorAll(".nearby-btn").forEach(b => b.classList.remove("active"));
+    return;
+  }
+
+  clearNearbyMarkers();
+  activeNearbyType = type;
+  document.querySelectorAll(".nearby-btn").forEach(b =>
+    b.classList.toggle("active", b.dataset.type === type)
+  );
+
+  _placesService.nearbySearch(
+    { location: map.getCenter(), radius: 1500, type },
+    (results, status) => {
+      if (status !== google.maps.places.PlacesServiceStatus.OK || !results) return;
+      results.forEach(place => {
+        if (!place.geometry?.location) return;
+        const marker = new google.maps.Marker({
+          map,
+          position: place.geometry.location,
+          title: place.name,
+          icon: nearbyMarkerSvg(),
+          zIndex: 10,
+        });
+        marker.addListener("click", () => {
+          if (state.finalized) return;
+          pendingLatLng = {
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng(),
+          };
+          // Fetch opening hours for this nearby result
+          if (place.place_id && _placesAllowed()) {
+            _placesIncrement();
+            _placesService.getDetails(
+              { placeId: place.place_id, fields: ["opening_hours"] },
+              (details, detailStatus) => {
+                const openHours = detailStatus === google.maps.places.PlacesServiceStatus.OK
+                  ? (details?.opening_hours?.weekday_text || null)
+                  : null;
+                openAddDialog(place.name || "", openHours);
+              }
+            );
+          } else {
+            openAddDialog(place.name || "", null);
+          }
+        });
+        nearbyMarkers.push(marker);
+      });
+    }
+  );
 }
 
 // ── Route ──
@@ -74,38 +156,28 @@ function renderRoute() {
 
   new google.maps.DirectionsService().route(
     {
-      origin: { lat: places[0].lat, lng: places[0].lng },
-      destination: { lat: places.at(-1).lat, lng: places.at(-1).lng },
-      waypoints: places
-        .slice(1, -1)
-        .map((p) => ({ location: { lat: p.lat, lng: p.lng }, stopover: true })),
-      travelMode: google.maps.TravelMode.DRIVING,
+      origin:      { lat: places[0].lat,       lng: places[0].lng },
+      destination: { lat: places.at(-1).lat,   lng: places.at(-1).lng },
+      waypoints:   places.slice(1, -1).map(p => ({ location: { lat: p.lat, lng: p.lng }, stopover: true })),
+      travelMode:  google.maps.TravelMode.DRIVING,
     },
     (result, status) => {
       if (status === "OK") {
         directionsRenderer.setDirections(result);
       } else {
-        if (directionsRenderer) {
-          directionsRenderer.setMap(null);
-          directionsRenderer = null;
-        }
+        if (directionsRenderer) { directionsRenderer.setMap(null); directionsRenderer = null; }
         routePolyline = new google.maps.Polyline({
-          path: places.map((p) => ({ lat: p.lat, lng: p.lng })),
+          path: places.map(p => ({ lat: p.lat, lng: p.lng })),
           map,
           strokeColor: "#2563eb",
           strokeWeight: 4,
           strokeOpacity: 0.8,
           geodesic: true,
-          icons: [
-            {
-              icon: {
-                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                scale: 3,
-              },
-              offset: "50%",
-              repeat: "150px",
-            },
-          ],
+          icons: [{
+            icon: { path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, scale: 3 },
+            offset: "50%",
+            repeat: "150px",
+          }],
         });
       }
     },
@@ -116,7 +188,7 @@ function renderRoute() {
 function fitBounds() {
   if (!map || !state.places.length) return;
   const bounds = new google.maps.LatLngBounds();
-  state.places.forEach((p) => bounds.extend({ lat: p.lat, lng: p.lng }));
+  state.places.forEach(p => bounds.extend({ lat: p.lat, lng: p.lng }));
   map.fitBounds(bounds, { top: 60, right: 40, bottom: 40, left: 40 });
 }
 
@@ -128,37 +200,30 @@ function setupMap() {
     mapTypeControl: false,
     streetViewControl: false,
     gestureHandling: "greedy",
-    fullscreenControlOptions: {
-      position: google.maps.ControlPosition.RIGHT_BOTTOM,
-    },
+    fullscreenControlOptions: { position: google.maps.ControlPosition.RIGHT_BOTTOM },
   });
 
-  const _placesService = new google.maps.places.PlacesService(map);
+  _placesService = new google.maps.places.PlacesService(map);
 
-  // ── Places API 用量監控（每月上限 10,000 次，低於免費額度 ~11,700 次）──
-  // Places Details Basic: $0.017/req，$200 credit ÷ $0.017 ≈ 11,764 次/月
+  // ── Places API 用量監控（每月上限 10,000 次）──
   const PLACES_MONTHLY_LIMIT = 10000;
   function _placesKey() {
     const d = new Date();
     return `places-${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   }
-  function _placesCount() {
-    return parseInt(localStorage.getItem(_placesKey()) || "0", 10);
-  }
-  function _placesAllowed() {
-    return _placesCount() < PLACES_MONTHLY_LIMIT;
-  }
+  function _placesCount()     { return parseInt(localStorage.getItem(_placesKey()) || "0", 10); }
+  function _placesAllowed()   { return _placesCount() < PLACES_MONTHLY_LIMIT; }
   function _placesIncrement() {
     const key = _placesKey();
     const next = _placesCount() + 1;
     localStorage.setItem(key, next);
-    const remaining = PLACES_MONTHLY_LIMIT - next;
-    if (remaining === 500) {
-      console.warn(
-        `[Places API] 本月剩餘配額僅剩 ${remaining} 次，即將暫停自動帶入地點名稱`,
-      );
-    }
+    if (PLACES_MONTHLY_LIMIT - next === 500)
+      console.warn(`[Places API] 本月剩餘配額僅剩 500 次`);
   }
+
+  // Make quota helpers accessible to nearbySearch
+  window._placesAllowed   = _placesAllowed;
+  window._placesIncrement = _placesIncrement;
 
   map.addListener("click", event => {
     if (state.finalized) return;
@@ -167,7 +232,7 @@ function setupMap() {
       event.stop();
       _placesIncrement();
       _placesService.getDetails(
-        { placeId: event.placeId, fields: ["name", "types"] },
+        { placeId: event.placeId, fields: ["name", "types", "opening_hours"] },
         (place, status) => {
           const SKIP_TYPES = ["route", "street_address", "street_number",
             "intersection", "political", "country",
@@ -175,14 +240,16 @@ function setupMap() {
             "administrative_area_level_3", "locality", "sublocality",
             "sublocality_level_1", "postal_code", "neighborhood"];
           const isRoadOrArea = place?.types?.some(t => SKIP_TYPES.includes(t));
-          const name = (status === google.maps.places.PlacesServiceStatus.OK && !isRoadOrArea)
-            ? (place.name || "")
-            : "";
-          openAddDialog(name);
+          const ok = status === google.maps.places.PlacesServiceStatus.OK;
+          const name      = (ok && !isRoadOrArea) ? (place.name || "") : "";
+          const openHours = (ok && !isRoadOrArea)
+            ? (place?.opening_hours?.weekday_text || null)
+            : null;
+          openAddDialog(name, openHours);
         }
       );
     } else {
-      openAddDialog("");
+      openAddDialog("", null);
     }
   });
 
@@ -191,20 +258,18 @@ function setupMap() {
   initPlacesSearch();
 }
 
-// Google Maps API Key（固定，不需使用者設定）
+// Google Maps API Key
 const GOOGLE_MAPS_KEY = "AIzaSyACPr5Rmw-vyFeNOO_oScADGSsxT3LR4D0";
 
 function loadGoogleMap() {
   if (window.google?.maps) return setupMap();
-
   const script = document.createElement("script");
   script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&callback=__initMap`;
   script.async = true;
   window.__initMap = setupMap;
   script.onerror = () => {
     mapHintEl.classList.remove("hidden");
-    mapHintEl.querySelector("p").textContent =
-      "Google Maps 載入失敗，請確認網路連線。";
+    mapHintEl.querySelector("p").textContent = "Google Maps 載入失敗，請確認網路連線。";
     document.getElementById("map").style.display = "none";
   };
   document.head.appendChild(script);
@@ -214,9 +279,7 @@ function loadGoogleMap() {
 function initPlacesSearch() {
   const input = document.getElementById("mapSearch");
   if (!window.google?.maps?.places || !input) return;
-  const autocomplete = new google.maps.places.Autocomplete(input, {
-    fields: ["name", "geometry"],
-  });
+  const autocomplete = new google.maps.places.Autocomplete(input, { fields: ["name", "geometry"] });
   autocomplete.bindTo("bounds", map);
   autocomplete.addListener("place_changed", () => {
     const place = autocomplete.getPlace();
@@ -224,10 +287,7 @@ function initPlacesSearch() {
     if (place.geometry.viewport) {
       map.fitBounds(place.geometry.viewport);
     } else {
-      map.panTo({
-        lat: place.geometry.location.lat(),
-        lng: place.geometry.location.lng(),
-      });
+      map.panTo({ lat: place.geometry.location.lat(), lng: place.geometry.location.lng() });
       map.setZoom(16);
     }
     input.value = "";
@@ -240,4 +300,8 @@ routeToggleBtn.addEventListener("click", () => {
   routeToggleBtn.textContent = state.showRoute ? "🛣 隱藏路線" : "🛣 顯示路線";
   routeToggleBtn.classList.toggle("active", state.showRoute);
   renderRoute();
+});
+
+document.querySelectorAll(".nearby-btn").forEach(btn => {
+  btn.addEventListener("click", () => searchNearby(btn.dataset.type));
 });
