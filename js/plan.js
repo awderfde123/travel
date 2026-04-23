@@ -3,7 +3,18 @@
 // ─────────────────────────────────────────────
 let planOrder = [];
 let planPool  = [];
-let planLegs  = {};  // key: "fromId__toId", value: transportItemId
+let planLegs  = {};  // key: "fromId__toId", value: mode string e.g. "🚗 自駕"
+
+const TRANSPORT_MODES = [
+  { icon: "🚶", label: "步行" },
+  { icon: "🚗", label: "自駕" },
+  { icon: "🚕", label: "計程車" },
+  { icon: "🚌", label: "公車" },
+  { icon: "🚇", label: "捷運" },
+  { icon: "🚆", label: "高鐵" },
+  { icon: "✈",  label: "飛機" },
+  { icon: "⛴",  label: "船" },
+];
 let planMap   = null;
 let planMarkers  = [];
 let planPolyline = null;
@@ -18,7 +29,6 @@ function renderPlanPage() {
   planLegs  = {};
   renderPoolCards();
   renderPlanCards();
-  renderPlanTransport();
   _rebuildTransportPool();
   initPlanMap();
   updatePlanSummary();
@@ -177,37 +187,26 @@ function _initListSortable() {
   });
 }
 
-// ── Transport pool (left column) ──
+// ── Transport mode pool (left column) ──
 function _rebuildTransportPool() {
   if (_transportPoolSortable) { _transportPoolSortable.destroy(); _transportPoolSortable = null; }
   const poolEl = document.getElementById("planTransportPool");
   if (!poolEl) return;
 
-  const items = typeof transportItems !== "undefined" ? transportItems : [];
-  if (!items.length) {
-    poolEl.innerHTML = `<div class="plan-transport-pool-empty">尚無票券</div>`;
-    return;
-  }
-
   poolEl.innerHTML = "";
-  items.forEach(t => {
-    const card = document.createElement("div");
-    card.className = "plan-card plan-transport-pool-card";
-    card.dataset.transportId = t.id;
-    card.innerHTML = `
-      <div class="plan-card-info">
-        <div class="plan-card-name">${transportIcon(t.method)} ${esc(t.method)}</div>
-        ${t.route ? `<span class="transport-tag" style="margin-top:2px;display:inline-block;">${esc(t.route)}</span>` : ""}
-      </div>`;
-    poolEl.appendChild(card);
+  TRANSPORT_MODES.forEach(({ icon, label }) => {
+    const tile = document.createElement("div");
+    tile.className = "plan-mode-tile";
+    tile.dataset.mode = `${icon} ${label}`;
+    tile.innerHTML = `<span class="plan-mode-icon">${icon}</span><span class="plan-mode-label">${label}</span>`;
+    poolEl.appendChild(tile);
   });
 
   if (window.Sortable) {
     _transportPoolSortable = Sortable.create(poolEl, {
       group:     { name: "transport", pull: "clone", put: false },
       animation: 150,
-      filter:    "button",
-      draggable: "[data-transport-id]",
+      draggable: "[data-mode]",
     });
   }
 }
@@ -219,15 +218,13 @@ function _createLegEl(key, fromId, toId) {
   legEl.dataset.from = fromId;
   legEl.dataset.to   = toId;
 
-  const assignedId  = planLegs[key];
-  const allTransport = typeof transportItems !== "undefined" ? transportItems : [];
-  const transport    = assignedId ? allTransport.find(t => t.id === assignedId) : null;
+  const mode = planLegs[key]; // e.g. "🚗 自駕"
 
-  if (transport) {
+  if (mode) {
     legEl.innerHTML = `
       <div class="plan-leg-assigned">
-        <span class="plan-leg-transport">${transportIcon(transport.method)} ${esc(transport.method)}</span>
-        <button class="plan-leg-clear" title="清除（步行）">✕</button>
+        <span class="plan-leg-transport">${esc(mode)}</span>
+        <button class="plan-leg-clear" title="清除">✕</button>
       </div>`;
     legEl.querySelector(".plan-leg-clear").addEventListener("click", () => {
       delete planLegs[key];
@@ -245,9 +242,9 @@ function _createLegEl(key, fromId, toId) {
         animation: 150,
         draggable: "[data-transport-id]",
         onAdd: (evt) => {
-          const tId = evt.item.dataset.transportId;
+          const mode = evt.item.dataset.mode;
           evt.item.remove();
-          planLegs[key] = tId;
+          planLegs[key] = mode;
           _rebuildLegs();
         },
       });
@@ -274,24 +271,6 @@ function _rebuildLegs() {
     const key    = `${fromId}__${toId}`;
     card.after(_createLegEl(key, fromId, toId));
   });
-}
-
-// ── Plan transport section ──
-function renderPlanTransport() {
-  const finals  = (typeof transportItems !== "undefined" ? transportItems : []).filter(t => t.isFinal);
-  const section = document.getElementById("planTransportSection");
-  const listEl  = document.getElementById("planTransportList");
-  if (!section) return;
-  if (!finals.length) { section.classList.add("hidden"); return; }
-  section.classList.remove("hidden");
-  listEl.innerHTML = finals.map(t => `
-    <div class="plan-transport-card">
-      <span class="plan-transport-method">${esc(t.method)}</span>
-      ${t.route ? `<span class="transport-tag">${esc(t.route)}</span>` : ""}
-      ${t.where ? `<span class="transport-tag">${esc(t.where)}</span>` : ""}
-      ${t.price > 0 ? `<span class="loc-budget">NT$${t.price.toLocaleString()}</span>` : ""}
-      <span class="${t.purchased ? "dic-purchased" : "dic-unpurchased"}">${t.purchased ? "✅ 已購買" : "🛒 未購買"}</span>
-    </div>`).join("");
 }
 
 // ── Plan map ──
