@@ -367,6 +367,36 @@ body {
 }
 
 /* ── Sidebar tabs ── */
+/* ── Sub-tabs (inside 旅程 panel) ── */
+.sub-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 10px 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.sub-tab-btn {
+  flex: 1;
+  padding: 6px 4px;
+  font-size: .78rem;
+  font-weight: 500;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+  font-family: "Noto Sans TC", sans-serif;
+}
+.sub-tab-btn:hover { color: var(--text); }
+.sub-tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 700;
+}
+
 .sidebar-tabs {
   flex-shrink: 0;
   display: flex;

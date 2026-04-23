@@ -9,7 +9,6 @@ function switchTab(activeTab) {
     document.getElementById(id).classList.toggle("active", id === activeTab);
     document.getElementById(SIDEBAR_PANELS[i]).classList.toggle("hidden", id !== activeTab);
   });
-  if (activeTab === "tabLocations") renderTripTransportList();
   if (activeTab === "tabTransport") renderTransportList();
   if (activeTab === "tabPacking")   renderPackingList();
 }
@@ -17,6 +16,18 @@ function switchTab(activeTab) {
 document.getElementById("tabLocations").addEventListener("click", () => switchTab("tabLocations"));
 document.getElementById("tabTransport").addEventListener("click", () => switchTab("tabTransport"));
 document.getElementById("tabPacking").addEventListener("click",   () => switchTab("tabPacking"));
+
+// ── 旅程內的子 tab ──
+function switchSubTab(active) {
+  ["subTabPlaces", "subTabTransport"].forEach(id => {
+    document.getElementById(id).classList.toggle("active", id === active);
+  });
+  document.getElementById("subPanelPlaces").classList.toggle("hidden",    active !== "subTabPlaces");
+  document.getElementById("subPanelTransport").classList.toggle("hidden", active !== "subTabTransport");
+  if (active === "subTabTransport") renderTripTransportList();
+}
+document.getElementById("subTabPlaces").addEventListener("click",    () => switchSubTab("subTabPlaces"));
+document.getElementById("subTabTransport").addEventListener("click", () => switchSubTab("subTabTransport"));
 
 // ─────────────────────────────────────────────
 // 定案 UI
