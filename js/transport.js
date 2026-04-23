@@ -70,11 +70,10 @@ function renderTransportList() {
           ${item.where ? `<span class="transport-tag">${esc(item.where)}</span>` : ""}
         </div>
         <div class="loc-meta-row">
-          ${item.price > 0 ? `<span class="loc-budget">NT$${item.price.toLocaleString()}</span>` : ""}
-          ${finalized ? `
-            <button class="transport-status-btn ${item.purchased ? "purchased" : "unpurchased"}">
-              ${item.purchased ? "✅ 已購買" : "🛒 未購買"}
-            </button>` : ""}
+          <button class="transport-status-btn ${item.purchased ? "purchased" : "unpurchased"}">
+            ${item.purchased ? "✅ 已購買" : "🛒 未購買"}
+            ${item.price > 0 ? `<span class="transport-status-price">NT$${item.price.toLocaleString()}</span>` : ""}
+          </button>
           <span class="loc-discuss-count">💬 ${count > 0 ? `${count} 則討論` : "查看討論"}</span>
         </div>
       </div>
@@ -85,14 +84,13 @@ function renderTransportList() {
       </div>` : ""}`;
 
     el.querySelector(".loc-info").addEventListener("click", () => openTransportDiscussPage(item.id));
-    if (finalized) {
-      el.querySelector(".transport-status-btn")?.addEventListener("click", e => {
-        e.stopPropagation();
-        item.purchased = !item.purchased;
-        saveTransport();
-        renderTransportList();
-      });
-    } else {
+    el.querySelector(".transport-status-btn").addEventListener("click", e => {
+      e.stopPropagation();
+      item.purchased = !item.purchased;
+      saveTransport();
+      renderTransportList();
+    });
+    if (!finalized) {
       el.querySelector(".icon-btn.edit").addEventListener("click", e => {
         e.stopPropagation();
         openEditTransportDialog(item.id);

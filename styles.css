@@ -986,6 +986,11 @@ dialog::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(6px); }
   transition: opacity .15s, transform .1s;
 }
 .transport-status-btn:hover { opacity: .8; transform: scale(.97); }
+.transport-status-price {
+  font-weight: 700;
+  margin-left: 5px;
+  opacity: .85;
+}
 .transport-status-btn.purchased {
   color: var(--green);
   background: var(--green-bg);
