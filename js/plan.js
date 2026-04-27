@@ -232,30 +232,36 @@ function _rebuildTransportPool() {
   }
 }
 
-// ── Ticket pool (left column) ──
+// ── Ticket pool (left column) — only shows unassigned tickets ──
 function _rebuildTicketPool() {
   if (_ticketPoolSortable) { _ticketPoolSortable.destroy(); _ticketPoolSortable = null; }
   const poolEl = document.getElementById("planTicketPool");
   if (!poolEl) return;
 
-  const tickets = typeof transportItems !== "undefined" ? transportItems : [];
-  if (!tickets.length) {
+  const all      = typeof transportItems !== "undefined" ? transportItems : [];
+  const assigned = new Set(Object.values(planTickets));
+  const available = all.filter(t => !assigned.has(t.id));
+
+  if (!all.length) {
     poolEl.innerHTML = `<div class="plan-transport-pool-empty">在票券 tab 新增後會顯示於此</div>`;
     return;
   }
 
   poolEl.innerHTML = "";
-  tickets.forEach(t => {
-    const card = document.createElement("div");
-    card.className = "plan-card plan-transport-pool-card";
-    card.dataset.ticketId = t.id;
-    card.innerHTML = `
-      <div class="plan-card-info">
-        <div class="plan-card-name">🎫 ${esc(t.method)}</div>
-        ${t.route ? `<span class="transport-tag" style="margin-top:2px;display:inline-block;">${esc(t.route)}</span>` : ""}
-      </div>`;
-    poolEl.appendChild(card);
-  });
+  if (!available.length) {
+    poolEl.innerHTML = `<div class="plan-transport-pool-empty">所有票券已分配</div>`;
+  } else {
+    available.forEach(t => {
+      const card = document.createElement("div");
+      card.className = "plan-card plan-transport-pool-card";
+      card.dataset.ticketId = t.id;
+      card.innerHTML = `
+        <div class="plan-card-info">
+          <div class="plan-card-name">🎫 ${esc(t.method)}</div>
+        </div>`;
+      poolEl.appendChild(card);
+    });
+  }
 
   if (window.Sortable) {
     _ticketPoolSortable = Sortable.create(poolEl, {
@@ -288,6 +294,7 @@ function _rebuildTicketZones() {
       zoneEl.querySelector(".plan-ticket-clear").addEventListener("click", e => {
         e.stopPropagation();
         delete planTickets[locId];
+        _rebuildTicketPool();
         _rebuildTicketZones();
       });
     } else {
@@ -302,6 +309,7 @@ function _rebuildTicketZones() {
           onAdd: (evt) => {
             evt.item.remove();
             planTickets[locId] = evt.item.dataset.ticketId;
+            _rebuildTicketPool();
             _rebuildTicketZones();
           },
         });
