@@ -1610,6 +1610,49 @@ dialog::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(6px); }
 .plan-leg-clear:hover { background: #fee2e2; color: var(--danger); }
 
 
+/* ── Finalized itinerary connectors ── */
+.loc-leg-connector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 4px 40px;
+  color: var(--muted);
+  font-size: .75rem;
+}
+.loc-leg-mode {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid rgba(37,99,235,.2);
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-size: .72rem;
+  font-weight: 600;
+}
+.loc-leg-walk {
+  background: var(--surface-3);
+  color: var(--muted);
+  border-color: var(--border);
+  font-weight: normal;
+}
+.loc-leg-note {
+  color: var(--muted);
+  font-size: .7rem;
+}
+.loc-plan-time {
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+.loc-ticket-badge {
+  font-size: .7rem;
+  background: var(--amber-bg);
+  color: var(--amber);
+  border-radius: 20px;
+  padding: 1px 7px;
+  border: 1px solid rgba(180,83,9,.2);
+}
+
 /* ── Finalized clean view ── */
 .main-page.finalized .map-toolbar  { display: none; }
 .main-page.finalized .nearby-bar   { display: none; }

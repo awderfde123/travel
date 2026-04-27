@@ -47,16 +47,22 @@ function renderLocationsList() {
     const count    = place.discussions?.length ?? 0;
     const budget   = place.budget || 0;
     const todayHrs = todayOpenHours(place.openHours);
-    const row      = document.createElement("div");
-    row.className  = "loc-item";
-    row.innerHTML  = `
+    const time     = finalized ? (state.planCardTimes?.[place.id] || "") : "";
+    const ticketId = finalized ? (state.planTickets?.[place.id] || "") : "";
+    const ticket   = ticketId ? (typeof transportItems !== "undefined" ? transportItems.find(t => t.id === ticketId) : null) : null;
+
+    const row = document.createElement("div");
+    row.className = "loc-item";
+    row.innerHTML = `
       <div class="loc-num">${state.places.indexOf(place) + 1}</div>
       <div class="loc-info">
+        ${time ? `<div class="loc-plan-time">🕐 ${esc(time)}</div>` : ""}
         <div class="loc-name">${esc(place.name)}</div>
-        ${place.note   ? `<div class="loc-note">${esc(place.note)}</div>` : ""}
-        ${todayHrs     ? `<div class="loc-hours">🕐 ${esc(todayHrs)}</div>` : ""}
+        ${place.note ? `<div class="loc-note">${esc(place.note)}</div>` : ""}
+        ${todayHrs   ? `<div class="loc-hours">🕐 ${esc(todayHrs)}</div>` : ""}
         <div class="loc-meta-row">
           ${budget > 0 ? `<span class="loc-budget">NT$${budget.toLocaleString()}</span>` : ""}
+          ${ticket ? `<span class="loc-ticket-badge">🎫 ${esc(ticket.method)}</span>` : ""}
           <button class="loc-discuss-btn">💬 ${count > 0 ? `${count} 則討論` : "查看討論"}</button>
         </div>
       </div>
@@ -66,19 +72,16 @@ function renderLocationsList() {
         <button class="icon-btn del danger" title="刪除">✕</button>
       </div>` : ""}`;
 
-    // 點卡片本體 → 地圖定位
     row.addEventListener("click", () => {
       if (map && place.lat != null && place.lng != null) {
         map.panTo({ lat: place.lat, lng: place.lng });
         map.setZoom(Math.max(map.getZoom(), 16));
       }
     });
-    // 點序號 → 討論頁（優先動作）
     row.querySelector(".loc-num").addEventListener("click", e => {
       e.stopPropagation();
       openDiscussPage(place.id);
     });
-    // 點 💬 按鈕 → 討論頁
     row.querySelector(".loc-discuss-btn").addEventListener("click", e => {
       e.stopPropagation();
       openDiscussPage(place.id);
@@ -88,6 +91,20 @@ function renderLocationsList() {
       row.querySelector(".icon-btn.del").addEventListener("click",  e => { e.stopPropagation(); deletePlace(place.id); });
     }
     locationsListEl.appendChild(row);
+
+    // ── Between-location transport connector (finalized only) ──
+    if (finalized && i < filtered.length - 1) {
+      const nextPlace = filtered[i + 1];
+      const key = `${place.id}__${nextPlace.id}`;
+      const legId = state.planLegs?.[key];
+      const leg = legId && typeof tripLegs !== "undefined" ? tripLegs.find(t => t.id === legId) : null;
+      const connector = document.createElement("div");
+      connector.className = "loc-leg-connector";
+      connector.innerHTML = leg
+        ? `<span class="loc-leg-mode">${esc(leg.mode)}</span>${leg.note ? `<span class="loc-leg-note">${esc(leg.note)}</span>` : ""}`
+        : `<span class="loc-leg-mode loc-leg-walk">🚶</span>`;
+      locationsListEl.appendChild(connector);
+    }
   });
 }
 

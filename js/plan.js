@@ -518,8 +518,11 @@ document.getElementById("confirmPlanBtn").addEventListener("click", () => {
     return;
   const ordered = planOrder.map((id) => getPlace(id)).filter(Boolean);
   const poolRest = planPool.map((id) => getPlace(id)).filter(Boolean);
-  state.places = [...ordered, ...poolRest];
-  state.finalized = true;
+  state.places        = [...ordered, ...poolRest];
+  state.finalized     = true;
+  state.planLegs      = { ...planLegs };
+  state.planCardTimes = { ...planCardTimes };
+  state.planTickets   = { ...planTickets };
   saveState();
   updateTripHistory({ finalized: true });
   if (typeof applyFinalizedUI === "function") applyFinalizedUI();

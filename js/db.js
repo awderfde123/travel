@@ -79,6 +79,9 @@ function cloudSave() {
         tripName:      state.tripName       || "",
         finalized:     state.finalized      || false,
         showRoute:     state.showRoute      || false,
+        planLegs:      JSON.parse(JSON.stringify(state.planLegs      || {})),
+        planCardTimes: JSON.parse(JSON.stringify(state.planCardTimes || {})),
+        planTickets:   JSON.parse(JSON.stringify(state.planTickets   || {})),
         places:        JSON.parse(JSON.stringify(state.places)),
         transport:     JSON.parse(JSON.stringify(transportItems)),
         tripLegs:      JSON.parse(JSON.stringify(tripLegs)),
@@ -100,9 +103,12 @@ async function loadFromCloud() {
     const doc = await ref.get();
     if (!doc.exists) return false;
     const data = doc.data();
-    if (data.tripName  !== undefined) state.tripName  = data.tripName;
-    if (data.finalized !== undefined) state.finalized = data.finalized;
-    if (data.showRoute !== undefined) state.showRoute = data.showRoute;
+    if (data.tripName      !== undefined) state.tripName      = data.tripName;
+    if (data.finalized     !== undefined) state.finalized     = data.finalized;
+    if (data.showRoute     !== undefined) state.showRoute     = data.showRoute;
+    if (data.planLegs      !== undefined) state.planLegs      = data.planLegs;
+    if (data.planCardTimes !== undefined) state.planCardTimes = data.planCardTimes;
+    if (data.planTickets   !== undefined) state.planTickets   = data.planTickets;
     if (Array.isArray(data.places))    state.places   = data.places;
     if (Array.isArray(data.transport)) transportItems = data.transport;
     if (Array.isArray(data.tripLegs))  tripLegs       = data.tripLegs;
@@ -142,9 +148,12 @@ function subscribeTrip() {
       const prevTripLegs  = JSON.stringify(tripLegs);
       const prevPacking   = JSON.stringify(packingShared);
 
-      if (data.tripName  !== undefined) state.tripName  = data.tripName;
-      if (data.finalized !== undefined) state.finalized = data.finalized;
-      if (data.showRoute !== undefined) state.showRoute = data.showRoute;
+      if (data.tripName      !== undefined) state.tripName      = data.tripName;
+      if (data.finalized     !== undefined) state.finalized     = data.finalized;
+      if (data.showRoute     !== undefined) state.showRoute     = data.showRoute;
+      if (data.planLegs      !== undefined) state.planLegs      = data.planLegs;
+      if (data.planCardTimes !== undefined) state.planCardTimes = data.planCardTimes;
+      if (data.planTickets   !== undefined) state.planTickets   = data.planTickets;
       if (Array.isArray(data.places))        state.places   = data.places;
       if (Array.isArray(data.transport))     transportItems = data.transport;
       if (Array.isArray(data.tripLegs))      tripLegs       = data.tripLegs;
