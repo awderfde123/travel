@@ -49,6 +49,7 @@ function applyFinalizedUI() {
   renderLocationsList();
   renderTransportList();
   renderPackingList();
+  if (typeof renderMarkers === "function") renderMarkers();
 }
 
 // 旅程名稱（使用 dialog 而非 prompt，相容 iOS WebView）

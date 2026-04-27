@@ -155,7 +155,7 @@ function clearRoute() {
 
 function renderRoute() {
   clearRoute();
-  if (!map || !state.showRoute || state.places.length < 2) return;
+  if (!map || (!state.showRoute && !state.finalized) || state.places.length < 2) return;
 
   const places = state.places;
   directionsRenderer = new google.maps.DirectionsRenderer({
