@@ -1135,10 +1135,12 @@ dialog::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(6px); }
   flex-shrink: 0;
 }
 
-/* Selected cards: fixed width, horizontal scroll */
+/* Selected cards: fixed width, column layout for ticket zone */
 .plan-list .plan-card {
+  flex-direction: column;
+  align-items: stretch;
   flex-shrink: 0;
-  width: 160px;
+  width: 170px;
   flex-direction: column;
   gap: 6px;
   align-items: stretch;
@@ -1157,9 +1159,52 @@ dialog::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(6px); }
   box-shadow: 0 2px 5px rgba(37,99,235,.28);
 }
 
+.plan-card-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+}
 .plan-card-info { flex: 1; min-width: 0; }
 .plan-card-name { font-weight: 600; font-size: .84rem; line-height: 1.35; }
 .plan-card-note { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+
+/* Ticket zone inside list card */
+.plan-ticket-zone {
+  width: 100%;
+  margin-top: 5px;
+  border-radius: var(--radius-xs);
+  min-height: 26px;
+  display: flex;
+  align-items: center;
+}
+.plan-ticket-empty {
+  border: 1px dashed var(--border);
+  justify-content: center;
+  cursor: default;
+}
+.plan-ticket-empty.sortable-drag-over { border-color: var(--accent); background: var(--accent-bg); }
+.plan-ticket-hint { font-size: .85rem; opacity: .3; }
+.plan-ticket-assigned {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  background: var(--amber-bg);
+  border: 1px solid var(--amber-border);
+  border-radius: var(--radius-xs);
+  font-size: .7rem;
+  color: var(--amber);
+  width: 100%;
+  overflow: hidden;
+}
+.plan-ticket-assigned span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.plan-ticket-clear {
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: .65rem; padding: 0 2px;
+  flex-shrink: 0;
+}
+.plan-ticket-clear:hover { color: var(--danger); }
 .plan-card-budget {
   display: inline-block;
   margin-top: 5px;
@@ -1344,7 +1389,8 @@ dialog::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(6px); }
     overflow-y: auto;
     max-height: 220px;
   }
-  .plan-list .plan-card { width: 100%; flex-direction: row; align-items: center; }
+  .plan-list .plan-card { width: 100%; }
+  .plan-list .plan-card .plan-card-row { align-items: center; }
   .plan-leg { width: 100%; padding: 2px 0; }
   .plan-leg-drop { width: 100%; min-width: unset; min-height: 36px; }
   .plan-leg-assigned { width: 100%; flex-direction: row; justify-content: center; }

@@ -151,7 +151,7 @@
               <div id="transportPanel" class="tab-panel hidden">
                 <div class="panel-header" style="display:flex;align-items:center;justify-content:space-between;">
                   <h2>🎫 票券 <span id="transportBadge" class="loc-count-badge"></span></h2>
-                  <button id="addTransportBtn" class="primary" style="font-size:.78rem;padding:5px 11px;">＋ 新增</button>
+                  <button id="addTransportBtn" class="primary" style="font-size:.78rem;padding:5px 11px;">＋ 新增票券</button>
                 </div>
                 <div id="transportList" class="locations-list"></div>
               </div>
@@ -212,6 +212,8 @@
 
             <div class="plan-pool-section-head">🚌 旅程交通 <span class="plan-pool-section-hint">拖曳至地點間</span></div>
             <div id="planTransportPool" class="plan-transport-pool"></div>
+            <div class="plan-pool-section-head">🎫 票券 <span class="plan-pool-section-hint">拖曳至地點</span></div>
+            <div id="planTicketPool" class="plan-transport-pool"></div>
           </div>
           <div class="plan-right-col">
             <div class="plan-map-wrap">
@@ -334,11 +336,11 @@
     </dialog>
 
     <dialog id="addTransportDialog">
-      <div class="dialog-header"><h3>🚌 新增交通</h3></div>
+      <div class="dialog-header"><h3>🎫 新增票券</h3></div>
       <div class="dialog-body">
         <div class="field">
-          <label>交通方式 <span class="req">*</span></label>
-          <input id="tMethod" type="text" placeholder="高鐵、客運、計程車、飛機…" />
+          <label>票券名稱 <span class="req">*</span></label>
+          <input id="tMethod" type="text" placeholder="高鐵票、入場券、博物館票…" />
         </div>
         <div class="field">
           <label>路線（選填）</label>
@@ -365,11 +367,11 @@
     </dialog>
 
     <dialog id="editTransportDialog">
-      <div class="dialog-header"><h3>✏ 編輯交通</h3></div>
+      <div class="dialog-header"><h3>✏ 編輯票券</h3></div>
       <div class="dialog-body">
         <div class="field">
-          <label>交通方式 <span class="req">*</span></label>
-          <input id="etMethod" type="text" placeholder="高鐵、客運、計程車、飛機…" />
+          <label>票券名稱 <span class="req">*</span></label>
+          <input id="etMethod" type="text" placeholder="高鐵票、入場券、博物館票…" />
         </div>
         <div class="field">
           <label>路線（選填）</label>

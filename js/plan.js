@@ -1,9 +1,10 @@
 // ─────────────────────────────────────────────
 // 行程規劃頁
 // ─────────────────────────────────────────────
-let planOrder = [];
-let planPool  = [];
-let planLegs  = {};  // key: "fromId__toId", value: mode string e.g. "🚗 自駕"
+let planOrder   = [];
+let planPool    = [];
+let planLegs    = {};     // key: "fromId__toId", value: tripLeg ID
+let planTickets = {};     // key: locationId, value: transportItem ID
 
 let planMap   = null;
 let planMarkers  = [];
@@ -12,14 +13,18 @@ let _poolSortable          = null;
 let _listSortable          = null;
 let _legSortables          = [];
 let _transportPoolSortable = null;
+let _ticketPoolSortable    = null;
+let _ticketZoneSortables   = [];
 
 function renderPlanPage() {
-  planPool  = state.places.map(p => p.id);
-  planOrder = [];
-  planLegs  = {};
+  planPool    = state.places.map(p => p.id);
+  planOrder   = [];
+  planLegs    = {};
+  planTickets = {};
   renderPoolCards();
   renderPlanCards();
   _rebuildTransportPool();
+  _rebuildTicketPool();
   initPlanMap();
   updatePlanSummary();
 }
@@ -37,13 +42,18 @@ function _poolCardInner(p) {
 
 function _listCardInner(p, num) {
   return `
-    <div class="plan-card-num">${num}</div>
-    <div class="plan-card-info">
-      <div class="plan-card-name">${esc(p.name)}</div>
-      ${p.note   ? `<div class="plan-card-note">${esc(p.note)}</div>` : ""}
-      ${p.budget > 0 ? `<div class="plan-card-budget">NT$${p.budget.toLocaleString()}</div>` : ""}
+    <div class="plan-card-row">
+      <div class="plan-card-num">${num}</div>
+      <div class="plan-card-info">
+        <div class="plan-card-name">${esc(p.name)}</div>
+        ${p.note   ? `<div class="plan-card-note">${esc(p.note)}</div>` : ""}
+        ${p.budget > 0 ? `<div class="plan-card-budget">NT$${p.budget.toLocaleString()}</div>` : ""}
+      </div>
+      <button class="plan-tap-remove" title="移除">✕</button>
     </div>
-    <button class="plan-tap-remove" title="移除">✕</button>`;
+    <div class="plan-ticket-zone plan-ticket-empty" data-loc-id="${p.id}">
+      <span class="plan-ticket-hint">🎫</span>
+    </div>`;
 }
 
 function _attachPoolEvents(card, id) {
@@ -110,6 +120,7 @@ function renderPlanCards() {
   }
   _initListSortable();
   _rebuildLegs();
+  _rebuildTicketZones();
 }
 
 // ── SortableJS helpers ──
@@ -142,6 +153,7 @@ function _initPoolSortable() {
       _readState();
       _renumberList();
       _rebuildLegs();
+      _rebuildTicketZones();
       renderPlanMarkers(); updatePlanSummary();
     },
     onUpdate: () => { _readState(); },
@@ -169,10 +181,11 @@ function _initListSortable() {
       _readState();
       _renumberList();
       _rebuildLegs();
+      _rebuildTicketZones();
       renderPlanMarkers(); updatePlanSummary();
     },
     onUpdate: () => {
-      _readState(); _renumberList(); _rebuildLegs(); renderPlanMarkers(); updatePlanSummary();
+      _readState(); _renumberList(); _rebuildLegs(); _rebuildTicketZones(); renderPlanMarkers(); updatePlanSummary();
     },
   });
 }
@@ -213,6 +226,85 @@ function _rebuildTransportPool() {
       draggable: "[data-trip-leg-id]",
     });
   }
+}
+
+// ── Ticket pool (left column) ──
+function _rebuildTicketPool() {
+  if (_ticketPoolSortable) { _ticketPoolSortable.destroy(); _ticketPoolSortable = null; }
+  const poolEl = document.getElementById("planTicketPool");
+  if (!poolEl) return;
+
+  const tickets = typeof transportItems !== "undefined" ? transportItems : [];
+  if (!tickets.length) {
+    poolEl.innerHTML = `<div class="plan-transport-pool-empty">在票券 tab 新增後會顯示於此</div>`;
+    return;
+  }
+
+  poolEl.innerHTML = "";
+  tickets.forEach(t => {
+    const card = document.createElement("div");
+    card.className = "plan-card plan-transport-pool-card";
+    card.dataset.ticketId = t.id;
+    card.innerHTML = `
+      <div class="plan-card-info">
+        <div class="plan-card-name">🎫 ${esc(t.method)}</div>
+        ${t.route ? `<span class="transport-tag" style="margin-top:2px;display:inline-block;">${esc(t.route)}</span>` : ""}
+      </div>`;
+    poolEl.appendChild(card);
+  });
+
+  if (window.Sortable) {
+    _ticketPoolSortable = Sortable.create(poolEl, {
+      group:     { name: "tickets", pull: "clone", put: false },
+      animation: 150,
+      filter:    "button",
+      draggable: "[data-ticket-id]",
+    });
+  }
+}
+
+// ── Ticket zones inside location cards ──
+function _rebuildTicketZones() {
+  _ticketZoneSortables.forEach(s => { try { s.destroy(); } catch(e) {} });
+  _ticketZoneSortables = [];
+
+  document.querySelectorAll("#planList .plan-ticket-zone").forEach(zoneEl => {
+    const locId    = zoneEl.dataset.locId;
+    const ticketId = planTickets[locId];
+    const all      = typeof transportItems !== "undefined" ? transportItems : [];
+    const ticket   = ticketId ? all.find(t => t.id === ticketId) : null;
+
+    if (ticket) {
+      zoneEl.classList.remove("plan-ticket-empty");
+      zoneEl.innerHTML = `
+        <div class="plan-ticket-assigned">
+          <span>🎫 ${esc(ticket.method)}</span>
+          <button class="plan-ticket-clear">✕</button>
+        </div>`;
+      zoneEl.querySelector(".plan-ticket-clear").addEventListener("click", e => {
+        e.stopPropagation();
+        delete planTickets[locId];
+        _rebuildTicketZones();
+      });
+    } else {
+      zoneEl.classList.add("plan-ticket-empty");
+      zoneEl.innerHTML = `<span class="plan-ticket-hint">🎫</span>`;
+
+      if (window.Sortable) {
+        const s = Sortable.create(zoneEl, {
+          group:     { name: "tickets", pull: false, put: true },
+          animation: 150,
+          draggable: "[data-ticket-id]",
+          onAdd: (evt) => {
+            evt.item.remove();
+            planTickets[locId] = evt.item.dataset.ticketId;
+            _rebuildTicketZones();
+          },
+        });
+        _ticketZoneSortables.push(s);
+      }
+    }
+  });
 }
 
 // ── Leg connectors between place cards ──
