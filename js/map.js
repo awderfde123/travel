@@ -362,6 +362,9 @@ function initPlacesSearch() {
     // Pan / zoom
     if (place.geometry.viewport) {
       map.fitBounds(place.geometry.viewport);
+      google.maps.event.addListenerOnce(map, "idle", () => {
+        if (map.getZoom() < 15) map.setZoom(15);
+      });
     } else {
       map.panTo({ lat, lng });
       map.setZoom(16);
