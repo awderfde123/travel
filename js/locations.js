@@ -66,11 +66,12 @@ function renderLocationsList() {
           <button class="loc-discuss-btn">💬 ${count > 0 ? `${count} 則討論` : "查看討論"}</button>
         </div>
       </div>
-      ${!finalized ? `
       <div class="loc-actions">
+        ${finalized && place.lat != null ? `<button class="icon-btn nav-btn" title="開啟導航">🧭</button>` : ""}
+        ${!finalized ? `
         <button class="icon-btn edit" title="編輯">✏</button>
-        <button class="icon-btn del danger" title="刪除">✕</button>
-      </div>` : ""}`;
+        <button class="icon-btn del danger" title="刪除">✕</button>` : ""}
+      </div>`;
 
     row.addEventListener("click", () => {
       if (map && place.lat != null && place.lng != null) {
@@ -86,6 +87,12 @@ function renderLocationsList() {
       e.stopPropagation();
       openDiscussPage(place.id);
     });
+    if (finalized && place.lat != null) {
+      row.querySelector(".nav-btn").addEventListener("click", e => {
+        e.stopPropagation();
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}`, "_blank");
+      });
+    }
     if (!finalized) {
       row.querySelector(".icon-btn.edit").addEventListener("click", e => { e.stopPropagation(); openEditDialog(place.id); });
       row.querySelector(".icon-btn.del").addEventListener("click",  e => { e.stopPropagation(); deletePlace(place.id); });

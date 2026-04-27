@@ -908,6 +908,8 @@ button.danger:hover { background: #fee2e2; border-color: #f87171; }
 .icon-btn.edit:hover  { color: var(--accent); border-color: rgba(37,99,235,.35); background: var(--accent-bg); }
 .icon-btn.del   { border-color: #fecaca; background: var(--danger-bg); color: var(--danger); }
 .icon-btn.del:hover   { background: #fee2e2; border-color: #f87171; }
+.icon-btn.nav-btn { border-color: #bbf7d0; background: var(--green-bg); color: var(--green); font-size: 1rem; }
+.icon-btn.nav-btn:hover { background: #dcfce7; border-color: #4ade80; }
 
 .tool-btn { font-size: .78rem; padding: 5px 12px; }
 .tool-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
