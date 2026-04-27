@@ -79,16 +79,36 @@ document.getElementById("backToTripsBtn")?.addEventListener("click", () => {
   location.hash = "#/";
 });
 
+function _updateUserDisplay(name) {
+  const n = name || localStorage.getItem(AUTHOR_KEY) || "";
+  const topbarEl = document.getElementById("topbarUserName");
+  if (topbarEl) topbarEl.textContent = n;
+  const packingEl = document.getElementById("packingUserName");
+  if (packingEl) packingEl.textContent = n;
+  const discussEl = document.getElementById("dAuthorDisplay");
+  if (discussEl) discussEl.textContent = n;
+}
+
 // 確認名稱（初次設定 & 修改皆用此 listener）
 document.getElementById("confirmNameBtn")?.addEventListener("click", () => {
   const name = document.getElementById("nameInput").value.trim();
   if (!name) return;
   localStorage.setItem(AUTHOR_KEY, name);
-  document.getElementById("cancelNameBtn").classList.add("hidden");
   document.getElementById("nameDialog").close();
-  const userEl = document.getElementById("packingUserName");
-  if (userEl) userEl.textContent = name;
+  _updateUserDisplay(name);
   renderPackingList();
+});
+
+// 更改名稱按鈕（topbar）
+document.getElementById("changeUserBtn")?.addEventListener("click", () => {
+  document.getElementById("nameInput").value = localStorage.getItem(AUTHOR_KEY) || "";
+  document.getElementById("cancelNameBtn").classList.remove("hidden");
+  document.getElementById("nameDialog").showModal();
+  setTimeout(() => document.getElementById("nameInput").select(), 50);
+});
+
+document.getElementById("cancelNameBtn")?.addEventListener("click", () => {
+  document.getElementById("nameDialog").close();
 });
 
 
@@ -103,6 +123,7 @@ document.getElementById("confirmNameBtn")?.addEventListener("click", () => {
     // Wait for dialog to close (confirmNameBtn closes it)
     await new Promise(resolve => dlg.addEventListener("close", resolve, { once: true }));
   }
+  _updateUserDisplay();
 
   // 2. 初始化 Firebase + 旅程代碼
   initDb();
