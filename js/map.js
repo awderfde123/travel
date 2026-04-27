@@ -286,7 +286,10 @@ function setupMap() {
   window._placesAllowed   = _placesAllowed;
   window._placesIncrement = _placesIncrement;
 
+  let _suppressMapClick = false;
+
   map.addListener("click", event => {
+    if (_suppressMapClick) return;
     const lat = event.latLng.lat();
     const lng = event.latLng.lng();
 
@@ -314,11 +317,12 @@ function setupMap() {
     }
   });
 
-  // Close card when clicking empty map area (keep marker)
-  map.addListener("click", () => _hidePlaceCard());
-
   // Place card buttons
-  document.getElementById("placeCardClose")?.addEventListener("click", _hidePlaceCard);
+  document.getElementById("placeCardClose")?.addEventListener("click", () => {
+    _suppressMapClick = true;
+    _hidePlaceCard();
+    setTimeout(() => { _suppressMapClick = false; }, 300);
+  });
   document.getElementById("placeCardAdd")?.addEventListener("click", () => {
     if (_placeCardLat === null) return;
     pendingLatLng = { lat: _placeCardLat, lng: _placeCardLng };
