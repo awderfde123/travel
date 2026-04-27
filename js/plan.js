@@ -199,8 +199,7 @@ function _rebuildTransportPool() {
   if (!poolEl) return;
 
   const legs = typeof tripLegs !== "undefined" ? tripLegs : [];
-  // Filter out 步行 — no card needed, just leave leg empty
-  const draggable = legs.filter(t => !t.mode.includes("步行"));
+  const draggable = legs;
 
   if (!draggable.length) {
     poolEl.innerHTML = `<div class="plan-transport-pool-empty">在旅程 → 交通新增後會顯示於此</div>`;
