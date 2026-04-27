@@ -35,10 +35,13 @@ document.getElementById("subTabTransport").addEventListener("click", () => switc
 function applyFinalizedUI() {
   const f = state.finalized;
 
+  document.getElementById("mainView")?.classList.toggle("finalized", f);
   document.getElementById("unfinalizeBtn")?.classList.toggle("hidden", !f);
   document.getElementById("finalizedBadge")?.classList.toggle("hidden", !f);
   document.getElementById("openPlanBtn")?.classList.toggle("hidden", f);
   document.getElementById("addTransportBtn")?.classList.toggle("hidden", f);
+
+  if (f) switchTab("tabLocations");
 
   const nameEl = document.getElementById("tripNameDisplay");
   if (nameEl) nameEl.textContent = state.tripName || tripId || "旅程";
