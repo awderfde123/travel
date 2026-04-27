@@ -28,6 +28,20 @@ function markerSvg(num) {
   };
 }
 
+function searchMarkerSvg() {
+  const w = 28, h = 38;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+    <path d="M14 2C8.477 2 4 6.477 4 12c0 7.418 10 24 10 24S24 19.418 24 12C24 6.477 19.523 2 14 2z"
+          fill="#16a34a" stroke="white" stroke-width="2"/>
+    <circle cx="14" cy="12" r="5" fill="white"/>
+  </svg>`;
+  return {
+    url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
+    scaledSize: new google.maps.Size(w, h),
+    anchor: new google.maps.Point(w / 2, h),
+  };
+}
+
 function nearbyMarkerSvg() {
   const s = 18;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}">
@@ -229,8 +243,10 @@ function _showMapPin(lat, lng, name, address, openHours) {
   _searchMarker = new google.maps.Marker({
     map,
     position:  { lat, lng },
+    icon:      searchMarkerSvg(),
     animation: google.maps.Animation.DROP,
     title:     name || "",
+    zIndex:    999,
   });
   _searchMarker.addListener("click", () => _showPlaceCard(name, address, openHours));
 
