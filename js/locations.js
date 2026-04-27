@@ -43,6 +43,27 @@ function renderLocationsList() {
   }
 
   const finalized = state.finalized;
+
+  // ── 定案模式：整趟旅程導航按鈕 ──
+  if (finalized) {
+    const withCoords = state.places.filter(p => p.lat != null && p.lng != null);
+    if (withCoords.length >= 2) {
+      const origin      = withCoords[0];
+      const destination = withCoords[withCoords.length - 1];
+      const waypoints   = withCoords.slice(1, -1).map(p => `${p.lat},${p.lng}`).join("|");
+      const url = `https://www.google.com/maps/dir/?api=1` +
+        `&origin=${origin.lat},${origin.lng}` +
+        `&destination=${destination.lat},${destination.lng}` +
+        (waypoints ? `&waypoints=${waypoints}` : "") +
+        `&travelmode=driving`;
+      const navBar = document.createElement("div");
+      navBar.className = "trip-nav-bar";
+      navBar.innerHTML = `<button class="trip-nav-btn">🧭 開啟導航</button>`;
+      navBar.querySelector(".trip-nav-btn").addEventListener("click", () => window.open(url, "_blank"));
+      locationsListEl.appendChild(navBar);
+    }
+  }
+
   filtered.forEach((place, i) => {
     const count    = place.discussions?.length ?? 0;
     const budget   = place.budget || 0;
@@ -66,12 +87,11 @@ function renderLocationsList() {
           <button class="loc-discuss-btn">💬 ${count > 0 ? `${count} 則討論` : "查看討論"}</button>
         </div>
       </div>
+      ${!finalized ? `
       <div class="loc-actions">
-        ${finalized && place.lat != null ? `<button class="icon-btn nav-btn" title="開啟導航">🧭</button>` : ""}
-        ${!finalized ? `
         <button class="icon-btn edit" title="編輯">✏</button>
-        <button class="icon-btn del danger" title="刪除">✕</button>` : ""}
-      </div>`;
+        <button class="icon-btn del danger" title="刪除">✕</button>
+      </div>` : ""}`;
 
     row.addEventListener("click", () => {
       if (map && place.lat != null && place.lng != null) {
@@ -87,12 +107,6 @@ function renderLocationsList() {
       e.stopPropagation();
       openDiscussPage(place.id);
     });
-    if (finalized && place.lat != null) {
-      row.querySelector(".nav-btn").addEventListener("click", e => {
-        e.stopPropagation();
-        window.open(`https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}`, "_blank");
-      });
-    }
     if (!finalized) {
       row.querySelector(".icon-btn.edit").addEventListener("click", e => { e.stopPropagation(); openEditDialog(place.id); });
       row.querySelector(".icon-btn.del").addEventListener("click",  e => { e.stopPropagation(); deletePlace(place.id); });
