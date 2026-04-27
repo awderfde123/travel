@@ -314,11 +314,11 @@ function setupMap() {
     }
   });
 
-  // Close card when clicking empty map area
-  map.addListener("click", () => _clearSearchPin());
+  // Close card when clicking empty map area (keep marker)
+  map.addListener("click", () => _hidePlaceCard());
 
   // Place card buttons
-  document.getElementById("placeCardClose")?.addEventListener("click", _clearSearchPin);
+  document.getElementById("placeCardClose")?.addEventListener("click", _hidePlaceCard);
   document.getElementById("placeCardAdd")?.addEventListener("click", () => {
     if (_placeCardLat === null) return;
     pendingLatLng = { lat: _placeCardLat, lng: _placeCardLng };
