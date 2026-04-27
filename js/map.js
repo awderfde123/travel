@@ -235,19 +235,27 @@ function _hidePlaceCard() {
 }
 
 function _showMapPin(lat, lng, name, address, openHours) {
-  _clearSearchPin();
-  _placeCardLat      = lat;
-  _placeCardLng      = lng;
+  _placeCardLat       = lat;
+  _placeCardLng       = lng;
   _placeCardOpenHours = openHours;
 
-  _searchMarker = new google.maps.Marker({
-    map,
-    position:  { lat, lng },
-    icon:      searchMarkerSvg(),
-    animation: google.maps.Animation.DROP,
-    title:     name || "",
-    zIndex:    999,
-  });
+  if (_searchMarker) {
+    // Just move the existing marker — no flash
+    _searchMarker.setPosition({ lat, lng });
+    _searchMarker.setTitle(name || "");
+  } else {
+    _searchMarker = new google.maps.Marker({
+      map,
+      position:  { lat, lng },
+      icon:      searchMarkerSvg(),
+      animation: google.maps.Animation.DROP,
+      title:     name || "",
+      zIndex:    999,
+    });
+  }
+
+  // Refresh click listener for updated place info
+  google.maps.event.clearListeners(_searchMarker, "click");
   _searchMarker.addListener("click", () => _showPlaceCard(name, address, openHours));
 
   _showPlaceCard(name, address, openHours);
