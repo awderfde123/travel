@@ -81,6 +81,7 @@ function cloudSave() {
         showRoute:     state.showRoute      || false,
         places:        JSON.parse(JSON.stringify(state.places)),
         transport:     JSON.parse(JSON.stringify(transportItems)),
+        tripLegs:      JSON.parse(JSON.stringify(tripLegs)),
         packingShared: JSON.parse(JSON.stringify(packingShared)),
         updatedAt:     firebase.firestore.FieldValue.serverTimestamp(),
       });
@@ -104,6 +105,7 @@ async function loadFromCloud() {
     if (data.showRoute !== undefined) state.showRoute = data.showRoute;
     if (Array.isArray(data.places))    state.places   = data.places;
     if (Array.isArray(data.transport)) transportItems = data.transport;
+    if (Array.isArray(data.tripLegs))  tripLegs       = data.tripLegs;
     // 新版 packing（含舊版遷移）
     if (Array.isArray(data.packingShared)) {
       packingShared = data.packingShared;
@@ -113,6 +115,7 @@ async function loadFromCloud() {
     // packingPersonal is intentionally NOT synced — each user keeps their own local list
     saveState(false);
     saveTransport(false);
+    saveTripLegs(false);
     savePacking(false);
     updateTripHistory();
     return true;
@@ -136,6 +139,7 @@ function subscribeTrip() {
       const wasFinalized  = state.finalized;
       const prevPlacesStr = JSON.stringify(state.places);
       const prevTransport = JSON.stringify(transportItems);
+      const prevTripLegs  = JSON.stringify(tripLegs);
       const prevPacking   = JSON.stringify(packingShared);
 
       if (data.tripName  !== undefined) state.tripName  = data.tripName;
@@ -143,19 +147,23 @@ function subscribeTrip() {
       if (data.showRoute !== undefined) state.showRoute = data.showRoute;
       if (Array.isArray(data.places))        state.places   = data.places;
       if (Array.isArray(data.transport))     transportItems = data.transport;
+      if (Array.isArray(data.tripLegs))      tripLegs       = data.tripLegs;
       if (Array.isArray(data.packingShared)) packingShared  = data.packingShared;
       // packingPersonal is intentionally NOT synced — each user keeps their own local list
       saveState(false);
       saveTransport(false);
+      saveTripLegs(false);
       savePacking(false);
       updateTripHistory();
 
       const placesChanged    = JSON.stringify(state.places)  !== prevPlacesStr;
       const transportChanged = JSON.stringify(transportItems) !== prevTransport;
+      const tripLegsChanged  = JSON.stringify(tripLegs)       !== prevTripLegs;
       const packingChanged   = JSON.stringify(packingShared)  !== prevPacking;
 
       if (placesChanged) { renderLocationsList(); renderMarkers(); }
       if (transportChanged) renderTransportList();
+      if (tripLegsChanged)  renderTripLegList();
       if (packingChanged)   renderPackingList();
 
       const nameEl = document.getElementById("tripNameDisplay");
@@ -188,6 +196,7 @@ async function joinTrip(code) {
   state.tripName  = "";
   state.finalized = false;
   transportItems  = [];
+  tripLegs        = [];
   packingShared   = [];
   packingPersonal = [];
 
@@ -195,6 +204,7 @@ async function joinTrip(code) {
   if (!loaded) {
     saveState(false);
     saveTransport(false);
+    saveTripLegs(false);
     savePacking(false);
     cloudSave();
   }

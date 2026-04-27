@@ -1354,6 +1354,8 @@ dialog::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(6px); }
   .plan-pool, .locations-list, .discuss-msgs { touch-action: pan-y; }
 }
 
+.leg-note { font-size: .73rem; color: var(--muted); }
+
 /* ── Transport tags ── */
 .transport-tags {
   display: flex;

@@ -126,69 +126,8 @@ function openEditTransportDialog(id) {
   setTimeout(() => document.getElementById("etMethod").focus(), 50);
 }
 
-// ── 旅程 tab 裡的交通列表（與票券 tab 共用資料）──
-function renderTripTransportList() {
-  const listEl  = document.getElementById("tripTransportList");
-  const badgeEl = document.getElementById("tripTransportBadge");
-  if (!listEl) return;
-  if (badgeEl) badgeEl.textContent = transportItems.length ? `${transportItems.length} 筆` : "";
-
-  listEl.innerHTML = "";
-  if (!transportItems.length) {
-    listEl.innerHTML = `<div class="empty-state" style="padding:16px 0;"><p style="color:var(--muted);font-size:.85rem;text-align:center;">尚無交通資訊</p></div>`;
-    return;
-  }
-  const finalized = state.finalized;
-  transportItems.forEach(item => {
-    const el = document.createElement("div");
-    el.className = "loc-item";
-    el.innerHTML = `
-      <div class="loc-info">
-        <div class="loc-name">${transportIcon(item.method)} ${esc(item.method)}
-          ${item.isFinal ? '<span class="transport-final-badge">定案</span>' : ""}
-        </div>
-        <div class="transport-tags">
-          ${item.route ? `<span class="transport-tag">${esc(item.route)}</span>` : ""}
-          ${item.where ? `<span class="transport-tag">${esc(item.where)}</span>` : ""}
-        </div>
-        <button class="transport-status-btn ${item.purchased ? "purchased" : "unpurchased"}">
-          ${item.purchased ? "✅ 已購買" : "🛒 未購買"}
-          ${item.price > 0 ? `<span class="transport-status-price">NT$${item.price.toLocaleString()}</span>` : ""}
-        </button>
-      </div>
-      ${!finalized ? `
-      <div class="loc-actions">
-        <button class="icon-btn edit" title="編輯">✏</button>
-        <button class="icon-btn del danger" title="刪除">✕</button>
-      </div>` : ""}`;
-
-    el.querySelector(".transport-status-btn").addEventListener("click", e => {
-      e.stopPropagation();
-      item.purchased = !item.purchased;
-      saveTransport();
-      renderTripTransportList();
-      renderTransportList();
-    });
-    if (!finalized) {
-      el.querySelector(".icon-btn.edit").addEventListener("click", e => {
-        e.stopPropagation();
-        openEditTransportDialog(item.id);
-      });
-      el.querySelector(".del").addEventListener("click", e => {
-        e.stopPropagation();
-        transportItems = transportItems.filter(t => t.id !== item.id);
-        saveTransport();
-        renderTripTransportList();
-        renderTransportList();
-      });
-    }
-    listEl.appendChild(el);
-  });
-}
-
 // ─ 事件綁定 ─
 document.getElementById("addTransportBtn").addEventListener("click", openAddTransportDialog);
-document.getElementById("addTripTransportBtn").addEventListener("click", openAddTransportDialog);
 
 document.getElementById("confirmAddTransportBtn").addEventListener("click", () => {
   const method = document.getElementById("tMethod").value.trim();
@@ -205,7 +144,6 @@ document.getElementById("confirmAddTransportBtn").addEventListener("click", () =
   saveTransport();
   document.getElementById("addTransportDialog").close();
   renderTransportList();
-  renderTripTransportList();
 });
 
 document.getElementById("cancelAddTransportBtn").addEventListener("click", () => {
@@ -225,7 +163,6 @@ document.getElementById("saveEditTransportBtn").addEventListener("click", () => 
   saveTransport();
   document.getElementById("editTransportDialog").close();
   renderTransportList();
-  renderTripTransportList();
   if (!discussViewEl.classList.contains("hidden")) renderDiscussView();
 });
 

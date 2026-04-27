@@ -394,6 +394,58 @@
       </menu>
     </dialog>
 
+    <dialog id="addTripLegDialog">
+      <div class="dialog-header"><h3>🚌 新增交通</h3></div>
+      <div class="dialog-body">
+        <div class="field">
+          <label>交通方式 <span class="req">*</span></label>
+          <input id="tlMode" type="text" placeholder="高鐵、計程車、自駕、客運…" />
+        </div>
+        <div class="field">
+          <label>路線（選填）</label>
+          <input id="tlRoute" type="text" placeholder="台北 → 花蓮" />
+        </div>
+        <div class="field">
+          <label>時間（選填）</label>
+          <input id="tlTime" type="text" placeholder="09:00 出發" />
+        </div>
+        <div class="field">
+          <label>備註（選填）</label>
+          <input id="tlNote" type="text" placeholder="備注資訊" />
+        </div>
+      </div>
+      <menu class="dialog-footer">
+        <button id="confirmAddTripLegBtn" class="primary">新增</button>
+        <button id="cancelAddTripLegBtn">取消</button>
+      </menu>
+    </dialog>
+
+    <dialog id="editTripLegDialog">
+      <div class="dialog-header"><h3>✏ 編輯交通</h3></div>
+      <div class="dialog-body">
+        <div class="field">
+          <label>交通方式 <span class="req">*</span></label>
+          <input id="etlMode" type="text" placeholder="高鐵、計程車、自駕、客運…" />
+        </div>
+        <div class="field">
+          <label>路線（選填）</label>
+          <input id="etlRoute" type="text" placeholder="台北 → 花蓮" />
+        </div>
+        <div class="field">
+          <label>時間（選填）</label>
+          <input id="etlTime" type="text" placeholder="09:00 出發" />
+        </div>
+        <div class="field">
+          <label>備註（選填）</label>
+          <input id="etlNote" type="text" placeholder="備注資訊" />
+        </div>
+      </div>
+      <menu class="dialog-footer">
+        <button id="saveEditTripLegBtn" class="primary">儲存</button>
+        <button id="cancelEditTripLegBtn">取消</button>
+      </menu>
+    </dialog>
+
     <dialog id="joinTripDialog">
       <div class="dialog-header">
         <h3>🔑 加入旅程</h3>
@@ -418,6 +470,7 @@
     <script src="js/utils.js"></script>
     <script src="js/state.js"></script>
     <script src="js/transport.js"></script>
+    <script src="js/tripleg.js"></script>
     <script src="js/packing.js"></script>
     <script src="js/plan.js"></script>
     <script src="js/discuss.js"></script>

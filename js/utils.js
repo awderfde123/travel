@@ -6,6 +6,7 @@ const AUTHOR_KEY           = "trip-map-author";
 const TRANSPORT_KEY        = "trip-transport-v1";
 const PACKING_SHARED_KEY   = "trip-packing-shared-v1";
 const PACKING_PERSONAL_KEY = "trip-packing-personal-v1";
+const TRIP_LEGS_KEY        = "trip-legs-v1";
 const TRIP_HISTORY_KEY     = "trip-history-v1";
 const TRIP_META_KEY        = "trip-meta-v1";
 

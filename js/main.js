@@ -24,7 +24,7 @@ function switchSubTab(active) {
   });
   document.getElementById("subPanelPlaces").classList.toggle("hidden",    active !== "subTabPlaces");
   document.getElementById("subPanelTransport").classList.toggle("hidden", active !== "subTabTransport");
-  if (active === "subTabTransport") renderTripTransportList();
+  if (active === "subTabTransport") renderTripLegList();
 }
 document.getElementById("subTabPlaces").addEventListener("click",    () => switchSubTab("subTabPlaces"));
 document.getElementById("subTabTransport").addEventListener("click", () => switchSubTab("subTabTransport"));
@@ -115,6 +115,7 @@ document.getElementById("confirmNameBtn")?.addEventListener("click", () => {
     loadState();
     loadTransport();
     loadPacking();
+    loadTripLegs();
     const fromCloud = await loadFromCloud();
     if (!fromCloud) cloudSave();
     updateTripHistory();
@@ -122,7 +123,7 @@ document.getElementById("confirmNameBtn")?.addEventListener("click", () => {
 
   // 4. 渲染（即便資料為空也先渲染）
   renderLocationsList();
-  renderTripTransportList();
+  renderTripLegList();
   renderTransportList();
   renderPackingList();
   loadGoogleMap();
