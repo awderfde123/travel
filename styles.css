@@ -1614,9 +1614,6 @@ dialog::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(6px); }
 .main-page.finalized .map-toolbar  { display: none; }
 .main-page.finalized .nearby-bar   { display: none; }
 .main-page.finalized #tabTransport { display: none; }
-.main-page.finalized .sub-tabs     { display: none; }
-.main-page.finalized #subPanelTransport { display: none !important; }
-.main-page.finalized #subPanelPlaces    { display: block !important; }
 .main-page.finalized .loc-search-wrap   { display: none; }
 .main-page.finalized #addTripTransportBtn { display: none; }
 
