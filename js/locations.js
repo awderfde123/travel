@@ -117,7 +117,6 @@ function renderLocationsList() {
 
 function deletePlace(id) {
   const place = getPlace(id);
-  if (!confirm(`確定刪除「${place?.name ?? ""}」？`)) return;
   state.places = state.places.filter(p => p.id !== id);
   saveState();
   renderLocationsList();

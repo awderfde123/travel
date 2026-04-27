@@ -71,7 +71,6 @@ document.getElementById("cancelEditTripNameBtn")?.addEventListener("click", () =
 
 // 解除定案
 document.getElementById("unfinalizeBtn")?.addEventListener("click", () => {
-  if (!confirm("確定解除定案，回到編輯模式？")) return;
   state.finalized = false;
   saveState();
   updateTripHistory({ finalized: false });

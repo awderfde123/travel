@@ -510,12 +510,6 @@ document.getElementById("backPlanBtn").addEventListener("click", () => {
   location.hash = "#/trip";
 });
 document.getElementById("confirmPlanBtn").addEventListener("click", () => {
-  if (
-    !confirm(
-      "確定定案並儲存行程順序？\n定案後進入唯讀模式，可切換為攜帶清單打勾模式。",
-    )
-  )
-    return;
   const ordered = planOrder.map((id) => getPlace(id)).filter(Boolean);
   const poolRest = planPool.map((id) => getPlace(id)).filter(Boolean);
   state.places        = [...ordered, ...poolRest];
