@@ -74,7 +74,6 @@ function renderTripLegList() {
         <div class="loc-name">${esc(item.mode)}</div>
         <div class="transport-tags">
           ${item.route ? `<span class="transport-tag">${esc(item.route)}</span>` : ""}
-          ${item.time  ? `<span class="transport-tag">⏰ ${esc(item.time)}</span>` : ""}
         </div>
         ${item.note ? `<div class="loc-meta-row"><span class="leg-note">${esc(item.note)}</span></div>` : ""}
       </div>
@@ -105,7 +104,7 @@ function renderTripLegList() {
 function openAddTripLegDialog() {
   _addSelectedMode = "";
   _initModePicker("tlModePicker", "", mode => { _addSelectedMode = mode; });
-  ["tlRoute", "tlTime", "tlNote"].forEach(id => { document.getElementById(id).value = ""; });
+  ["tlRoute", "tlNote"].forEach(id => { document.getElementById(id).value = ""; });
   document.getElementById("addTripLegDialog").showModal();
 }
 
@@ -116,7 +115,6 @@ function openEditTripLegDialog(id) {
   _editSelectedMode = item.mode || "";
   _initModePicker("etlModePicker", item.mode || "", mode => { _editSelectedMode = mode; });
   document.getElementById("etlRoute").value = item.route || "";
-  document.getElementById("etlTime").value  = item.time  || "";
   document.getElementById("etlNote").value  = item.note  || "";
   document.getElementById("editTripLegDialog").showModal();
 }
@@ -130,7 +128,6 @@ document.getElementById("confirmAddTripLegBtn").addEventListener("click", () => 
     id:    crypto.randomUUID(),
     mode:  _addSelectedMode,
     route: document.getElementById("tlRoute").value.trim(),
-    time:  document.getElementById("tlTime").value.trim(),
     note:  document.getElementById("tlNote").value.trim(),
   });
   saveTripLegs();
@@ -149,7 +146,6 @@ document.getElementById("saveEditTripLegBtn").addEventListener("click", () => {
   if (!_editSelectedMode) return alert("請選擇交通方式");
   item.mode  = _editSelectedMode;
   item.route = document.getElementById("etlRoute").value.trim();
-  item.time  = document.getElementById("etlTime").value.trim();
   item.note  = document.getElementById("etlNote").value.trim();
   saveTripLegs();
   document.getElementById("editTripLegDialog").close();

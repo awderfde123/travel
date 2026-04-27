@@ -1,10 +1,11 @@
 // ─────────────────────────────────────────────
 // 行程規劃頁
 // ─────────────────────────────────────────────
-let planOrder   = [];
-let planPool    = [];
-let planLegs    = {};     // key: "fromId__toId", value: tripLeg ID
-let planTickets = {};     // key: locationId, value: transportItem ID
+let planOrder    = [];
+let planPool     = [];
+let planLegs     = {};     // key: "fromId__toId", value: tripLeg ID
+let planLegTimes = {};     // key: "fromId__toId", value: time string
+let planTickets  = {};     // key: locationId, value: transportItem ID
 
 let planMap   = null;
 let planMarkers  = [];
@@ -17,10 +18,11 @@ let _ticketPoolSortable    = null;
 let _ticketZoneSortables   = [];
 
 function renderPlanPage() {
-  planPool    = state.places.map(p => p.id);
-  planOrder   = [];
-  planLegs    = {};
-  planTickets = {};
+  planPool     = state.places.map(p => p.id);
+  planOrder    = [];
+  planLegs     = {};
+  planLegTimes = {};
+  planTickets  = {};
   renderPoolCards();
   renderPlanCards();
   _rebuildTransportPool();
@@ -321,19 +323,32 @@ function _createLegEl(key, fromId, toId) {
   if (leg) {
     legEl.innerHTML = `
       <div class="plan-leg-assigned">
-        <span class="plan-leg-transport">${esc(leg.mode)}</span>
-        ${leg.route ? `<span class="plan-leg-route">${esc(leg.route)}</span>` : ""}
-        <button class="plan-leg-clear" title="清除">✕</button>
+        <div class="plan-leg-top">
+          <span class="plan-leg-transport">${esc(leg.mode)}</span>
+          ${leg.route ? `<span class="plan-leg-route">${esc(leg.route)}</span>` : ""}
+          <button class="plan-leg-clear" title="清除">✕</button>
+        </div>
+        <input type="text" class="plan-leg-time-input" placeholder="時間（如 09:30）" value="${esc(planLegTimes[key] || '')}">
       </div>`;
     legEl.querySelector(".plan-leg-clear").addEventListener("click", () => {
       delete planLegs[key];
+      delete planLegTimes[key];
       _rebuildLegs();
+    });
+    legEl.querySelector(".plan-leg-time-input").addEventListener("input", e => {
+      planLegTimes[key] = e.target.value.trim();
     });
   } else {
     const dropEl = document.createElement("div");
     dropEl.className = "plan-leg-drop";
-    dropEl.innerHTML = `<span class="plan-leg-walk">🚶</span>`;
+    dropEl.innerHTML = `
+      <span class="plan-leg-walk">🚶</span>
+      <input type="text" class="plan-leg-time-input plan-leg-time-walk" placeholder="時間（如 09:30）" value="${esc(planLegTimes[key] || '')}">`;
     legEl.appendChild(dropEl);
+
+    dropEl.querySelector(".plan-leg-time-walk").addEventListener("input", e => {
+      planLegTimes[key] = e.target.value.trim();
+    });
 
     if (window.Sortable) {
       const s = Sortable.create(dropEl, {
