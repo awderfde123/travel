@@ -71,6 +71,7 @@ function renderTripLegList() {
     el.innerHTML = `
       <div class="loc-info">
         <div class="loc-name">${esc(item.mode)}</div>
+        ${item.price > 0 ? `<div class="loc-budget">NT$${item.price.toLocaleString()}</div>` : ""}
         ${item.note ? `<div class="loc-meta-row"><span class="leg-note">${esc(item.note)}</span></div>` : ""}
       </div>
       ${!finalized ? `
@@ -100,7 +101,8 @@ function renderTripLegList() {
 function openAddTripLegDialog() {
   _addSelectedMode = "";
   _initModePicker("tlModePicker", "", mode => { _addSelectedMode = mode; });
-  document.getElementById("tlNote").value = "";
+  document.getElementById("tlPrice").value = "";
+  document.getElementById("tlNote").value  = "";
   document.getElementById("addTripLegDialog").showModal();
 }
 
@@ -110,7 +112,8 @@ function openEditTripLegDialog(id) {
   if (!item) return;
   _editSelectedMode = item.mode || "";
   _initModePicker("etlModePicker", item.mode || "", mode => { _editSelectedMode = mode; });
-  document.getElementById("etlNote").value = item.note || "";
+  document.getElementById("etlPrice").value = item.price > 0 ? item.price : "";
+  document.getElementById("etlNote").value  = item.note || "";
   document.getElementById("editTripLegDialog").showModal();
 }
 
@@ -120,9 +123,10 @@ document.getElementById("addTripTransportBtn").addEventListener("click", openAdd
 document.getElementById("confirmAddTripLegBtn").addEventListener("click", () => {
   if (!_addSelectedMode) return alert("請選擇交通方式");
   tripLegs.push({
-    id:   crypto.randomUUID(),
-    mode: _addSelectedMode,
-    note: document.getElementById("tlNote").value.trim(),
+    id:    crypto.randomUUID(),
+    mode:  _addSelectedMode,
+    price: parseInt(document.getElementById("tlPrice").value) || 0,
+    note:  document.getElementById("tlNote").value.trim(),
   });
   saveTripLegs();
   document.getElementById("addTripLegDialog").close();
@@ -138,8 +142,9 @@ document.getElementById("saveEditTripLegBtn").addEventListener("click", () => {
   const item = tripLegs.find(t => t.id === editingTripLegId);
   if (!item) return;
   if (!_editSelectedMode) return alert("請選擇交通方式");
-  item.mode = _editSelectedMode;
-  item.note = document.getElementById("etlNote").value.trim();
+  item.mode  = _editSelectedMode;
+  item.price = parseInt(document.getElementById("etlPrice").value) || 0;
+  item.note  = document.getElementById("etlNote").value.trim();
   saveTripLegs();
   document.getElementById("editTripLegDialog").close();
   renderTripLegList();
