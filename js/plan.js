@@ -5,16 +5,6 @@ let planOrder = [];
 let planPool  = [];
 let planLegs  = {};  // key: "fromId__toId", value: mode string e.g. "🚗 自駕"
 
-const TRANSPORT_MODES = [
-  { icon: "🚶", label: "步行" },
-  { icon: "🚗", label: "自駕" },
-  { icon: "🚕", label: "計程車" },
-  { icon: "🚌", label: "公車" },
-  { icon: "🚇", label: "捷運" },
-  { icon: "🚆", label: "高鐵" },
-  { icon: "✈",  label: "飛機" },
-  { icon: "⛴",  label: "船" },
-];
 let planMap   = null;
 let planMarkers  = [];
 let planPolyline = null;
@@ -187,26 +177,40 @@ function _initListSortable() {
   });
 }
 
-// ── Transport mode pool (left column) ──
+// ── Transport pool (left column) — uses tripLegs ──
 function _rebuildTransportPool() {
   if (_transportPoolSortable) { _transportPoolSortable.destroy(); _transportPoolSortable = null; }
   const poolEl = document.getElementById("planTransportPool");
   if (!poolEl) return;
 
+  const legs = typeof tripLegs !== "undefined" ? tripLegs : [];
+  // Filter out 步行 — no card needed, just leave leg empty
+  const draggable = legs.filter(t => !t.mode.includes("步行"));
+
+  if (!draggable.length) {
+    poolEl.innerHTML = `<div class="plan-transport-pool-empty">在旅程 → 交通新增後會顯示於此</div>`;
+    return;
+  }
+
   poolEl.innerHTML = "";
-  TRANSPORT_MODES.forEach(({ icon, label }) => {
-    const tile = document.createElement("div");
-    tile.className = "plan-mode-tile";
-    tile.dataset.mode = `${icon} ${label}`;
-    tile.innerHTML = `<span class="plan-mode-icon">${icon}</span><span class="plan-mode-label">${label}</span>`;
-    poolEl.appendChild(tile);
+  draggable.forEach(leg => {
+    const card = document.createElement("div");
+    card.className = "plan-card plan-transport-pool-card";
+    card.dataset.tripLegId = leg.id;
+    card.innerHTML = `
+      <div class="plan-card-info">
+        <div class="plan-card-name">${esc(leg.mode)}</div>
+        ${leg.route ? `<span class="transport-tag" style="margin-top:2px;display:inline-block;">${esc(leg.route)}</span>` : ""}
+      </div>`;
+    poolEl.appendChild(card);
   });
 
   if (window.Sortable) {
     _transportPoolSortable = Sortable.create(poolEl, {
       group:     { name: "transport", pull: "clone", put: false },
       animation: 150,
-      draggable: "[data-mode]",
+      filter:    "button",
+      draggable: "[data-trip-leg-id]",
     });
   }
 }
@@ -218,12 +222,15 @@ function _createLegEl(key, fromId, toId) {
   legEl.dataset.from = fromId;
   legEl.dataset.to   = toId;
 
-  const mode = planLegs[key]; // e.g. "🚗 自駕"
+  const legId = planLegs[key];
+  const allLegs = typeof tripLegs !== "undefined" ? tripLegs : [];
+  const leg = legId ? allLegs.find(t => t.id === legId) : null;
 
-  if (mode) {
+  if (leg) {
     legEl.innerHTML = `
       <div class="plan-leg-assigned">
-        <span class="plan-leg-transport">${esc(mode)}</span>
+        <span class="plan-leg-transport">${esc(leg.mode)}</span>
+        ${leg.route ? `<span class="plan-leg-route">${esc(leg.route)}</span>` : ""}
         <button class="plan-leg-clear" title="清除">✕</button>
       </div>`;
     legEl.querySelector(".plan-leg-clear").addEventListener("click", () => {
@@ -242,9 +249,9 @@ function _createLegEl(key, fromId, toId) {
         animation: 150,
         draggable: "[data-transport-id]",
         onAdd: (evt) => {
-          const mode = evt.item.dataset.mode;
+          const tripLegId = evt.item.dataset.tripLegId;
           evt.item.remove();
-          planLegs[key] = mode;
+          planLegs[key] = tripLegId;
           _rebuildLegs();
         },
       });

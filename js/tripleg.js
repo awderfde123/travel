@@ -1,8 +1,21 @@
 // ─────────────────────────────────────────────
 // 旅程交通（獨立於票券）
 // ─────────────────────────────────────────────
+const TRANSPORT_MODES = [
+  { icon: "🚶", label: "步行" },
+  { icon: "🚗", label: "自駕" },
+  { icon: "🚕", label: "計程車" },
+  { icon: "🚌", label: "公車" },
+  { icon: "🚇", label: "捷運" },
+  { icon: "🚆", label: "高鐵" },
+  { icon: "✈",  label: "飛機" },
+  { icon: "⛴",  label: "船" },
+];
+
 let tripLegs = [];
-let editingTripLegId = null;
+let editingTripLegId  = null;
+let _addSelectedMode  = "";
+let _editSelectedMode = "";
 
 function loadTripLegs() {
   tripLegs = JSON.parse(localStorage.getItem(TRIP_LEGS_KEY) || "[]");
@@ -13,6 +26,29 @@ function saveTripLegs(sync = true) {
   if (sync) cloudSave();
 }
 
+// ── Mode picker (shared for add / edit dialogs) ──
+function _initModePicker(pickerId, currentMode, onSelect) {
+  const picker = document.getElementById(pickerId);
+  if (!picker) return;
+  picker.innerHTML = "";
+  TRANSPORT_MODES.forEach(({ icon, label }) => {
+    const modeStr = `${icon} ${label}`;
+    const tile = document.createElement("button");
+    tile.type = "button";
+    tile.className = "dialog-mode-tile";
+    tile.dataset.mode = modeStr;
+    tile.innerHTML = `<span class="dialog-mode-icon">${icon}</span><span class="dialog-mode-label">${label}</span>`;
+    if (currentMode === modeStr) tile.classList.add("selected");
+    tile.addEventListener("click", () => {
+      picker.querySelectorAll(".dialog-mode-tile").forEach(t => t.classList.remove("selected"));
+      tile.classList.add("selected");
+      onSelect(modeStr);
+    });
+    picker.appendChild(tile);
+  });
+}
+
+// ── List rendering ──
 function renderTripLegList() {
   const listEl  = document.getElementById("tripTransportList");
   const badgeEl = document.getElementById("tripTransportBadge");
@@ -35,7 +71,7 @@ function renderTripLegList() {
     el.className = "loc-item";
     el.innerHTML = `
       <div class="loc-info">
-        <div class="loc-name">${transportIcon(item.mode)} ${esc(item.mode)}</div>
+        <div class="loc-name">${esc(item.mode)}</div>
         <div class="transport-tags">
           ${item.route ? `<span class="transport-tag">${esc(item.route)}</span>` : ""}
           ${item.time  ? `<span class="transport-tag">⏰ ${esc(item.time)}</span>` : ""}
@@ -58,41 +94,41 @@ function renderTripLegList() {
         tripLegs = tripLegs.filter(t => t.id !== item.id);
         saveTripLegs();
         renderTripLegList();
+        if (typeof _rebuildTransportPool === "function") _rebuildTransportPool();
       });
     }
     listEl.appendChild(el);
   });
 }
 
+// ── Dialogs ──
 function openAddTripLegDialog() {
-  ["tlMode", "tlRoute", "tlTime", "tlNote"].forEach(id => {
-    document.getElementById(id).value = "";
-  });
+  _addSelectedMode = "";
+  _initModePicker("tlModePicker", "", mode => { _addSelectedMode = mode; });
+  ["tlRoute", "tlTime", "tlNote"].forEach(id => { document.getElementById(id).value = ""; });
   document.getElementById("addTripLegDialog").showModal();
-  setTimeout(() => document.getElementById("tlMode").focus(), 50);
 }
 
 function openEditTripLegDialog(id) {
   editingTripLegId = id;
   const item = tripLegs.find(t => t.id === id);
   if (!item) return;
-  document.getElementById("etlMode").value  = item.mode  || "";
+  _editSelectedMode = item.mode || "";
+  _initModePicker("etlModePicker", item.mode || "", mode => { _editSelectedMode = mode; });
   document.getElementById("etlRoute").value = item.route || "";
   document.getElementById("etlTime").value  = item.time  || "";
   document.getElementById("etlNote").value  = item.note  || "";
   document.getElementById("editTripLegDialog").showModal();
-  setTimeout(() => document.getElementById("etlMode").focus(), 50);
 }
 
 // ─ 事件綁定 ─
 document.getElementById("addTripTransportBtn").addEventListener("click", openAddTripLegDialog);
 
 document.getElementById("confirmAddTripLegBtn").addEventListener("click", () => {
-  const mode = document.getElementById("tlMode").value.trim();
-  if (!mode) return alert("請輸入交通方式");
+  if (!_addSelectedMode) return alert("請選擇交通方式");
   tripLegs.push({
     id:    crypto.randomUUID(),
-    mode,
+    mode:  _addSelectedMode,
     route: document.getElementById("tlRoute").value.trim(),
     time:  document.getElementById("tlTime").value.trim(),
     note:  document.getElementById("tlNote").value.trim(),
@@ -100,6 +136,7 @@ document.getElementById("confirmAddTripLegBtn").addEventListener("click", () => 
   saveTripLegs();
   document.getElementById("addTripLegDialog").close();
   renderTripLegList();
+  if (typeof _rebuildTransportPool === "function") _rebuildTransportPool();
 });
 
 document.getElementById("cancelAddTripLegBtn").addEventListener("click", () => {
@@ -109,15 +146,15 @@ document.getElementById("cancelAddTripLegBtn").addEventListener("click", () => {
 document.getElementById("saveEditTripLegBtn").addEventListener("click", () => {
   const item = tripLegs.find(t => t.id === editingTripLegId);
   if (!item) return;
-  const mode = document.getElementById("etlMode").value.trim();
-  if (!mode) return alert("請輸入交通方式");
-  item.mode  = mode;
+  if (!_editSelectedMode) return alert("請選擇交通方式");
+  item.mode  = _editSelectedMode;
   item.route = document.getElementById("etlRoute").value.trim();
   item.time  = document.getElementById("etlTime").value.trim();
   item.note  = document.getElementById("etlNote").value.trim();
   saveTripLegs();
   document.getElementById("editTripLegDialog").close();
   renderTripLegList();
+  if (typeof _rebuildTransportPool === "function") _rebuildTransportPool();
 });
 
 document.getElementById("cancelEditTripLegBtn").addEventListener("click", () => {

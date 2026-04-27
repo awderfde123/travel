@@ -1451,6 +1451,44 @@ dialog::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(6px); }
 .plan-mode-icon  { font-size: 1.1rem; line-height: 1; }
 .plan-mode-label { font-size: .62rem; color: var(--muted); }
 
+/* ── Dialog mode picker ── */
+.dialog-mode-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.dialog-mode-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 6px 8px;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  width: calc(25% - 6px);
+  min-width: 60px;
+  transition: background .12s, border-color .12s;
+}
+.dialog-mode-tile:hover    { background: var(--accent-bg); border-color: rgba(37,99,235,.35); }
+.dialog-mode-tile.selected {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+}
+.dialog-mode-icon  { font-size: 1.5rem; line-height: 1; }
+.dialog-mode-label { font-size: .7rem; color: var(--muted); font-weight: 500; }
+.dialog-mode-tile.selected .dialog-mode-label { color: var(--accent); font-weight: 700; }
+
+/* ── Plan leg route ── */
+.plan-leg-route {
+  font-size: .65rem;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.2;
+  margin-top: 1px;
+}
+
 /* ── Leg connectors between place cards ── */
 .plan-leg {
   display: flex;
