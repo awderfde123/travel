@@ -1654,6 +1654,10 @@ dialog::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(6px); }
   color: var(--muted);
   font-size: .7rem;
 }
+.loc-leg-status-btn {
+  font-size: .7rem;
+  padding: 2px 8px;
+}
 .loc-plan-time {
   font-size: .72rem;
   font-weight: 600;

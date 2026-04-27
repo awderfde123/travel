@@ -121,9 +121,26 @@ function renderLocationsList() {
       const leg = legId && typeof tripLegs !== "undefined" ? tripLegs.find(t => t.id === legId) : null;
       const connector = document.createElement("div");
       connector.className = "loc-leg-connector";
-      connector.innerHTML = leg
-        ? `<span class="loc-leg-mode">${esc(leg.mode)}</span>${leg.note ? `<span class="loc-leg-note">${esc(leg.note)}</span>` : ""}`
-        : `<span class="loc-leg-mode loc-leg-walk">🚶</span>`;
+      if (leg) {
+        connector.innerHTML = `
+          <span class="loc-leg-mode">${esc(leg.mode)}</span>
+          ${leg.note ? `<span class="loc-leg-note">${esc(leg.note)}</span>` : ""}
+          ${leg.price > 0 ? `
+          <button class="transport-status-btn ${leg.purchased ? "purchased" : "unpurchased"} loc-leg-status-btn">
+            ${leg.purchased ? "✅ 已購買" : "🛒 未購買"}
+            <span class="transport-status-price">NT$${leg.price.toLocaleString()}</span>
+          </button>` : ""}`;
+        if (leg.price > 0) {
+          connector.querySelector(".loc-leg-status-btn").addEventListener("click", e => {
+            e.stopPropagation();
+            leg.purchased = !leg.purchased;
+            saveTripLegs();
+            renderLocationsList();
+          });
+        }
+      } else {
+        connector.innerHTML = `<span class="loc-leg-mode loc-leg-walk">🚶</span>`;
+      }
       locationsListEl.appendChild(connector);
     }
   });
