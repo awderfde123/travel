@@ -215,7 +215,6 @@ function _rebuildTransportPool() {
     card.innerHTML = `
       <div class="plan-card-info">
         <div class="plan-card-name">${esc(leg.mode)}</div>
-        ${leg.route ? `<span class="transport-tag" style="margin-top:2px;display:inline-block;">${esc(leg.route)}</span>` : ""}
       </div>`;
     poolEl.appendChild(card);
   });
@@ -325,7 +324,6 @@ function _createLegEl(key, fromId, toId) {
       <div class="plan-leg-assigned">
         <div class="plan-leg-top">
           <span class="plan-leg-transport">${esc(leg.mode)}</span>
-          ${leg.route ? `<span class="plan-leg-route">${esc(leg.route)}</span>` : ""}
           <button class="plan-leg-clear" title="清除">✕</button>
         </div>
         <input type="text" class="plan-leg-time-input" placeholder="時間（如 09:30）" value="${esc(planLegTimes[key] || '')}">
