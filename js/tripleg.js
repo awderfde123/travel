@@ -52,7 +52,11 @@ function renderTripLegList() {
   const listEl  = document.getElementById("tripTransportList");
   const badgeEl = document.getElementById("tripTransportBadge");
   if (!listEl) return;
-  if (badgeEl) badgeEl.textContent = tripLegs.length ? `${tripLegs.length} 筆` : "";
+  const bought   = tripLegs.filter(t => t.purchased).length;
+  const unbought = tripLegs.filter(t => !t.purchased && t.price > 0).length;
+  if (badgeEl) badgeEl.textContent = tripLegs.length
+    ? `✅ ${bought} / 🛒 ${unbought}`
+    : "";
 
   listEl.innerHTML = "";
   if (!tripLegs.length) {
@@ -71,7 +75,13 @@ function renderTripLegList() {
     el.innerHTML = `
       <div class="loc-info">
         <div class="loc-name">${esc(item.mode)}</div>
-        ${item.price > 0 ? `<div class="loc-budget">NT$${item.price.toLocaleString()}</div>` : ""}
+        ${item.price > 0 ? `
+        <div class="loc-meta-row">
+          <button class="transport-status-btn ${item.purchased ? "purchased" : "unpurchased"}">
+            ${item.purchased ? "✅ 已購買" : "🛒 未購買"}
+            <span class="transport-status-price">NT$${item.price.toLocaleString()}</span>
+          </button>
+        </div>` : ""}
         ${item.note ? `<div class="loc-meta-row"><span class="leg-note">${esc(item.note)}</span></div>` : ""}
       </div>
       ${!finalized ? `
@@ -80,6 +90,14 @@ function renderTripLegList() {
         <button class="icon-btn del danger" title="刪除">✕</button>
       </div>` : ""}`;
 
+    if (item.price > 0) {
+      el.querySelector(".transport-status-btn").addEventListener("click", e => {
+        e.stopPropagation();
+        item.purchased = !item.purchased;
+        saveTripLegs();
+        renderTripLegList();
+      });
+    }
     if (!finalized) {
       el.querySelector(".icon-btn.edit").addEventListener("click", e => {
         e.stopPropagation();
