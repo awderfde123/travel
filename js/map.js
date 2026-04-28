@@ -104,7 +104,11 @@ function searchNearby(type) {
     { location: map.getCenter(), radius: 1500, type },
     (results, status) => {
       if (status !== google.maps.places.PlacesServiceStatus.OK || !results) return;
-      results.forEach(place => {
+      // For restaurant search, exclude places that are tagged as cafes
+      const filtered = type === "restaurant"
+        ? results.filter(p => !(p.types || []).includes("cafe"))
+        : results;
+      filtered.forEach(place => {
         if (!place.geometry?.location) return;
         const marker = new google.maps.Marker({
           map,
