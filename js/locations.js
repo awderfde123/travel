@@ -80,6 +80,7 @@ function renderLocationsList() {
       <div class="loc-info">
         ${time ? `<div class="loc-plan-time">🕐 ${esc(time)}</div>` : ""}
         <div class="loc-name">${esc(place.name)}</div>
+        ${place.createdBy ? `<div class="card-creator">${esc(place.createdBy)}</div>` : ""}
         ${place.note ? `<div class="loc-note">${esc(place.note)}</div>` : ""}
         ${todayHrs   ? `<div class="loc-hours">🕐 ${esc(todayHrs)}</div>` : ""}
         <div class="loc-meta-row">
@@ -195,6 +196,7 @@ document.getElementById("confirmAddPlaceBtn").addEventListener("click", () => {
   state.places.push({
     id: crypto.randomUUID(), name, lat, lng, note: "", budget, discussions: [],
     openHours: pendingOpenHours || null,
+    createdBy: currentUser() || null,
   });
   pendingLatLng    = null;
   pendingOpenHours = null;

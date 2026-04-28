@@ -70,7 +70,8 @@ function _renderSection(elId, items, type, finalized, user) {
     if (finalized) {
       el.innerHTML = `
         <input type="checkbox" class="packing-check" ${isChecked ? "checked" : ""} />
-        <span class="packing-name">${esc(item.name)}</span>`;
+        <span class="packing-name">${esc(item.name)}</span>
+        ${item.createdBy ? `<span class="card-creator">${esc(item.createdBy)}</span>` : ""}`;
       el.querySelector(".packing-check").addEventListener("change", ev => {
         if (type === "shared") {
           item.checked = ev.target.checked;
@@ -88,6 +89,7 @@ function _renderSection(elId, items, type, finalized, user) {
     } else {
       el.innerHTML = `
         <span class="packing-name">${esc(item.name)}</span>
+        ${item.createdBy ? `<span class="card-creator">${esc(item.createdBy)}</span>` : ""}
         <button class="icon-btn del danger" title="刪除">✕</button>`;
       el.querySelector(".del").addEventListener("click", () => {
         if (type === "shared") {
@@ -109,10 +111,11 @@ function _addPackingItem(type) {
   if (!input) return;
   const name = input.value.trim();
   if (!name) return;
+  const creator = currentUser() || null;
   if (type === "shared") {
-    packingShared.push({ id: crypto.randomUUID(), name, checked: false });
+    packingShared.push({ id: crypto.randomUUID(), name, checked: false, createdBy: creator });
   } else {
-    packingPersonal.push({ id: crypto.randomUUID(), name, checkedBy: {} });
+    packingPersonal.push({ id: crypto.randomUUID(), name, checkedBy: {}, createdBy: creator });
   }
   savePacking();
   input.value = "";

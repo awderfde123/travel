@@ -65,6 +65,7 @@ function renderTransportList() {
           ${esc(item.method)}
           ${item.isFinal ? '<span class="transport-final-badge">定案</span>' : ""}
         </div>
+        ${item.createdBy ? `<div class="card-creator">${esc(item.createdBy)}</div>` : ""}
         <div class="transport-tags">
           ${item.where ? `<span class="transport-tag">${esc(item.where)}</span>` : ""}
         </div>
@@ -136,6 +137,7 @@ document.getElementById("confirmAddTransportBtn").addEventListener("click", () =
     price:       Math.max(0, parseFloat(document.getElementById("tPrice").value) || 0),
     purchased:   document.getElementById("tPurchased").checked,
     discussions: [],
+    createdBy:   currentUser() || null,
   });
   saveTransport();
   document.getElementById("addTransportDialog").close();

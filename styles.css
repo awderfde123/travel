@@ -524,6 +524,7 @@ body {
 .loc-info { flex: 1; min-width: 0; }
 .loc-name { font-weight: 600; font-size: .88rem; line-height: 1.4; color: var(--text); }
 .loc-note { font-size: .77rem; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+.card-creator { font-size: .68rem; color: var(--muted); opacity: .75; margin-top: 1px; }
 .loc-meta-row {
   display: flex;
   align-items: center;
