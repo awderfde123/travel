@@ -85,7 +85,9 @@ function renderLocationsList() {
         ${todayHrs   ? `<div class="loc-hours">🕐 ${esc(todayHrs)}</div>` : ""}
         <div class="loc-meta-row">
           ${budget > 0 ? `<span class="loc-budget">NT$${budget.toLocaleString()}</span>` : ""}
-          ${ticket ? `<span class="loc-ticket-badge">🎫 ${esc(ticket.method)}</span>` : ""}
+          ${ticket ? `<button class="loc-ticket-badge${ticket.purchased ? " purchased locked" : " unpurchased"}">
+            ${ticket.purchased ? "✅" : "🎫"} ${esc(ticket.method)}
+          </button>` : ""}
           ${!finalized ? `<button class="loc-discuss-btn">💬 ${count > 0 ? `${count} 則討論` : "查看討論"}</button>` : ""}
         </div>
         ${markedMsg ? `<div class="loc-marked-msg"><span class="loc-marked-author">${esc(markedMsg.author)}</span>${esc(markedMsg.text)}</div>` : ""}
@@ -109,6 +111,13 @@ function renderLocationsList() {
     row.querySelector(".loc-discuss-btn")?.addEventListener("click", e => {
       e.stopPropagation();
       openDiscussPage(place.id);
+    });
+    row.querySelector(".loc-ticket-badge")?.addEventListener("click", e => {
+      e.stopPropagation();
+      if (!ticket || ticket.purchased) return; // locked once purchased
+      ticket.purchased = true;
+      saveTransport();
+      renderLocationsList();
     });
     if (!finalized) {
       row.querySelector(".icon-btn.edit").addEventListener("click", e => { e.stopPropagation(); openEditDialog(place.id); });
