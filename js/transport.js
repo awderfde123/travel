@@ -70,7 +70,7 @@ function renderTransportList() {
           ${item.where ? `<span class="transport-tag">${esc(item.where)}</span>` : ""}
         </div>
         <div class="loc-meta-row">
-          <button class="transport-status-btn ${item.purchased ? "purchased" : "unpurchased"}">
+          <button class="transport-status-btn ${item.purchased ? "purchased" : "unpurchased"}${finalized && item.purchased ? " locked" : ""}">
             ${item.purchased ? "✅ 已購買" : "🛒 未購買"}
             ${item.price > 0 ? `<span class="transport-status-price">NT$${item.price.toLocaleString()}</span>` : ""}
           </button>
@@ -89,6 +89,7 @@ function renderTransportList() {
     });
     el.querySelector(".transport-status-btn").addEventListener("click", e => {
       e.stopPropagation();
+      if (finalized && item.purchased) return; // one-way: cannot undo purchase when finalized
       item.purchased = !item.purchased;
       saveTransport();
       renderTransportList();
