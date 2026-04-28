@@ -87,7 +87,7 @@ function renderLocationsList() {
           ${ticket ? `<span class="loc-ticket-badge">🎫 ${esc(ticket.method)}</span>` : ""}
           ${!finalized ? `<button class="loc-discuss-btn">💬 ${count > 0 ? `${count} 則討論` : "查看討論"}</button>` : ""}
         </div>
-        ${markedMsg ? `<div class="loc-marked-msg">📌 ${esc(markedMsg.text)}</div>` : ""}
+        ${markedMsg ? `<div class="loc-marked-msg"><span class="loc-marked-author">${esc(markedMsg.author)}</span>${esc(markedMsg.text)}</div>` : ""}
       </div>
       ${!finalized ? `
       <div class="loc-actions">
