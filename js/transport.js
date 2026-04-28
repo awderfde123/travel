@@ -66,7 +66,6 @@ function renderTransportList() {
           ${item.isFinal ? '<span class="transport-final-badge">定案</span>' : ""}
         </div>
         <div class="transport-tags">
-          ${item.route ? `<span class="transport-tag">${esc(item.route)}</span>` : ""}
           ${item.where ? `<span class="transport-tag">${esc(item.where)}</span>` : ""}
         </div>
         <div class="loc-meta-row">
@@ -107,7 +106,7 @@ function renderTransportList() {
 }
 
 function openAddTransportDialog() {
-  ["tMethod","tRoute","tWhere","tPrice"].forEach(id => document.getElementById(id).value = "");
+  ["tMethod","tWhere","tPrice"].forEach(id => document.getElementById(id).value = "");
   document.getElementById("tPurchased").checked = false;
   document.getElementById("addTransportDialog").showModal();
   setTimeout(() => document.getElementById("tMethod").focus(), 50);
@@ -117,9 +116,8 @@ function openEditTransportDialog(id) {
   editingTransportId = id;
   const item = transportItems.find(t => t.id === id);
   if (!item) return;
-  document.getElementById("etMethod").value      = item.method || "";
-  document.getElementById("etRoute").value       = item.route  || "";
-  document.getElementById("etWhere").value       = item.where  || "";
+  document.getElementById("etMethod").value = item.method || "";
+  document.getElementById("etWhere").value  = item.where  || "";
   document.getElementById("etPrice").value       = item.price > 0 ? item.price : "";
   document.getElementById("etPurchased").checked = item.purchased || false;
   document.getElementById("editTransportDialog").showModal();
@@ -135,7 +133,6 @@ document.getElementById("confirmAddTransportBtn").addEventListener("click", () =
   transportItems.push({
     id:          crypto.randomUUID(),
     method,
-    route:       document.getElementById("tRoute").value.trim(),
     where:       document.getElementById("tWhere").value.trim(),
     price:       Math.max(0, parseFloat(document.getElementById("tPrice").value) || 0),
     purchased:   document.getElementById("tPurchased").checked,
@@ -155,9 +152,8 @@ document.getElementById("saveEditTransportBtn").addEventListener("click", () => 
   if (!item) return;
   const method = document.getElementById("etMethod").value.trim();
   if (!method) return alert("請輸入交通方式");
-  item.method    = method;
-  item.route     = document.getElementById("etRoute").value.trim();
-  item.where     = document.getElementById("etWhere").value.trim();
+  item.method = method;
+  item.where  = document.getElementById("etWhere").value.trim();
   item.price     = Math.max(0, parseFloat(document.getElementById("etPrice").value) || 0);
   item.purchased = document.getElementById("etPurchased").checked;
   saveTransport();
