@@ -71,6 +71,7 @@ function renderLocationsList() {
     const time     = finalized ? (state.planCardTimes?.[place.id] || "") : "";
     const ticketId = finalized ? (state.planTickets?.[place.id] || "") : "";
     const ticket   = ticketId ? (typeof transportItems !== "undefined" ? transportItems.find(t => t.id === ticketId) : null) : null;
+    const markedMsg = finalized ? (place.discussions || []).find(d => d.marked) : null;
 
     const row = document.createElement("div");
     row.className = "loc-item";
@@ -84,8 +85,9 @@ function renderLocationsList() {
         <div class="loc-meta-row">
           ${budget > 0 ? `<span class="loc-budget">NT$${budget.toLocaleString()}</span>` : ""}
           ${ticket ? `<span class="loc-ticket-badge">🎫 ${esc(ticket.method)}</span>` : ""}
-          <button class="loc-discuss-btn">💬 ${count > 0 ? `${count} 則討論` : "查看討論"}</button>
+          ${!finalized ? `<button class="loc-discuss-btn">💬 ${count > 0 ? `${count} 則討論` : "查看討論"}</button>` : ""}
         </div>
+        ${markedMsg ? `<div class="loc-marked-msg">📌 ${esc(markedMsg.text)}</div>` : ""}
       </div>
       ${!finalized ? `
       <div class="loc-actions">
@@ -103,7 +105,7 @@ function renderLocationsList() {
       e.stopPropagation();
       openDiscussPage(place.id);
     });
-    row.querySelector(".loc-discuss-btn").addEventListener("click", e => {
+    row.querySelector(".loc-discuss-btn")?.addEventListener("click", e => {
       e.stopPropagation();
       openDiscussPage(place.id);
     });

@@ -1658,6 +1658,28 @@ dialog::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(6px); }
   font-size: .7rem;
   padding: 2px 8px;
 }
+.loc-marked-msg {
+  margin-top: 5px;
+  font-size: .75rem;
+  color: var(--text-light);
+  background: #fffbeb;
+  border-left: 3px solid #f59e0b;
+  border-radius: 0 4px 4px 0;
+  padding: 4px 8px;
+  line-height: 1.4;
+}
+.d-mark-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: .85rem;
+  padding: 0 4px;
+  opacity: .4;
+  transition: opacity .15s;
+  margin-left: auto;
+}
+.d-mark-btn:hover, .d-mark-btn.active { opacity: 1; }
+.d-item-marked { background: #fffbeb; border-radius: 6px; }
 .loc-plan-time {
   font-size: .72rem;
   font-weight: 600;

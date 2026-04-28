@@ -179,12 +179,14 @@ function _renderMessages() {
   } else {
     discussions.forEach(d => {
       const el = document.createElement("div");
-      el.className = "d-item";
+      el.className = `d-item${d.marked ? " d-item-marked" : ""}`;
       el.innerHTML = `
         <div class="d-item-header">
           <span class="d-author">${esc(d.author)}</span>
           <span class="d-time">${fmtTime(d.createdAt)}</span>
-          ${!finalized ? `<button class="d-del" data-id="${d.id}" title="刪除">✕</button>` : ""}
+          ${finalized
+            ? `<button class="d-mark-btn${d.marked ? " active" : ""}" data-id="${d.id}" title="標記顯示在卡片">📌</button>`
+            : `<button class="d-del" data-id="${d.id}" title="刪除">✕</button>`}
         </div>
         <p class="d-text">${esc(d.text || "")}</p>`;
       newMsgs.appendChild(el);
@@ -199,6 +201,19 @@ function _renderMessages() {
       const ctx = discussContext;
       if (!ctx) return;
       ctx.item.discussions = (ctx.item.discussions || []).filter(x => x.id !== btn.dataset.id);
+      ctx.saveFunc();
+      renderDiscussView();
+    });
+  } else {
+    newMsgs.addEventListener("click", e => {
+      const btn = e.target.closest(".d-mark-btn");
+      if (!btn) return;
+      const ctx = discussContext;
+      if (!ctx) return;
+      const targetId = btn.dataset.id;
+      (ctx.item.discussions || []).forEach(x => {
+        x.marked = (x.id === targetId) ? !x.marked : false;
+      });
       ctx.saveFunc();
       renderDiscussView();
     });
