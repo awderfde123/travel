@@ -113,7 +113,7 @@ function searchNearby(type) {
 
   searchTypes.forEach(searchType => {
     _placesService.nearbySearch(
-      { location: map.getCenter(), radius: 1500, type: searchType },
+      { location: map.getCenter(), rankBy: google.maps.places.RankBy.DISTANCE, type: searchType },
       (results, status) => {
         if (status !== google.maps.places.PlacesServiceStatus.OK || !results) return;
         results.forEach(place => {
@@ -346,11 +346,12 @@ function setupMap() {
           const name      = (ok && !isRoadOrArea) ? (place.name || "") : "";
           const openHours = (ok && !isRoadOrArea) ? (place?.opening_hours?.weekday_text || null) : null;
           const address   = (ok && !isRoadOrArea) ? (place?.formatted_address || "") : "";
+          if (!name) return; // unknown place — skip pin and card
           _showMapPin(lat, lng, name, address, openHours);
         }
       );
     } else {
-      _showMapPin(lat, lng, "", "", null);
+      // no place_id (blank map area) — do nothing
     }
   });
 
