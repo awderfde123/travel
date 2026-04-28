@@ -100,51 +100,59 @@ function searchNearby(type) {
     b.classList.toggle("active", b.dataset.type === type)
   );
 
-  _placesService.nearbySearch(
-    { location: map.getCenter(), radius: 1500, type },
-    (results, status) => {
-      if (status !== google.maps.places.PlacesServiceStatus.OK || !results) return;
-      results.forEach(place => {
-        if (!place.geometry?.location) return;
-        const marker = new google.maps.Marker({
-          map,
-          position: place.geometry.location,
-          title: place.name,
-          icon: nearbyMarkerSvg(),
-          zIndex: 10,
-        });
-        marker.addListener("click", () => {
-          const lat = place.geometry.location.lat();
-          const lng = place.geometry.location.lng();
-          if (place.place_id && _placesAllowed()) {
-            _placesIncrement();
-            _placesService.getDetails(
-              { placeId: place.place_id, fields: ["name", "opening_hours", "formatted_address"] },
-              (details, detailStatus) => {
-                const ok = detailStatus === google.maps.places.PlacesServiceStatus.OK;
-                const openHours = ok ? (details?.opening_hours?.weekday_text || null) : null;
-                const address   = ok ? (details?.formatted_address || "") : "";
-                if (state.finalized) {
-                  _showMapPin(lat, lng, place.name || "", address, openHours);
-                } else {
-                  pendingLatLng = { lat, lng };
-                  openAddDialog(place.name || "", openHours);
+  // For restaurant, also search meal_takeaway to catch food shops (e.g. 雙月食品社)
+  const searchTypes = type === "restaurant" ? ["restaurant", "meal_takeaway"] : [type];
+  const seen = new Set();
+
+  searchTypes.forEach(searchType => {
+    _placesService.nearbySearch(
+      { location: map.getCenter(), radius: 1500, type: searchType },
+      (results, status) => {
+        if (status !== google.maps.places.PlacesServiceStatus.OK || !results) return;
+        results.forEach(place => {
+          if (!place.geometry?.location) return;
+          if (seen.has(place.place_id)) return;
+          seen.add(place.place_id);
+          const marker = new google.maps.Marker({
+            map,
+            position: place.geometry.location,
+            title: place.name,
+            icon: nearbyMarkerSvg(),
+            zIndex: 10,
+          });
+          marker.addListener("click", () => {
+            const lat = place.geometry.location.lat();
+            const lng = place.geometry.location.lng();
+            if (place.place_id && _placesAllowed()) {
+              _placesIncrement();
+              _placesService.getDetails(
+                { placeId: place.place_id, fields: ["name", "opening_hours", "formatted_address"] },
+                (details, detailStatus) => {
+                  const ok = detailStatus === google.maps.places.PlacesServiceStatus.OK;
+                  const openHours = ok ? (details?.opening_hours?.weekday_text || null) : null;
+                  const address   = ok ? (details?.formatted_address || "") : "";
+                  if (state.finalized) {
+                    _showMapPin(lat, lng, place.name || "", address, openHours);
+                  } else {
+                    pendingLatLng = { lat, lng };
+                    openAddDialog(place.name || "", openHours);
+                  }
                 }
-              }
-            );
-          } else {
-            if (state.finalized) {
-              _showMapPin(lat, lng, place.name || "", "", null);
+              );
             } else {
-              pendingLatLng = { lat, lng };
-              openAddDialog(place.name || "", null);
+              if (state.finalized) {
+                _showMapPin(lat, lng, place.name || "", "", null);
+              } else {
+                pendingLatLng = { lat, lng };
+                openAddDialog(place.name || "", null);
+              }
             }
-          }
+          });
+          nearbyMarkers.push(marker);
         });
-        nearbyMarkers.push(marker);
-      });
-    }
-  );
+      }
+    );
+  });
 }
 
 // ── Route ──
