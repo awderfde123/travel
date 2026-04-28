@@ -78,11 +78,14 @@ function renderTransportList() {
       </div>
       ${!finalized ? `
       <div class="loc-actions">
-        <button class="icon-btn edit" title="編輯">✏</button>
         <button class="icon-btn del danger" title="刪除">✕</button>
       </div>` : ""}`;
 
-    el.querySelector(".loc-info").addEventListener("click", () => openTransportDiscussPage(item.id));
+    el.addEventListener("click", () => openEditTransportDialog(item.id));
+    el.querySelector(".loc-info").addEventListener("click", e => {
+      e.stopPropagation();
+      openTransportDiscussPage(item.id);
+    });
     el.querySelector(".transport-status-btn").addEventListener("click", e => {
       e.stopPropagation();
       item.purchased = !item.purchased;
@@ -90,10 +93,6 @@ function renderTransportList() {
       renderTransportList();
     });
     if (!finalized) {
-      el.querySelector(".icon-btn.edit").addEventListener("click", e => {
-        e.stopPropagation();
-        openEditTransportDialog(item.id);
-      });
       el.querySelector(".del").addEventListener("click", e => {
         e.stopPropagation();
         transportItems = transportItems.filter(t => t.id !== item.id);

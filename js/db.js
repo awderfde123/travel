@@ -144,6 +144,7 @@ function subscribeTrip() {
       const data = doc.data();
       const wasFinalized  = state.finalized;
       const prevPlacesStr = JSON.stringify(state.places);
+      const prevPlacesGeo = JSON.stringify(state.places.map(p => ({ id: p.id, lat: p.lat, lng: p.lng })));
       const prevTransport = JSON.stringify(transportItems);
       const prevTripLegs  = JSON.stringify(tripLegs);
       const prevPacking   = JSON.stringify(packingShared);
@@ -169,8 +170,10 @@ function subscribeTrip() {
       const transportChanged = JSON.stringify(transportItems) !== prevTransport;
       const tripLegsChanged  = JSON.stringify(tripLegs)       !== prevTripLegs;
       const packingChanged   = JSON.stringify(packingShared)  !== prevPacking;
+      const geoChanged       = JSON.stringify(state.places.map(p => ({ id: p.id, lat: p.lat, lng: p.lng }))) !== prevPlacesGeo;
 
-      if (placesChanged) { renderLocationsList(); renderMarkers(); }
+      if (placesChanged) renderLocationsList();
+      if (geoChanged) renderMarkers();
       if (transportChanged) renderTransportList();
       if (tripLegsChanged)  renderTripLegList();
       if (packingChanged)   renderPackingList();
