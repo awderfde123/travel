@@ -100,10 +100,15 @@ function searchNearby(type) {
     b.classList.toggle("active", b.dataset.type === type)
   );
 
-  // For restaurant, search multiple food-related types to match fork-knife icon places
-  const searchTypes = type === "restaurant"
-    ? ["restaurant", "meal_takeaway", "meal_delivery"]
-    : [type];
+  // Map each button to all Google Places types that share the same map icon
+  const typeMap = {
+    restaurant:         ["restaurant", "meal_takeaway", "meal_delivery"],
+    cafe:               ["cafe", "bakery"],
+    tourist_attraction: ["tourist_attraction", "museum", "art_gallery"],
+    convenience_store:  ["convenience_store"],
+    lodging:            ["lodging"],
+  };
+  const searchTypes = typeMap[type] || [type];
   const seen = new Set();
 
   searchTypes.forEach(searchType => {
