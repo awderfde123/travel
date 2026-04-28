@@ -100,8 +100,10 @@ function searchNearby(type) {
     b.classList.toggle("active", b.dataset.type === type)
   );
 
-  // For restaurant, also search meal_takeaway to catch food shops (e.g. 雙月食品社)
-  const searchTypes = type === "restaurant" ? ["restaurant", "meal_takeaway"] : [type];
+  // For restaurant, search multiple food-related types to match fork-knife icon places
+  const searchTypes = type === "restaurant"
+    ? ["restaurant", "meal_takeaway", "meal_delivery"]
+    : [type];
   const seen = new Set();
 
   searchTypes.forEach(searchType => {
