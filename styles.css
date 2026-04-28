@@ -435,6 +435,16 @@ body {
 }
 .tab-panel.hidden { display: none !important; }
 
+/* Sub-panels inside tab-panel must also form a flex column to pass height down */
+#subPanelPlaces,
+#subPanelTransport {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 /* Locations search bar */
 .loc-search-wrap {
   flex-shrink: 0;
@@ -471,6 +481,7 @@ body {
 /* ── Locations list ── */
 .locations-list {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 8px;
   display: flex;
@@ -1356,10 +1367,10 @@ dialog::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(6px); }
   .map-card { height: 380px; flex: none; }
   .sidebar { overflow: visible; min-height: 300px; }
   .sidebar-panel { overflow: visible; flex: none; height: auto; }
-  .tab-panel { flex: none; height: auto; }
+  .tab-panel { flex: none; min-height: unset; height: auto; }
   #subPanelPlaces,
-  #subPanelTransport { height: auto; }
-  .locations-list { overflow-y: visible; height: auto; flex: none; }
+  #subPanelTransport { flex: none; min-height: unset; overflow: visible; height: auto; }
+  .locations-list { overflow-y: visible; min-height: unset; height: auto; flex: none; }
   .discuss-view { min-height: 100vh; flex: none; }
   .plan-layout { grid-template-columns: 1fr; }
   .plan-right-col { min-height: 500px; }
