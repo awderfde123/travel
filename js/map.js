@@ -215,13 +215,21 @@ function _showPlaceCard(name, address, openHours) {
   document.getElementById("placeCardName").textContent    = name || "（未知地點）";
   document.getElementById("placeCardAddress").textContent = address || "";
 
-  // All 7 days, highlight today
   const hoursEl = document.getElementById("placeCardHours");
   if (Array.isArray(openHours) && openHours.length) {
     const todayIdx = (() => { const d = new Date().getDay(); return d === 0 ? 6 : d - 1; })();
-    hoursEl.innerHTML = openHours.map((row, i) =>
-      `<div class="place-card-hour-row${i === todayIdx ? " today" : ""}">${esc(row)}</div>`
-    ).join("");
+    if (state.finalized) {
+      // Finalized: show only today's hours
+      const todayRow = openHours[todayIdx];
+      hoursEl.innerHTML = todayRow
+        ? `<div class="place-card-hour-row today">${esc(todayRow)}</div>`
+        : "";
+    } else {
+      // All 7 days, highlight today
+      hoursEl.innerHTML = openHours.map((row, i) =>
+        `<div class="place-card-hour-row${i === todayIdx ? " today" : ""}">${esc(row)}</div>`
+      ).join("");
+    }
   } else {
     hoursEl.innerHTML = "";
   }
