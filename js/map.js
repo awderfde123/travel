@@ -104,13 +104,7 @@ function searchNearby(type) {
     { location: map.getCenter(), radius: 1500, type },
     (results, status) => {
       if (status !== google.maps.places.PlacesServiceStatus.OK || !results) return;
-      // Filter by primary type (types[0]) to match the map icon category.
-      // e.g. restaurant search should not show places whose primary type is cafe, and vice versa.
-      const primaryExclude = { restaurant: "cafe", cafe: "restaurant" }[type];
-      const filtered = primaryExclude
-        ? results.filter(p => (p.types || [])[0] !== primaryExclude)
-        : results;
-      filtered.forEach(place => {
+      results.forEach(place => {
         if (!place.geometry?.location) return;
         const marker = new google.maps.Marker({
           map,
