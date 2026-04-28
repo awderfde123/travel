@@ -1735,6 +1735,7 @@ dialog::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(6px); }
 
 /* ── Finalized clean view ── */
 .main-page.finalized .map-toolbar         { display: none; }
+.main-page.finalized #tabTransport        { display: none; }
 .main-page.finalized .sub-tabs            { display: none; }
 .main-page.finalized #subPanelTransport   { display: none !important; }
 .main-page.finalized #subPanelPlaces      { display: flex !important; }
