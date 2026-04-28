@@ -135,22 +135,18 @@ function renderLocationsList() {
       connector.className = "loc-leg-connector";
       if (leg) {
         connector.innerHTML = `
-          <span class="loc-leg-mode">${esc(leg.mode)}</span>
-          ${leg.note ? `<span class="loc-leg-note">${esc(leg.note)}</span>` : ""}
-          ${leg.price > 0 ? `
-          <button class="transport-status-btn ${leg.purchased ? "purchased locked" : "unpurchased"} loc-leg-status-btn">
-            ${leg.purchased ? "✅ 已購買" : "🛒 未購買"}
-            <span class="transport-status-price">NT$${leg.price.toLocaleString()}</span>
-          </button>` : ""}`;
-        if (leg.price > 0) {
-          connector.querySelector(".loc-leg-status-btn").addEventListener("click", e => {
-            e.stopPropagation();
-            if (leg.purchased) return; // locked once purchased
-            leg.purchased = true;
-            saveTripLegs();
-            renderLocationsList();
-          });
-        }
+          <button class="loc-leg-mode${leg.purchased ? " purchased locked" : ""}">
+            ${leg.purchased ? "✅" : transportIcon(leg.mode)} ${esc(leg.mode)}
+            ${leg.price > 0 ? `<span class="transport-status-price">NT$${leg.price.toLocaleString()}</span>` : ""}
+          </button>
+          ${leg.note ? `<span class="loc-leg-note">${esc(leg.note)}</span>` : ""}`;
+        connector.querySelector(".loc-leg-mode").addEventListener("click", e => {
+          e.stopPropagation();
+          if (leg.purchased) return; // locked once purchased
+          leg.purchased = true;
+          saveTripLegs();
+          renderLocationsList();
+        });
       } else {
         connector.innerHTML = `<span class="loc-leg-mode loc-leg-walk">🚶</span>`;
       }

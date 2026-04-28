@@ -1665,7 +1665,17 @@ dialog::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(6px); }
   padding: 2px 8px;
   font-size: .72rem;
   font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s;
 }
+.loc-leg-mode:hover { opacity: .8; }
+.loc-leg-mode.purchased {
+  background: var(--green-bg);
+  color: var(--green);
+  border-color: var(--green-border);
+}
+.loc-leg-mode.locked { cursor: default; opacity: .85; }
+.loc-leg-mode.locked:hover { opacity: .85; }
 .loc-leg-walk {
   background: var(--surface-3);
   color: var(--muted);
