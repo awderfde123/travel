@@ -114,25 +114,31 @@ function searchNearby(type) {
           zIndex: 10,
         });
         marker.addListener("click", () => {
-          if (state.finalized) return;
-          pendingLatLng = {
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng(),
-          };
-          // Fetch opening hours for this nearby result
+          const lat = place.geometry.location.lat();
+          const lng = place.geometry.location.lng();
           if (place.place_id && _placesAllowed()) {
             _placesIncrement();
             _placesService.getDetails(
-              { placeId: place.place_id, fields: ["opening_hours"] },
+              { placeId: place.place_id, fields: ["name", "opening_hours", "formatted_address"] },
               (details, detailStatus) => {
-                const openHours = detailStatus === google.maps.places.PlacesServiceStatus.OK
-                  ? (details?.opening_hours?.weekday_text || null)
-                  : null;
-                openAddDialog(place.name || "", openHours);
+                const ok = detailStatus === google.maps.places.PlacesServiceStatus.OK;
+                const openHours = ok ? (details?.opening_hours?.weekday_text || null) : null;
+                const address   = ok ? (details?.formatted_address || "") : "";
+                if (state.finalized) {
+                  _showMapPin(lat, lng, place.name || "", address, openHours);
+                } else {
+                  pendingLatLng = { lat, lng };
+                  openAddDialog(place.name || "", openHours);
+                }
               }
             );
           } else {
-            openAddDialog(place.name || "", null);
+            if (state.finalized) {
+              _showMapPin(lat, lng, place.name || "", "", null);
+            } else {
+              pendingLatLng = { lat, lng };
+              openAddDialog(place.name || "", null);
+            }
           }
         });
         nearbyMarkers.push(marker);
