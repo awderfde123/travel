@@ -225,7 +225,7 @@ async function joinTrip(code) {
 }
 
 // ── UI 事件 ──
-document.getElementById("copyTripBtn").addEventListener("click", () => {
+document.getElementById("copyTripBtn")?.addEventListener("click", () => {
   const url = `${location.origin}${location.pathname}?trip=${tripId}`;
   navigator.clipboard.writeText(url).then(() => {
     const btn = document.getElementById("copyTripBtn");

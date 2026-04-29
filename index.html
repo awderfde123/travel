@@ -73,15 +73,10 @@
             </div>
           </div>
           <div class="topbar-right">
-            <button id="changeUserBtn" class="topbar-user-btn" title="更改名稱">名 <span id="topbarUserName"></span></button>
             <span id="finalizedBadge" class="finalized-status-badge hidden">定 已定案</span>
             <button id="unfinalizeBtn" class="tool-btn topbar-tool hidden">解除定案</button>
-            <div class="trip-code-chip">
-              <code id="tripCodeDisplay">------</code>
-              <button id="copyTripBtn" title="複製邀請連結">寫</button>
-            </div>
             <button id="themeToggleBtn" class="theme-toggle-btn" title="切換深淺色">月</button>
-            <button id="openPlanBtn" class="primary">程 規劃行程</button>
+            <button id="openPlanBtn" class="primary">規劃行程</button>
           </div>
         </header>
 
@@ -97,17 +92,7 @@
                   <input id="mapSearch" type="text" placeholder="搜尋地點…" autocomplete="off" />
                   <button id="mapSearchClear" class="map-search-clear hidden">閉</button>
                 </div>
-                <div class="map-toolbar-btns">
-                  <button id="routeToggleBtn" class="tool-btn hidden">路 顯示路線</button>
-                </div>
-              </div>
-              <div class="nearby-bar">
-                <span class="nearby-label">附近</span>
-                <button class="nearby-btn" data-type="restaurant">食 餐廳</button>
-                <button class="nearby-btn" data-type="cafe">茶 咖啡</button>
-                <button class="nearby-btn" data-type="tourist_attraction">觀 景點</button>
-                <button class="nearby-btn" data-type="convenience_store">店 超商</button>
-                <button class="nearby-btn" data-type="lodging">宿 住宿</button>
+                <div class="map-toolbar-btns"></div>
               </div>
               <div id="map"></div>
               <!-- 地點資訊卡（底部滑出）-->

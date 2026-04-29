@@ -17,7 +17,7 @@ function todayOpenHours(openHours) {
 
 function renderLocationsList() {
   locCountEl.textContent = `共 ${state.places.length} 個地點`;
-  routeToggleBtn.classList.toggle("hidden", state.places.length < 2);
+  routeToggleBtn?.classList.toggle("hidden", state.places.length < 2);
   locationsListEl.innerHTML = "";
 
   const query    = (document.getElementById("locSearch")?.value ?? "").trim().toLowerCase();

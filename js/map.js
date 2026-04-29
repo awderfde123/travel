@@ -446,10 +446,12 @@ function initPlacesSearch() {
 }
 
 // ─ 事件綁定 ─
-routeToggleBtn.addEventListener("click", () => {
+routeToggleBtn?.addEventListener("click", () => {
   state.showRoute = !state.showRoute;
-  routeToggleBtn.textContent = state.showRoute ? "🛣 隱藏路線" : "🛣 顯示路線";
-  routeToggleBtn.classList.toggle("active", state.showRoute);
+  if (routeToggleBtn) {
+    routeToggleBtn.textContent = state.showRoute ? "🛣 隱藏路線" : "🛣 顯示路線";
+    routeToggleBtn.classList.toggle("active", state.showRoute);
+  }
   renderRoute();
 });
 
