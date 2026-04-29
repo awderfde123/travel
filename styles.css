@@ -989,12 +989,12 @@ h1, h2, h3 {
 .plan-map-wrap  { flex: 1; min-height: 0; position: relative; overflow: hidden; border: 2px solid var(--text); box-shadow: 4px 4px 0 var(--text); }
 .plan-map       { width: 100%; height: 100%; }
 
-.plan-selected-panel { flex-shrink: 0; display: flex; flex-direction: column; border: 2px solid var(--text); background: var(--surface); box-shadow: 4px 4px 0 var(--text); }
+.plan-selected-panel { flex-shrink: 0; height: 360px; display: flex; flex-direction: column; border: 2px solid var(--text); background: var(--surface); box-shadow: 4px 4px 0 var(--text); overflow: hidden; }
 .plan-selected-head { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; border-bottom: 1.5px dashed var(--text); background: var(--surface-2); }
 .plan-summary { display: flex; align-items: center; gap: 10px; font-family: "Caveat", cursive; font-size: 1.05rem; color: var(--text); flex-wrap: wrap; font-weight: 600; }
 .plan-summary-sep { color: var(--border); }
 
-.plan-list { height: auto; flex: none; overflow-x: scroll; overflow-y: hidden; padding: 12px 12px 14px; display: flex; flex-direction: row; align-items: flex-start; gap: 8px; scrollbar-width: thin; scrollbar-color: var(--text) var(--surface-2); }
+.plan-list { flex: 1; min-height: 0; overflow-x: scroll; overflow-y: hidden; padding: 12px 12px 8px; display: flex; flex-direction: row; align-items: flex-start; gap: 8px; scrollbar-width: thin; scrollbar-color: var(--text) var(--surface-2); }
 .plan-list::-webkit-scrollbar { height: 6px; }
 .plan-list::-webkit-scrollbar-track { background: var(--surface-2); }
 .plan-list::-webkit-scrollbar-thumb { background: var(--border-strong); }
