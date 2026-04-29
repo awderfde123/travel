@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-title" content="旅伴共筆" />
     <title>旅伴共筆</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <!-- Tailwind CSS Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -28,6 +28,15 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script>
+      // 主題:light / dark — 在 CSS 載入前套用避免閃爍
+      (function(){
+        try {
+          var t = localStorage.getItem('zen-theme') || 'light';
+          document.documentElement.setAttribute('data-theme', t);
+        } catch(e) { document.documentElement.setAttribute('data-theme', 'light'); }
+      })();
+    </script>
   </head>
   <body>
     <div class="app-shell">
@@ -36,15 +45,16 @@
       <div id="tripsView" class="trips-page">
         <header class="trips-header">
           <div class="topbar-brand">
-            <div class="brand-icon">✈</div>
+            <div class="brand-icon">旅</div>
             <div>
               <h1>旅伴共筆</h1>
               <p>選擇或建立旅程開始規劃</p>
             </div>
           </div>
           <div class="trips-actions">
-            <button id="createTripBtn" class="primary">＋ 建立新旅程</button>
-            <button id="joinTripFromListBtn" class="tool-btn">🔑 加入旅程</button>
+            <button id="themeToggleBtnList" class="theme-toggle-btn" title="切換深淺色">月</button>
+            <button id="createTripBtn" class="primary">加 建立新旅程</button>
+            <button id="joinTripFromListBtn" class="tool-btn">鍵 加入旅程</button>
           </div>
         </header>
         <div id="tripsList" class="trips-list"></div>
@@ -59,18 +69,19 @@
             <button id="backToTripsBtn" class="back-btn topbar-back">← 所有旅程</button>
             <div class="trip-name-wrap">
               <span id="tripNameDisplay" class="trip-name-display">旅程</span>
-              <button id="editTripNameBtn" class="topbar-icon-btn" title="修改名稱">✏</button>
+              <button id="editTripNameBtn" class="topbar-icon-btn" title="修改名稱">筆</button>
             </div>
           </div>
           <div class="topbar-right">
-            <button id="changeUserBtn" class="topbar-user-btn" title="更改名稱">👤 <span id="topbarUserName"></span></button>
-            <span id="finalizedBadge" class="finalized-status-badge hidden">✓ 已定案</span>
+            <button id="changeUserBtn" class="topbar-user-btn" title="更改名稱">名 <span id="topbarUserName"></span></button>
+            <span id="finalizedBadge" class="finalized-status-badge hidden">定 已定案</span>
             <button id="unfinalizeBtn" class="tool-btn topbar-tool hidden">解除定案</button>
             <div class="trip-code-chip">
               <code id="tripCodeDisplay">------</code>
-              <button id="copyTripBtn" title="複製邀請連結">📋</button>
+              <button id="copyTripBtn" title="複製邀請連結">寫</button>
             </div>
-            <button id="openPlanBtn" class="primary">🗓 規劃行程</button>
+            <button id="themeToggleBtn" class="theme-toggle-btn" title="切換深淺色">月</button>
+            <button id="openPlanBtn" class="primary">程 規劃行程</button>
           </div>
         </header>
 
@@ -82,21 +93,21 @@
             <div class="map-card">
               <div class="map-toolbar">
                 <div class="map-search">
-                  <span class="map-search-icon">🔍</span>
+                  <span class="map-search-icon">探</span>
                   <input id="mapSearch" type="text" placeholder="搜尋地點…" autocomplete="off" />
-                  <button id="mapSearchClear" class="map-search-clear hidden">✕</button>
+                  <button id="mapSearchClear" class="map-search-clear hidden">閉</button>
                 </div>
                 <div class="map-toolbar-btns">
-                  <button id="routeToggleBtn" class="tool-btn hidden">🛣 顯示路線</button>
+                  <button id="routeToggleBtn" class="tool-btn hidden">路 顯示路線</button>
                 </div>
               </div>
               <div class="nearby-bar">
-                <span class="nearby-label">附近：</span>
-                <button class="nearby-btn" data-type="restaurant">🍽 餐廳</button>
-                <button class="nearby-btn" data-type="cafe">☕ 咖啡</button>
-                <button class="nearby-btn" data-type="tourist_attraction">🎯 景點</button>
-                <button class="nearby-btn" data-type="convenience_store">🏪 超商</button>
-                <button class="nearby-btn" data-type="lodging">🏨 住宿</button>
+                <span class="nearby-label">附近</span>
+                <button class="nearby-btn" data-type="restaurant">食 餐廳</button>
+                <button class="nearby-btn" data-type="cafe">茶 咖啡</button>
+                <button class="nearby-btn" data-type="tourist_attraction">觀 景點</button>
+                <button class="nearby-btn" data-type="convenience_store">店 超商</button>
+                <button class="nearby-btn" data-type="lodging">宿 住宿</button>
               </div>
               <div id="map"></div>
               <!-- 地點資訊卡（底部滑出）-->
@@ -107,14 +118,14 @@
                     <div id="placeCardAddress" class="place-card-address"></div>
                     <div id="placeCardHours" class="place-card-hours"></div>
                   </div>
-                  <button id="placeCardClose" class="place-card-close">✕</button>
+                  <button id="placeCardClose" class="place-card-close">閉</button>
                 </div>
                 <div class="place-card-actions">
-                  <button id="placeCardAdd" class="place-card-add-btn">＋ 加入行程</button>
+                  <button id="placeCardAdd" class="place-card-add-btn">加 加入行程</button>
                 </div>
               </div>
               <div id="mapHint" class="map-empty hidden">
-                <div class="map-empty-icon">🗺</div>
+                <div class="map-empty-icon">圖</div>
                 <p>Google Maps 載入失敗，請確認網路連線。</p>
               </div>
             </div>
@@ -124,27 +135,27 @@
           <div class="sidebar">
             <div class="sidebar-panel">
               <div class="sidebar-tabs">
-                <button class="tab-btn active" id="tabLocations">🗺 旅程</button>
-                <button class="tab-btn" id="tabTransport">🎫 票券</button>
-                <button class="tab-btn" id="tabPacking">🎒 清單</button>
+                <button class="tab-btn active" id="tabLocations">旅 旅程</button>
+                <button class="tab-btn" id="tabTransport">票 票券</button>
+                <button class="tab-btn" id="tabPacking">装 清單</button>
               </div>
 
               <!-- 旅程 tab (地點 + 交通 子tab) -->
               <div id="locationsPanel" class="tab-panel">
                 <div class="sub-tabs">
-                  <button class="sub-tab-btn active" id="subTabPlaces">📍 地點</button>
-                  <button class="sub-tab-btn" id="subTabTransport">🚌 交通</button>
+                  <button class="sub-tab-btn active" id="subTabPlaces">所 地點</button>
+                  <button class="sub-tab-btn" id="subTabTransport">行 交通</button>
                 </div>
 
                 <!-- 地點子面板 -->
                 <div id="subPanelPlaces">
                   <div class="panel-header">
-                    <h2>📍 地點列表
+                    <h2>所 地點列表
                       <span id="locationsCount" class="loc-count-badge">共 0 個地點</span>
                     </h2>
                   </div>
                   <div class="loc-search-wrap">
-                    <span class="loc-search-icon">🔍</span>
+                    <span class="loc-search-icon">探</span>
                     <input id="locSearch" type="text" placeholder="搜尋地點…" autocomplete="off" />
                   </div>
                   <div id="locationsList" class="locations-list"></div>
@@ -153,10 +164,10 @@
                 <!-- 交通子面板 -->
                 <div id="subPanelTransport" class="hidden">
                   <div class="panel-header" style="display:flex;align-items:center;justify-content:space-between;">
-                    <h2>🚌 交通列表
+                    <h2>行 交通列表
                       <span id="tripTransportBadge" class="loc-count-badge"></span>
                     </h2>
-                    <button id="addTripTransportBtn" class="primary" style="font-size:.78rem;padding:5px 11px;">＋ 新增</button>
+                    <button id="addTripTransportBtn" class="primary" style="font-size:.78rem;padding:5px 11px;">加 新增</button>
                   </div>
                   <div id="tripTransportList" class="locations-list"></div>
                 </div>
@@ -165,8 +176,8 @@
               <!-- Transport tab -->
               <div id="transportPanel" class="tab-panel hidden">
                 <div class="panel-header" style="display:flex;align-items:center;justify-content:space-between;">
-                  <h2>🎫 票券 <span id="transportBadge" class="loc-count-badge"></span></h2>
-                  <button id="addTransportBtn" class="primary" style="font-size:.78rem;padding:5px 11px;">＋ 新增票券</button>
+                  <h2>票 票券 <span id="transportBadge" class="loc-count-badge"></span></h2>
+                  <button id="addTransportBtn" class="primary" style="font-size:.78rem;padding:5px 11px;">加 新增票券</button>
                 </div>
                 <div id="transportList" class="locations-list"></div>
               </div>
@@ -174,7 +185,7 @@
               <!-- Packing tab -->
               <div id="packingPanel" class="tab-panel hidden">
                 <div class="panel-header" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                  <h2>🎒 攜帶清單
+                  <h2>装 攜帶清單
                     <span id="packingProgress" class="loc-count-badge"></span>
                   </h2>
                   <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
@@ -189,20 +200,20 @@
 
                 <!-- Shared section -->
                 <div class="packing-section">
-                  <div class="packing-section-head">🌍 共同攜帶</div>
+                  <div class="packing-section-head">共 共同攜帶</div>
                   <div class="packing-add-bar" id="packingSharedAddBar">
                     <input id="packingSharedInput" type="text" placeholder="新增共同品項…" autocomplete="off" />
-                    <button id="packingSharedAddBtn" class="primary">＋</button>
+                    <button id="packingSharedAddBtn" class="primary">加</button>
                   </div>
                   <div id="packingSharedList"></div>
                 </div>
 
                 <!-- Personal section -->
                 <div class="packing-section">
-                  <div class="packing-section-head">👤 個人攜帶</div>
+                  <div class="packing-section-head">名 個人攜帶</div>
                   <div class="packing-add-bar" id="packingPersonalAddBar">
                     <input id="packingPersonalInput" type="text" placeholder="新增個人品項…" autocomplete="off" />
-                    <button id="packingPersonalAddBtn" class="primary">＋</button>
+                    <button id="packingPersonalAddBtn" class="primary">加</button>
                   </div>
                   <div id="packingPersonalList"></div>
                 </div>
@@ -219,35 +230,35 @@
             <div class="plan-pool-head">
               <button id="backPlanBtn" class="back-btn">← 返回</button>
               <div>
-                <h2>📍 所有地點</h2>
+                <h2>所 所有地點</h2>
                 <p>拖曳想去的地點至右側</p>
               </div>
             </div>
             <div id="planPool" class="plan-pool"></div>
 
-            <div class="plan-pool-section-head">🚌 旅程交通 <span class="plan-pool-section-hint">拖曳至地點間</span></div>
+            <div class="plan-pool-section-head">行 旅程交通 <span class="plan-pool-section-hint">拖曳至地點間</span></div>
             <div id="planTransportPool" class="plan-transport-pool"></div>
-            <div class="plan-pool-section-head">🎫 票券 <span class="plan-pool-section-hint">拖曳至地點</span></div>
+            <div class="plan-pool-section-head">票 票券 <span class="plan-pool-section-hint">拖曳至地點</span></div>
             <div id="planTicketPool" class="plan-transport-pool"></div>
           </div>
           <div class="plan-right-col">
             <div class="plan-map-wrap">
               <div id="planMap" class="plan-map"></div>
               <div id="planMapHint" class="map-empty hidden">
-                <div class="map-empty-icon">🗺</div>
+                <div class="map-empty-icon">圖</div>
                 <p>地圖未載入</p>
               </div>
             </div>
             <div class="plan-selected-panel">
               <div class="plan-selected-head">
                 <div class="plan-summary">
-                  <span>🗓 已選行程</span>
+                  <span>程 已選行程</span>
                   <span class="plan-summary-sep">｜</span>
                   <span id="planCount">0 個地點</span>
                   <span class="plan-summary-sep">｜</span>
                   <span id="planBudget">NT$0</span>
                 </div>
-                <button id="confirmPlanBtn" class="primary">✅ 定案行程</button>
+                <button id="confirmPlanBtn" class="primary">定 定案行程</button>
               </div>
               <div id="planList" class="plan-list"></div>
             </div>
@@ -268,10 +279,10 @@
         <div id="discussMsgs" class="discuss-msgs"></div>
         <form id="discussForm" class="discuss-form">
           <div class="discuss-inputs">
-            <div class="discuss-author-label">👤 <span id="dAuthorDisplay"></span></div>
+            <div class="discuss-author-label">名 <span id="dAuthorDisplay"></span></div>
             <textarea id="dText" placeholder="輸入討論內容…" required></textarea>
           </div>
-          <button type="submit" class="primary">💬 發表留言</button>
+          <button type="submit" class="primary">言 發表留言</button>
         </form>
       </div>
 
@@ -280,7 +291,7 @@
     <!-- ── Dialogs ── -->
 
     <dialog id="editTripNameDialog">
-      <div class="dialog-header"><h3>✏ 修改旅程名稱</h3></div>
+      <div class="dialog-header"><h3>筆 修改旅程名稱</h3></div>
       <div class="dialog-body">
         <div class="field">
           <label>旅程名稱</label>
@@ -295,7 +306,7 @@
 
     <dialog id="nameDialog">
       <div class="dialog-header">
-        <h3>👤 請設定您的名稱</h3>
+        <h3>名 請設定您的名稱</h3>
         <p style="font-size:.82rem;color:var(--muted);margin:4px 0 0;">名稱用於討論留言及個人攜帶清單</p>
       </div>
       <div class="dialog-body">
@@ -311,7 +322,7 @@
     </dialog>
 
     <dialog id="addPlaceDialog">
-      <div class="dialog-header"><h3>📍 新增地點</h3></div>
+      <div class="dialog-header"><h3>所 新增地點</h3></div>
       <div class="dialog-body">
         <div class="field">
           <label>地點名稱 <span class="req">*</span></label>
@@ -331,7 +342,7 @@
     </dialog>
 
     <dialog id="editPlaceDialog">
-      <div class="dialog-header"><h3>✏ 編輯地點</h3></div>
+      <div class="dialog-header"><h3>筆 編輯地點</h3></div>
       <div class="dialog-body">
         <div class="field">
           <label>地點名稱 <span class="req">*</span></label>
@@ -351,7 +362,7 @@
     </dialog>
 
     <dialog id="addTransportDialog">
-      <div class="dialog-header"><h3>🎫 新增票券</h3></div>
+      <div class="dialog-header"><h3>票 新增票券</h3></div>
       <div class="dialog-body">
         <div class="field">
           <label>票券名稱 <span class="req">*</span></label>
@@ -378,7 +389,7 @@
     </dialog>
 
     <dialog id="editTransportDialog">
-      <div class="dialog-header"><h3>✏ 編輯票券</h3></div>
+      <div class="dialog-header"><h3>筆 編輯票券</h3></div>
       <div class="dialog-body">
         <div class="field">
           <label>票券名稱 <span class="req">*</span></label>
@@ -405,7 +416,7 @@
     </dialog>
 
     <dialog id="addTripLegDialog">
-      <div class="dialog-header"><h3>🚌 新增交通</h3></div>
+      <div class="dialog-header"><h3>行 新增交通</h3></div>
       <div class="dialog-body">
         <div class="field">
           <label>交通方式 <span class="req">*</span></label>
@@ -427,7 +438,7 @@
     </dialog>
 
     <dialog id="editTripLegDialog">
-      <div class="dialog-header"><h3>✏ 編輯交通</h3></div>
+      <div class="dialog-header"><h3>筆 編輯交通</h3></div>
       <div class="dialog-body">
         <div class="field">
           <label>交通方式 <span class="req">*</span></label>
@@ -450,7 +461,7 @@
 
     <dialog id="joinTripDialog">
       <div class="dialog-header">
-        <h3>🔑 加入旅程</h3>
+        <h3>鍵 加入旅程</h3>
         <p>輸入 6 位旅程代碼，或貼上邀請連結中的代碼</p>
       </div>
       <div class="dialog-body">
@@ -468,6 +479,32 @@
 
     <!-- SortableJS（拖移，支援手機觸控）-->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
+    <script>
+      // 主題切換 (深淺色模式)
+      (function(){
+        function bind(id) {
+          var btn = document.getElementById(id);
+          if (!btn) return;
+          btn.addEventListener('click', function(){
+            var cur = document.documentElement.getAttribute('data-theme') || 'light';
+            var next = cur === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            try { localStorage.setItem('zen-theme', next); } catch(e) {}
+            // 更新圖示:月/日
+            var glyph = next === 'dark' ? '日' : '月';
+            document.querySelectorAll('.theme-toggle-btn').forEach(function(b){ b.textContent = glyph; });
+          });
+        }
+        document.addEventListener('DOMContentLoaded', function(){
+          // 初始化圖示
+          var cur = document.documentElement.getAttribute('data-theme') || 'light';
+          var glyph = cur === 'dark' ? '日' : '月';
+          document.querySelectorAll('.theme-toggle-btn').forEach(function(b){ b.textContent = glyph; });
+          bind('themeToggleBtn');
+          bind('themeToggleBtnList');
+        });
+      })();
+    </script>
     <!-- 載入順序不可更動 -->
     <script src="js/utils.js"></script>
     <script src="js/state.js"></script>
