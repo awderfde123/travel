@@ -66,7 +66,7 @@
             >
               月
             </button>
-            <button id="createTripBtn" class="primary">加 建立新旅程</button>
+            <button id="createTripBtn" class="primary">建立新旅程</button>
             <button id="joinTripFromListBtn" class="tool-btn">加入旅程</button>
           </div>
         </header>
@@ -97,7 +97,7 @@
               <span id="topbarUserName"></span>
             </button>
             <span id="finalizedBadge" class="finalized-status-badge hidden"
-              >定 已定案</span
+              >已定案</span
             >
             <button id="unfinalizeBtn" class="tool-btn topbar-tool hidden">
               解除定案
@@ -371,13 +371,6 @@
             <div id="planTicketPool" class="plan-transport-pool"></div>
           </div>
           <div class="plan-right-col">
-            <div class="plan-map-wrap">
-              <div id="planMap" class="plan-map"></div>
-              <div id="planMapHint" class="map-empty hidden">
-                <div class="map-empty-icon">圖</div>
-                <p>地圖未載入</p>
-              </div>
-            </div>
             <div class="plan-selected-panel">
               <div class="plan-selected-head">
                 <div class="plan-summary">
@@ -390,6 +383,13 @@
                 <button id="confirmPlanBtn" class="primary">定案行程</button>
               </div>
               <div id="planList" class="plan-list"></div>
+            </div>
+            <div class="plan-map-wrap">
+              <div id="planMap" class="plan-map"></div>
+              <div id="planMapHint" class="map-empty hidden">
+                <div class="map-empty-icon">圖</div>
+                <p>地圖未載入</p>
+              </div>
             </div>
           </div>
         </div>
@@ -409,7 +409,7 @@
         <form id="discussForm" class="discuss-form">
           <div class="discuss-inputs">
             <div class="discuss-author-label">
-              名 <span id="dAuthorDisplay"></span>
+              <span id="dAuthorDisplay"></span>
             </div>
             <textarea
               id="dText"
@@ -417,7 +417,7 @@
               required
             ></textarea>
           </div>
-          <button type="submit" class="primary">言 發表留言</button>
+          <button type="submit" class="primary">發表留言</button>
         </form>
       </div>
     </div>
@@ -425,7 +425,7 @@
     <!-- ── Dialogs ── -->
 
     <dialog id="editTripNameDialog">
-      <div class="dialog-header"><h3>筆 修改旅程名稱</h3></div>
+      <div class="dialog-header"><h3>修改旅程名稱</h3></div>
       <div class="dialog-body">
         <div class="field">
           <label>旅程名稱</label>
@@ -445,7 +445,7 @@
 
     <dialog id="nameDialog">
       <div class="dialog-header">
-        <h3>名 請設定您的名稱</h3>
+        <h3>請設定您的名稱</h3>
         <p style="font-size: 0.82rem; color: var(--muted); margin: 4px 0 0">
           名稱用於討論留言及個人攜帶清單
         </p>
@@ -468,7 +468,7 @@
     </dialog>
 
     <dialog id="addPlaceDialog">
-      <div class="dialog-header"><h3>所 新增地點</h3></div>
+      <div class="dialog-header"><h3>新增地點</h3></div>
       <div class="dialog-body">
         <div class="field">
           <label>地點名稱 <span class="req">*</span></label>
@@ -488,7 +488,7 @@
     </dialog>
 
     <dialog id="editPlaceDialog">
-      <div class="dialog-header"><h3>筆 編輯地點</h3></div>
+      <div class="dialog-header"><h3>編輯地點</h3></div>
       <div class="dialog-body">
         <div class="field">
           <label>地點名稱 <span class="req">*</span></label>
@@ -508,7 +508,7 @@
     </dialog>
 
     <dialog id="addTransportDialog">
-      <div class="dialog-header"><h3>票 新增票券</h3></div>
+      <div class="dialog-header"><h3>新增票券</h3></div>
       <div class="dialog-body">
         <div class="field">
           <label>票券名稱 <span class="req">*</span></label>
@@ -539,7 +539,7 @@
     </dialog>
 
     <dialog id="editTransportDialog">
-      <div class="dialog-header"><h3>筆 編輯票券</h3></div>
+      <div class="dialog-header"><h3>編輯票券</h3></div>
       <div class="dialog-body">
         <div class="field">
           <label>票券名稱 <span class="req">*</span></label>
@@ -574,7 +574,7 @@
     </dialog>
 
     <dialog id="addTripLegDialog">
-      <div class="dialog-header"><h3>行 新增交通</h3></div>
+      <div class="dialog-header"><h3>新增交通</h3></div>
       <div class="dialog-body">
         <div class="field">
           <label>交通方式 <span class="req">*</span></label>
@@ -596,7 +596,7 @@
     </dialog>
 
     <dialog id="editTripLegDialog">
-      <div class="dialog-header"><h3>筆 編輯交通</h3></div>
+      <div class="dialog-header"><h3>編輯交通</h3></div>
       <div class="dialog-body">
         <div class="field">
           <label>交通方式 <span class="req">*</span></label>
