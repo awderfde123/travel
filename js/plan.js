@@ -54,9 +54,7 @@ function _listCardInner(p, num) {
       <button class="plan-tap-remove" title="移除">✕</button>
     </div>
     <input type="text" class="plan-card-time" placeholder="時間" value="${esc(planCardTimes[p.id] || "")}">
-    <div class="plan-ticket-zone plan-ticket-empty" data-loc-id="${p.id}">
-      <span class="plan-ticket-hint">🎫</span>
-    </div>`;
+    <div class="plan-ticket-zone" data-loc-id="${p.id}"></div>`;
 }
 
 function _attachPoolEvents(card, id) {
@@ -268,7 +266,7 @@ function _rebuildTransportPool() {
   }
 }
 
-// ── Ticket pool (left column) — only shows unassigned tickets ──
+// ── Ticket pool (left column) — all tickets shown, drag-clone ──
 function _rebuildTicketPool() {
   if (_ticketPoolSortable) {
     _ticketPoolSortable.destroy();
@@ -278,8 +276,6 @@ function _rebuildTicketPool() {
   if (!poolEl) return;
 
   const all = typeof transportItems !== "undefined" ? transportItems : [];
-  const assigned = new Set(Object.values(planTickets));
-  const available = all.filter((t) => !assigned.has(t.id));
 
   if (!all.length) {
     poolEl.innerHTML = `<div class="plan-transport-pool-empty">在票券 tab 新增後會顯示於此</div>`;
@@ -287,20 +283,16 @@ function _rebuildTicketPool() {
   }
 
   poolEl.innerHTML = "";
-  if (!available.length) {
-    poolEl.innerHTML = `<div class="plan-transport-pool-empty">所有票券已分配</div>`;
-  } else {
-    available.forEach((t) => {
-      const card = document.createElement("div");
-      card.className = "plan-card plan-transport-pool-card";
-      card.dataset.ticketId = t.id;
-      card.innerHTML = `
-        <div class="plan-card-info">
-          <div class="plan-card-name">🎫 ${esc(t.method)}</div>
-        </div>`;
-      poolEl.appendChild(card);
-    });
-  }
+  all.forEach((t) => {
+    const card = document.createElement("div");
+    card.className = "plan-card plan-transport-pool-card";
+    card.dataset.ticketId = t.id;
+    card.innerHTML = `
+      <div class="plan-card-info">
+        <div class="plan-card-name">🎫 ${esc(t.method)}</div>
+      </div>`;
+    poolEl.appendChild(card);
+  });
 
   if (window.Sortable) {
     _ticketPoolSortable = Sortable.create(poolEl, {
@@ -312,54 +304,54 @@ function _rebuildTicketPool() {
   }
 }
 
-// ── Ticket zones inside location cards ──
+// ── Ticket zones inside location cards — supports multiple tickets ──
 function _rebuildTicketZones() {
-  _ticketZoneSortables.forEach((s) => {
-    try {
-      s.destroy();
-    } catch (e) {}
-  });
+  _ticketZoneSortables.forEach((s) => { try { s.destroy(); } catch (e) {} });
   _ticketZoneSortables = [];
 
   document.querySelectorAll("#planList .plan-ticket-zone").forEach((zoneEl) => {
     const locId = zoneEl.dataset.locId;
-    const ticketId = planTickets[locId];
+    const ticketIds = planTickets[locId] || [];
     const all = typeof transportItems !== "undefined" ? transportItems : [];
-    const ticket = ticketId ? all.find((t) => t.id === ticketId) : null;
 
-    if (ticket) {
-      zoneEl.classList.remove("plan-ticket-empty");
-      zoneEl.innerHTML = `
-        <div class="plan-ticket-assigned">
-          <span>🎫 ${esc(ticket.method)}</span>
-          <button class="plan-ticket-clear">✕</button>
-        </div>`;
-      zoneEl
-        .querySelector(".plan-ticket-clear")
-        .addEventListener("click", (e) => {
-          e.stopPropagation();
-          delete planTickets[locId];
-          _rebuildTicketPool();
+    zoneEl.innerHTML = "";
+
+    // Render each assigned ticket with a remove button
+    ticketIds.forEach((tid, idx) => {
+      const ticket = all.find((t) => t.id === tid);
+      if (!ticket) return;
+      const item = document.createElement("div");
+      item.className = "plan-ticket-assigned";
+      item.innerHTML = `<span>🎫 ${esc(ticket.method)}</span><button class="plan-ticket-clear">✕</button>`;
+      item.querySelector(".plan-ticket-clear").addEventListener("click", (e) => {
+        e.stopPropagation();
+        planTickets[locId] = planTickets[locId].filter((_, i) => i !== idx);
+        if (!planTickets[locId].length) delete planTickets[locId];
+        _rebuildTicketZones();
+      });
+      zoneEl.appendChild(item);
+    });
+
+    // Drop zone to add more tickets
+    const dropEl = document.createElement("div");
+    dropEl.className = "plan-ticket-drop";
+    dropEl.innerHTML = `<span class="plan-ticket-hint">🎫</span>`;
+    zoneEl.appendChild(dropEl);
+
+    if (window.Sortable) {
+      const s = Sortable.create(dropEl, {
+        group: { name: "tickets", pull: false, put: true },
+        animation: 150,
+        draggable: "[data-ticket-id]",
+        onAdd: (evt) => {
+          evt.item.remove();
+          const tid = evt.item.dataset.ticketId;
+          if (!planTickets[locId]) planTickets[locId] = [];
+          planTickets[locId].push(tid);
           _rebuildTicketZones();
-        });
-    } else {
-      zoneEl.classList.add("plan-ticket-empty");
-      zoneEl.innerHTML = `<span class="plan-ticket-hint">🎫</span>`;
-
-      if (window.Sortable) {
-        const s = Sortable.create(zoneEl, {
-          group: { name: "tickets", pull: false, put: true },
-          animation: 150,
-          draggable: "[data-ticket-id]",
-          onAdd: (evt) => {
-            evt.item.remove();
-            planTickets[locId] = evt.item.dataset.ticketId;
-            _rebuildTicketPool();
-            _rebuildTicketZones();
-          },
-        });
-        _ticketZoneSortables.push(s);
-      }
+        },
+      });
+      _ticketZoneSortables.push(s);
     }
   });
 }

@@ -68,9 +68,11 @@ function renderLocationsList() {
     const count    = place.discussions?.length ?? 0;
     const budget   = place.budget || 0;
     const todayHrs = todayOpenHours(place.openHours);
-    const time     = finalized ? (state.planCardTimes?.[place.id] || "") : "";
-    const ticketId = finalized ? (state.planTickets?.[place.id] || "") : "";
-    const ticket   = ticketId ? (typeof transportItems !== "undefined" ? transportItems.find(t => t.id === ticketId) : null) : null;
+    const time      = finalized ? (state.planCardTimes?.[place.id] || "") : "";
+    const ticketIds = finalized ? (state.planTickets?.[place.id] || []) : [];
+    const tickets   = ticketIds.map(id =>
+      typeof transportItems !== "undefined" ? transportItems.find(t => t.id === id) : null
+    ).filter(Boolean);
     const markedMsg = finalized ? (place.discussions || []).find(d => d.marked) : null;
 
     const row = document.createElement("div");
@@ -85,9 +87,9 @@ function renderLocationsList() {
         ${todayHrs   ? `<div class="loc-hours">🕐 ${esc(todayHrs)}</div>` : ""}
         <div class="loc-meta-row">
           ${budget > 0 ? `<span class="loc-budget">NT$${budget.toLocaleString()}</span>` : ""}
-          ${ticket ? `<button class="loc-ticket-badge${ticket.purchased ? " purchased locked" : " unpurchased"}">
+          ${tickets.map(ticket => `<button class="loc-ticket-badge${ticket.purchased ? " purchased locked" : " unpurchased"}" data-ticket-id="${ticket.id}">
             ${ticket.purchased ? "✅" : "🎫"} ${esc(ticket.method)}
-          </button>` : ""}
+          </button>`).join("")}
           ${!finalized ? `<button class="loc-discuss-btn">💬 ${count > 0 ? `${count} 則討論` : "查看討論"}</button>` : ""}
         </div>
         ${markedMsg ? `<div class="loc-marked-msg"><span class="loc-marked-author">${esc(markedMsg.author)}</span>${esc(markedMsg.text)}</div>` : ""}
@@ -112,12 +114,16 @@ function renderLocationsList() {
       e.stopPropagation();
       openDiscussPage(place.id);
     });
-    row.querySelector(".loc-ticket-badge")?.addEventListener("click", e => {
-      e.stopPropagation();
-      if (!ticket || ticket.purchased) return; // locked once purchased
-      ticket.purchased = true;
-      saveTransport();
-      renderLocationsList();
+    row.querySelectorAll(".loc-ticket-badge").forEach(badge => {
+      badge.addEventListener("click", e => {
+        e.stopPropagation();
+        const tid = badge.dataset.ticketId;
+        const t = typeof transportItems !== "undefined" ? transportItems.find(x => x.id === tid) : null;
+        if (!t || t.purchased) return; // locked once purchased
+        t.purchased = true;
+        saveTransport();
+        renderLocationsList();
+      });
     });
     if (!finalized) {
       row.querySelector(".icon-btn.edit").addEventListener("click", e => { e.stopPropagation(); openEditDialog(place.id); });
