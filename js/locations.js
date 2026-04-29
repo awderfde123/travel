@@ -106,10 +106,6 @@ function renderLocationsList() {
         map.setZoom(Math.max(map.getZoom(), 16));
       }
     });
-    row.querySelector(".loc-num").addEventListener("click", e => {
-      e.stopPropagation();
-      openDiscussPage(place.id);
-    });
     row.querySelector(".loc-discuss-btn")?.addEventListener("click", e => {
       e.stopPropagation();
       openDiscussPage(place.id);
