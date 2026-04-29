@@ -2,13 +2,19 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="旅伴共筆" />
     <title>旅伴共筆</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;900&family=Noto+Serif+TC:wght@400;500;600;700;900&family=Caveat:wght@400;500;600;700&family=Patrick+Hand&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;900&family=Noto+Serif+TC:wght@400;500;600;700;900&family=Caveat:wght@400;500;600;700&family=Patrick+Hand&display=swap"
+      rel="stylesheet"
+    />
     <!-- Tailwind CSS Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -17,12 +23,12 @@
         theme: {
           extend: {
             colors: {
-              accent:  { DEFAULT: '#2563eb', dark: '#1d4ed8', bg: '#eff6ff' },
-              surface: { DEFAULT: '#ffffff', 2: '#f8fafc', 3: '#f1f5f9' },
-            }
-          }
-        }
-      }
+              accent: { DEFAULT: "#2563eb", dark: "#1d4ed8", bg: "#eff6ff" },
+              surface: { DEFAULT: "#ffffff", 2: "#f8fafc", 3: "#f1f5f9" },
+            },
+          },
+        },
+      };
     </script>
     <link rel="stylesheet" href="styles.css" />
     <!-- Firebase SDK -->
@@ -30,17 +36,18 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script>
       // 主題:light / dark — 在 CSS 載入前套用避免閃爍
-      (function(){
+      (function () {
         try {
-          var t = localStorage.getItem('zen-theme') || 'light';
-          document.documentElement.setAttribute('data-theme', t);
-        } catch(e) { document.documentElement.setAttribute('data-theme', 'light'); }
+          var t = localStorage.getItem("zen-theme") || "light";
+          document.documentElement.setAttribute("data-theme", t);
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "light");
+        }
       })();
     </script>
   </head>
   <body>
     <div class="app-shell">
-
       <!-- ── 旅程列表頁 ── -->
       <div id="tripsView" class="trips-page">
         <header class="trips-header">
@@ -52,9 +59,17 @@
             </div>
           </div>
           <div class="trips-actions">
-            <button id="themeToggleBtnList" class="theme-toggle-btn" title="切換深淺色">月</button>
+            <button
+              id="themeToggleBtnList"
+              class="theme-toggle-btn"
+              title="切換深淺色"
+            >
+              月
+            </button>
             <button id="createTripBtn" class="primary">加 建立新旅程</button>
-            <button id="joinTripFromListBtn" class="tool-btn">鍵 加入旅程</button>
+            <button id="joinTripFromListBtn" class="tool-btn">
+              鍵 加入旅程
+            </button>
           </div>
         </header>
         <div id="tripsList" class="trips-list"></div>
@@ -62,51 +77,81 @@
 
       <!-- ── 主旅程畫面 ── -->
       <div id="mainView" class="main-page hidden">
-
         <!-- Topbar -->
         <header class="topbar">
           <div class="topbar-left">
-            <button id="backToTripsBtn" class="back-btn topbar-back">← 所有旅程</button>
+            <button id="backToTripsBtn" class="back-btn topbar-back">
+              ← 所有旅程
+            </button>
             <div class="trip-name-wrap">
               <span id="tripNameDisplay" class="trip-name-display">旅程</span>
-              <button id="editTripNameBtn" class="topbar-icon-btn" title="修改名稱">筆</button>
+              <button
+                id="editTripNameBtn"
+                class="topbar-icon-btn"
+                title="修改名稱"
+              >
+                筆
+              </button>
             </div>
           </div>
           <div class="topbar-right">
-            <button id="changeUserBtn" class="topbar-user-btn" title="更改名稱"><span id="topbarUserName"></span></button>
-            <span id="finalizedBadge" class="finalized-status-badge hidden">定 已定案</span>
-            <button id="unfinalizeBtn" class="tool-btn topbar-tool hidden">解除定案</button>
-            <div class="trip-code-chip">
+            <button id="changeUserBtn" class="topbar-user-btn" title="更改名稱">
+              <span id="topbarUserName"></span>
+            </button>
+            <span id="finalizedBadge" class="finalized-status-badge hidden"
+              >定 已定案</span
+            >
+            <button id="unfinalizeBtn" class="tool-btn topbar-tool hidden">
+              解除定案
+            </button>
+            <div id="tripCodeChip" class="trip-code-chip">
               <code id="tripCodeDisplay">------</code>
-              <button id="copyTripBtn" title="複製邀請連結">寫</button>
             </div>
-            <button id="themeToggleBtn" class="theme-toggle-btn" title="切換深淺色">月</button>
+            <button
+              id="themeToggleBtn"
+              class="theme-toggle-btn"
+              title="切換深淺色"
+            >
+              月
+            </button>
             <button id="openPlanBtn" class="primary">規劃行程</button>
           </div>
         </header>
 
         <!-- Map + Sidebar -->
         <div class="page-layout">
-
           <!-- Left: Map -->
           <div class="map-column">
             <div class="map-card">
               <div class="map-toolbar">
                 <div class="map-search">
                   <span class="map-search-icon">探</span>
-                  <input id="mapSearch" type="text" placeholder="搜尋地點…" autocomplete="off" />
-                  <button id="mapSearchClear" class="map-search-clear hidden">閉</button>
+                  <input
+                    id="mapSearch"
+                    type="text"
+                    placeholder="搜尋地點…"
+                    autocomplete="off"
+                  />
+                  <button id="mapSearchClear" class="map-search-clear hidden">
+                    閉
+                  </button>
                 </div>
                 <div class="map-toolbar-btns">
-                  <button id="routeToggleBtn" class="tool-btn hidden">顯示路線</button>
+                  <button id="routeToggleBtn" class="tool-btn hidden">
+                    顯示路線
+                  </button>
                 </div>
               </div>
               <div class="nearby-bar">
                 <span class="nearby-label">附近</span>
                 <button class="nearby-btn" data-type="restaurant">餐廳</button>
                 <button class="nearby-btn" data-type="cafe">咖啡</button>
-                <button class="nearby-btn" data-type="tourist_attraction">景點</button>
-                <button class="nearby-btn" data-type="convenience_store">超商</button>
+                <button class="nearby-btn" data-type="tourist_attraction">
+                  景點
+                </button>
+                <button class="nearby-btn" data-type="convenience_store">
+                  超商
+                </button>
                 <button class="nearby-btn" data-type="lodging">住宿</button>
               </div>
               <div id="map"></div>
@@ -118,10 +163,14 @@
                     <div id="placeCardAddress" class="place-card-address"></div>
                     <div id="placeCardHours" class="place-card-hours"></div>
                   </div>
-                  <button id="placeCardClose" class="place-card-close">閉</button>
+                  <button id="placeCardClose" class="place-card-close">
+                    閉
+                  </button>
                 </div>
                 <div class="place-card-actions">
-                  <button id="placeCardAdd" class="place-card-add-btn">加 加入行程</button>
+                  <button id="placeCardAdd" class="place-card-add-btn">
+                    加 加入行程
+                  </button>
                 </div>
               </div>
               <div id="mapHint" class="map-empty hidden">
@@ -143,31 +192,58 @@
               <!-- 旅程 tab (地點 + 交通 子tab) -->
               <div id="locationsPanel" class="tab-panel">
                 <div class="sub-tabs">
-                  <button class="sub-tab-btn active" id="subTabPlaces">地點</button>
+                  <button class="sub-tab-btn active" id="subTabPlaces">
+                    地點
+                  </button>
                   <button class="sub-tab-btn" id="subTabTransport">交通</button>
                 </div>
 
                 <!-- 地點子面板 -->
                 <div id="subPanelPlaces">
                   <div class="panel-header">
-                    <h2>所 地點列表
-                      <span id="locationsCount" class="loc-count-badge">共 0 個地點</span>
+                    <h2>
+                      所 地點列表
+                      <span id="locationsCount" class="loc-count-badge"
+                        >共 0 個地點</span
+                      >
                     </h2>
                   </div>
                   <div class="loc-search-wrap">
                     <span class="loc-search-icon">探</span>
-                    <input id="locSearch" type="text" placeholder="搜尋地點…" autocomplete="off" />
+                    <input
+                      id="locSearch"
+                      type="text"
+                      placeholder="搜尋地點…"
+                      autocomplete="off"
+                    />
                   </div>
                   <div id="locationsList" class="locations-list"></div>
                 </div>
 
                 <!-- 交通子面板 -->
                 <div id="subPanelTransport" class="hidden">
-                  <div class="panel-header" style="display:flex;align-items:center;justify-content:space-between;">
-                    <h2>行 交通列表
-                      <span id="tripTransportBadge" class="loc-count-badge"></span>
+                  <div
+                    class="panel-header"
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                    "
+                  >
+                    <h2>
+                      行 交通列表
+                      <span
+                        id="tripTransportBadge"
+                        class="loc-count-badge"
+                      ></span>
                     </h2>
-                    <button id="addTripTransportBtn" class="primary" style="font-size:.78rem;padding:5px 11px;">加 新增</button>
+                    <button
+                      id="addTripTransportBtn"
+                      class="primary"
+                      style="font-size: 0.78rem; padding: 5px 11px"
+                    >
+                      加 新增
+                    </button>
                   </div>
                   <div id="tripTransportList" class="locations-list"></div>
                 </div>
@@ -175,21 +251,59 @@
 
               <!-- Transport tab -->
               <div id="transportPanel" class="tab-panel hidden">
-                <div class="panel-header" style="display:flex;align-items:center;justify-content:space-between;">
-                  <h2>票 票券 <span id="transportBadge" class="loc-count-badge"></span></h2>
-                  <button id="addTransportBtn" class="primary" style="font-size:.78rem;padding:5px 11px;">加 新增票券</button>
+                <div
+                  class="panel-header"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                  "
+                >
+                  <h2>
+                    票 票券
+                    <span id="transportBadge" class="loc-count-badge"></span>
+                  </h2>
+                  <button
+                    id="addTransportBtn"
+                    class="primary"
+                    style="font-size: 0.78rem; padding: 5px 11px"
+                  >
+                    加 新增票券
+                  </button>
                 </div>
                 <div id="transportList" class="locations-list"></div>
               </div>
 
               <!-- Packing tab -->
               <div id="packingPanel" class="tab-panel hidden">
-                <div class="panel-header" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                  <h2>装 攜帶清單
+                <div
+                  class="panel-header"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 8px;
+                  "
+                >
+                  <h2>
+                    装 攜帶清單
                     <span id="packingProgress" class="loc-count-badge"></span>
                   </h2>
-                  <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-                    <button id="clearCheckedBtn" class="danger hidden" style="font-size:.72rem;padding:4px 8px;">清除勾選</button>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 6px;
+                      flex-shrink: 0;
+                    "
+                  >
+                    <button
+                      id="clearCheckedBtn"
+                      class="danger hidden"
+                      style="font-size: 0.72rem; padding: 4px 8px"
+                    >
+                      清除勾選
+                    </button>
                   </div>
                 </div>
 
@@ -202,7 +316,12 @@
                 <div class="packing-section">
                   <div class="packing-section-head">共 共同攜帶</div>
                   <div class="packing-add-bar" id="packingSharedAddBar">
-                    <input id="packingSharedInput" type="text" placeholder="新增共同品項…" autocomplete="off" />
+                    <input
+                      id="packingSharedInput"
+                      type="text"
+                      placeholder="新增共同品項…"
+                      autocomplete="off"
+                    />
                     <button id="packingSharedAddBtn" class="primary">加</button>
                   </div>
                   <div id="packingSharedList"></div>
@@ -212,8 +331,15 @@
                 <div class="packing-section">
                   <div class="packing-section-head">名 個人攜帶</div>
                   <div class="packing-add-bar" id="packingPersonalAddBar">
-                    <input id="packingPersonalInput" type="text" placeholder="新增個人品項…" autocomplete="off" />
-                    <button id="packingPersonalAddBtn" class="primary">加</button>
+                    <input
+                      id="packingPersonalInput"
+                      type="text"
+                      placeholder="新增個人品項…"
+                      autocomplete="off"
+                    />
+                    <button id="packingPersonalAddBtn" class="primary">
+                      加
+                    </button>
                   </div>
                   <div id="packingPersonalList"></div>
                 </div>
@@ -230,15 +356,20 @@
             <div class="plan-pool-head">
               <button id="backPlanBtn" class="back-btn">← 返回</button>
               <div>
-                <h2>所 所有地點</h2>
+                <h2>所有地點</h2>
                 <p>拖曳想去的地點至右側</p>
               </div>
             </div>
             <div id="planPool" class="plan-pool"></div>
 
-            <div class="plan-pool-section-head">行 旅程交通 <span class="plan-pool-section-hint">拖曳至地點間</span></div>
+            <div class="plan-pool-section-head">
+              行 旅程交通
+              <span class="plan-pool-section-hint">拖曳至地點間</span>
+            </div>
             <div id="planTransportPool" class="plan-transport-pool"></div>
-            <div class="plan-pool-section-head">票 票券 <span class="plan-pool-section-hint">拖曳至地點</span></div>
+            <div class="plan-pool-section-head">
+              票 票券 <span class="plan-pool-section-hint">拖曳至地點</span>
+            </div>
             <div id="planTicketPool" class="plan-transport-pool"></div>
           </div>
           <div class="plan-right-col">
@@ -252,13 +383,13 @@
             <div class="plan-selected-panel">
               <div class="plan-selected-head">
                 <div class="plan-summary">
-                  <span>程 已選行程</span>
+                  <span>已選行程</span>
                   <span class="plan-summary-sep">｜</span>
                   <span id="planCount">0 個地點</span>
                   <span class="plan-summary-sep">｜</span>
                   <span id="planBudget">NT$0</span>
                 </div>
-                <button id="confirmPlanBtn" class="primary">定 定案行程</button>
+                <button id="confirmPlanBtn" class="primary">定案行程</button>
               </div>
               <div id="planList" class="plan-list"></div>
             </div>
@@ -279,13 +410,18 @@
         <div id="discussMsgs" class="discuss-msgs"></div>
         <form id="discussForm" class="discuss-form">
           <div class="discuss-inputs">
-            <div class="discuss-author-label">名 <span id="dAuthorDisplay"></span></div>
-            <textarea id="dText" placeholder="輸入討論內容…" required></textarea>
+            <div class="discuss-author-label">
+              名 <span id="dAuthorDisplay"></span>
+            </div>
+            <textarea
+              id="dText"
+              placeholder="輸入討論內容…"
+              required
+            ></textarea>
           </div>
           <button type="submit" class="primary">言 發表留言</button>
         </form>
       </div>
-
     </div>
 
     <!-- ── Dialogs ── -->
@@ -295,7 +431,12 @@
       <div class="dialog-body">
         <div class="field">
           <label>旅程名稱</label>
-          <input id="editTripNameInput" type="text" placeholder="例：東京五日遊" autocomplete="off" />
+          <input
+            id="editTripNameInput"
+            type="text"
+            placeholder="例：東京五日遊"
+            autocomplete="off"
+          />
         </div>
       </div>
       <menu class="dialog-footer">
@@ -307,12 +448,19 @@
     <dialog id="nameDialog">
       <div class="dialog-header">
         <h3>名 請設定您的名稱</h3>
-        <p style="font-size:.82rem;color:var(--muted);margin:4px 0 0;">名稱用於討論留言及個人攜帶清單</p>
+        <p style="font-size: 0.82rem; color: var(--muted); margin: 4px 0 0">
+          名稱用於討論留言及個人攜帶清單
+        </p>
       </div>
       <div class="dialog-body">
         <div class="field">
           <label>您的名稱 <span class="req">*</span></label>
-          <input id="nameInput" type="text" placeholder="例：小美" autocomplete="nickname" />
+          <input
+            id="nameInput"
+            type="text"
+            placeholder="例：小美"
+            autocomplete="nickname"
+          />
         </div>
       </div>
       <menu class="dialog-footer">
@@ -366,14 +514,18 @@
       <div class="dialog-body">
         <div class="field">
           <label>票券名稱 <span class="req">*</span></label>
-          <input id="tMethod" type="text" placeholder="高鐵票、入場券、博物館票…" />
+          <input
+            id="tMethod"
+            type="text"
+            placeholder="高鐵票、入場券、博物館票…"
+          />
         </div>
         <div class="field-row">
           <div class="field">
             <label>購買處（選填）</label>
             <input id="tWhere" type="text" placeholder="台灣高鐵官網、KKday…" />
           </div>
-          <div class="field" style="flex:0 0 110px">
+          <div class="field" style="flex: 0 0 110px">
             <label>金額（選填）</label>
             <input id="tPrice" type="number" min="0" placeholder="0" />
           </div>
@@ -393,14 +545,22 @@
       <div class="dialog-body">
         <div class="field">
           <label>票券名稱 <span class="req">*</span></label>
-          <input id="etMethod" type="text" placeholder="高鐵票、入場券、博物館票…" />
+          <input
+            id="etMethod"
+            type="text"
+            placeholder="高鐵票、入場券、博物館票…"
+          />
         </div>
         <div class="field-row">
           <div class="field">
             <label>購買處（選填）</label>
-            <input id="etWhere" type="text" placeholder="台灣高鐵官網、KKday…" />
+            <input
+              id="etWhere"
+              type="text"
+              placeholder="台灣高鐵官網、KKday…"
+            />
           </div>
-          <div class="field" style="flex:0 0 110px">
+          <div class="field" style="flex: 0 0 110px">
             <label>金額（選填）</label>
             <input id="etPrice" type="number" min="0" placeholder="0" />
           </div>
@@ -467,8 +627,17 @@
       <div class="dialog-body">
         <div class="field">
           <label>旅程代碼</label>
-          <input id="joinTripInput" type="text" placeholder="例：ABC123" maxlength="6"
-                 style="text-transform:uppercase;letter-spacing:.15em;font-size:1.1rem;" />
+          <input
+            id="joinTripInput"
+            type="text"
+            placeholder="例：ABC123"
+            maxlength="6"
+            style="
+              text-transform: uppercase;
+              letter-spacing: 0.15em;
+              font-size: 1.1rem;
+            "
+          />
         </div>
       </div>
       <menu class="dialog-footer">
@@ -481,27 +650,37 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
     <script>
       // 主題切換 (深淺色模式)
-      (function(){
+      (function () {
         function bind(id) {
           var btn = document.getElementById(id);
           if (!btn) return;
-          btn.addEventListener('click', function(){
-            var cur = document.documentElement.getAttribute('data-theme') || 'light';
-            var next = cur === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', next);
-            try { localStorage.setItem('zen-theme', next); } catch(e) {}
+          btn.addEventListener("click", function () {
+            var cur =
+              document.documentElement.getAttribute("data-theme") || "light";
+            var next = cur === "dark" ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", next);
+            try {
+              localStorage.setItem("zen-theme", next);
+            } catch (e) {}
             // 更新圖示:月/日
-            var glyph = next === 'dark' ? '日' : '月';
-            document.querySelectorAll('.theme-toggle-btn').forEach(function(b){ b.textContent = glyph; });
+            var glyph = next === "dark" ? "日" : "月";
+            document
+              .querySelectorAll(".theme-toggle-btn")
+              .forEach(function (b) {
+                b.textContent = glyph;
+              });
           });
         }
-        document.addEventListener('DOMContentLoaded', function(){
+        document.addEventListener("DOMContentLoaded", function () {
           // 初始化圖示
-          var cur = document.documentElement.getAttribute('data-theme') || 'light';
-          var glyph = cur === 'dark' ? '日' : '月';
-          document.querySelectorAll('.theme-toggle-btn').forEach(function(b){ b.textContent = glyph; });
-          bind('themeToggleBtn');
-          bind('themeToggleBtnList');
+          var cur =
+            document.documentElement.getAttribute("data-theme") || "light";
+          var glyph = cur === "dark" ? "日" : "月";
+          document.querySelectorAll(".theme-toggle-btn").forEach(function (b) {
+            b.textContent = glyph;
+          });
+          bind("themeToggleBtn");
+          bind("themeToggleBtnList");
         });
       })();
     </script>
