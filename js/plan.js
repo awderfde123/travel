@@ -10,6 +10,7 @@ let planTickets = {}; // key: locationId, value: transportItem ID
 let planMap = null;
 let planMarkers = [];
 let planPolyline = null;
+let _planRouteToken = 0;
 let _poolSortable = null;
 let _listSortable = null;
 let _legSortables = [];
@@ -456,7 +457,9 @@ function renderPlanMarkers() {
   }
   if (!planMap) return;
 
+  const token = ++_planRouteToken;
   const places = planOrder.map((id) => getPlace(id)).filter(Boolean);
+
   places.forEach((p, i) => {
     planMarkers.push(
       new google.maps.Marker({
@@ -469,14 +472,7 @@ function renderPlanMarkers() {
   });
 
   if (places.length >= 2) {
-    planPolyline = new google.maps.Polyline({
-      path: places.map((p) => ({ lat: p.lat, lng: p.lng })),
-      map: planMap,
-      strokeColor: "#2563eb",
-      strokeWeight: 3,
-      strokeOpacity: 0.6,
-      geodesic: true,
-    });
+    _drawPlanRoute(places, token);
   }
 
   if (places.length > 0) {
@@ -484,6 +480,53 @@ function renderPlanMarkers() {
     places.forEach((p) => bounds.extend({ lat: p.lat, lng: p.lng }));
     planMap.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
   }
+}
+
+function _drawPlanRoute(places, token) {
+  const fallback = () => {
+    if (token !== _planRouteToken) return;
+    planPolyline = new google.maps.Polyline({
+      path: places.map((p) => ({ lat: p.lat, lng: p.lng })),
+      map: planMap,
+      strokeColor: "#2563eb",
+      strokeWeight: 3,
+      strokeOpacity: 0.55,
+      geodesic: true,
+    });
+  };
+
+  if (!window.google?.maps?.DirectionsService || places.length > 10) {
+    fallback();
+    return;
+  }
+
+  const svc = new google.maps.DirectionsService();
+  svc.route(
+    {
+      origin:      new google.maps.LatLng(places[0].lat, places[0].lng),
+      destination: new google.maps.LatLng(places[places.length - 1].lat, places[places.length - 1].lng),
+      waypoints:   places.slice(1, -1).map((p) => ({
+        location: new google.maps.LatLng(p.lat, p.lng),
+        stopover: true,
+      })),
+      optimizeWaypoints: false,
+      travelMode: google.maps.TravelMode.DRIVING,
+    },
+    (result, status) => {
+      if (token !== _planRouteToken) return; // stale render
+      if (status === google.maps.DirectionsStatus.OK) {
+        planPolyline = new google.maps.Polyline({
+          path:          result.routes[0].overview_path,
+          map:           planMap,
+          strokeColor:   "#2563eb",
+          strokeWeight:  4,
+          strokeOpacity: 0.7,
+        });
+      } else {
+        fallback();
+      }
+    },
+  );
 }
 
 function updatePlanSummary() {
