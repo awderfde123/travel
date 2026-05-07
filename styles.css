@@ -599,6 +599,19 @@ h1, h2, h3 {
 .place-card-hours   { font-size: .82rem; margin-top: 6px; }
 .place-card-hour-row       { color: var(--muted); line-height: 1.7; }
 .place-card-hour-row.today { color: var(--green); font-weight: 700; }
+.hours-details { margin-top: 4px; }
+.hours-details summary {
+  font-size: .78rem; color: var(--accent); cursor: pointer;
+  list-style: none; display: inline-flex; align-items: center; gap: 4px; font-weight: 600;
+}
+.hours-details summary::after { content: "▾"; font-size: .7rem; }
+.hours-details[open] summary::after { content: "▴"; }
+.place-card-desc { margin-top: 8px; }
+.place-card-desc-text {
+  font-size: .82rem; color: var(--text-light); line-height: 1.55;
+  background: var(--amber-bg); border-left: 3px solid var(--amber);
+  padding: 6px 10px; border-radius: 0 4px 4px 0;
+}
 .place-card-close {
   background: var(--surface-2); border: 1.5px solid var(--text);
   width: 32px; height: 32px; cursor: pointer;

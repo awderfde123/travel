@@ -133,13 +133,14 @@ function searchNearby(type) {
             if (place.place_id && _placesAllowed()) {
               _placesIncrement();
               _placesService.getDetails(
-                { placeId: place.place_id, fields: ["name", "opening_hours", "formatted_address"] },
+                { placeId: place.place_id, fields: ["name", "opening_hours", "formatted_address", "editorial_summary"] },
                 (details, detailStatus) => {
-                  const ok = detailStatus === google.maps.places.PlacesServiceStatus.OK;
-                  const openHours = ok ? (details?.opening_hours?.weekday_text || null) : null;
-                  const address   = ok ? (details?.formatted_address || "") : "";
+                  const ok          = detailStatus === google.maps.places.PlacesServiceStatus.OK;
+                  const openHours   = ok ? (details?.opening_hours?.weekday_text || null) : null;
+                  const address     = ok ? (details?.formatted_address || "") : "";
+                  const description = ok ? (details?.editorial_summary?.overview || "") : "";
                   if (state.finalized) {
-                    _showMapPin(lat, lng, place.name || "", address, openHours);
+                    _showMapPin(lat, lng, place.name || "", address, openHours, description);
                   } else {
                     pendingLatLng = { lat, lng };
                     openAddDialog(place.name || "", openHours);
@@ -230,30 +231,36 @@ function fitBounds() {
 // ── Drop a search/click pin with bottom card ──
 let _placeCardLat = null, _placeCardLng = null, _placeCardOpenHours = null;
 
-function _showPlaceCard(name, address, openHours) {
+function _showPlaceCard(name, address, openHours, description = "") {
   const card = document.getElementById("placeCard");
   if (!card) return;
   document.getElementById("placeCardName").textContent    = name || "（未知地點）";
   document.getElementById("placeCardAddress").textContent = address || "";
 
+  // ── 開放時間：今天顯示，其他天下拉 ──
   const hoursEl = document.getElementById("placeCardHours");
   if (Array.isArray(openHours) && openHours.length) {
-    const todayIdx = (() => { const d = new Date().getDay(); return d === 0 ? 6 : d - 1; })();
-    if (state.finalized) {
-      // Finalized: show only today's hours
-      const todayRow = openHours[todayIdx];
-      hoursEl.innerHTML = todayRow
-        ? `<div class="place-card-hour-row today">${esc(todayRow)}</div>`
-        : "";
-    } else {
-      // All 7 days, highlight today
-      hoursEl.innerHTML = openHours.map((row, i) =>
-        `<div class="place-card-hour-row${i === todayIdx ? " today" : ""}">${esc(row)}</div>`
-      ).join("");
-    }
+    const todayIdx  = (() => { const d = new Date().getDay(); return d === 0 ? 6 : d - 1; })();
+    const todayRow  = openHours[todayIdx] || "";
+    const otherRows = openHours.filter((_, i) => i !== todayIdx);
+    hoursEl.innerHTML = `
+      ${todayRow ? `<div class="place-card-hour-row today">${esc(todayRow)}</div>` : ""}
+      ${otherRows.length ? `
+        <details class="hours-details">
+          <summary>其他時間</summary>
+          ${openHours.map((row, i) => i !== todayIdx
+            ? `<div class="place-card-hour-row">${esc(row)}</div>` : ""
+          ).join("")}
+        </details>` : ""}`;
   } else {
     hoursEl.innerHTML = "";
   }
+
+  // ── 地點簡介 ──
+  const descEl = document.getElementById("placeCardDesc");
+  if (descEl) descEl.innerHTML = description
+    ? `<div class="place-card-desc-text">✨ ${esc(description)}</div>`
+    : "";
 
   document.getElementById("placeCardAdd").classList.toggle("hidden", !!state.finalized);
   card.classList.remove("hidden");
@@ -263,7 +270,7 @@ function _hidePlaceCard() {
   document.getElementById("placeCard")?.classList.add("hidden");
 }
 
-function _showMapPin(lat, lng, name, address, openHours) {
+function _showMapPin(lat, lng, name, address, openHours, description = "") {
   _placeCardLat       = lat;
   _placeCardLng       = lng;
   _placeCardOpenHours = openHours;
@@ -285,9 +292,9 @@ function _showMapPin(lat, lng, name, address, openHours) {
 
   // Refresh click listener for updated place info
   google.maps.event.clearListeners(_searchMarker, "click");
-  _searchMarker.addListener("click", () => _showPlaceCard(name, address, openHours));
+  _searchMarker.addListener("click", () => _showPlaceCard(name, address, openHours, description));
 
-  _showPlaceCard(name, address, openHours);
+  _showPlaceCard(name, address, openHours, description);
 }
 
 // ── Setup ──
@@ -334,7 +341,7 @@ function setupMap() {
       event.stop();
       _placesIncrement();
       _placesService.getDetails(
-        { placeId: event.placeId, fields: ["name", "types", "opening_hours", "formatted_address"] },
+        { placeId: event.placeId, fields: ["name", "types", "opening_hours", "formatted_address", "editorial_summary"] },
         (place, status) => {
           const SKIP_TYPES = ["route", "street_address", "street_number",
             "intersection", "political", "country",
@@ -342,12 +349,13 @@ function setupMap() {
             "administrative_area_level_3", "locality", "sublocality",
             "sublocality_level_1", "postal_code", "neighborhood"];
           const isRoadOrArea = place?.types?.some(t => SKIP_TYPES.includes(t));
-          const ok        = status === google.maps.places.PlacesServiceStatus.OK;
-          const name      = (ok && !isRoadOrArea) ? (place.name || "") : "";
-          const openHours = (ok && !isRoadOrArea) ? (place?.opening_hours?.weekday_text || null) : null;
-          const address   = (ok && !isRoadOrArea) ? (place?.formatted_address || "") : "";
+          const ok          = status === google.maps.places.PlacesServiceStatus.OK;
+          const name        = (ok && !isRoadOrArea) ? (place.name || "") : "";
+          const openHours   = (ok && !isRoadOrArea) ? (place?.opening_hours?.weekday_text || null) : null;
+          const address     = (ok && !isRoadOrArea) ? (place?.formatted_address || "") : "";
+          const description = (ok && !isRoadOrArea) ? (place?.editorial_summary?.overview || "") : "";
           if (!name) return; // unknown place — skip pin and card
-          _showMapPin(lat, lng, name, address, openHours);
+          _showMapPin(lat, lng, name, address, openHours, description);
         }
       );
     } else {
@@ -406,7 +414,7 @@ function initPlacesSearch() {
   if (!window.google?.maps?.places || !input) return;
 
   const autocomplete = new google.maps.places.Autocomplete(input, {
-    fields: ["name", "geometry", "opening_hours", "formatted_address"],
+    fields: ["name", "geometry", "opening_hours", "formatted_address", "editorial_summary"],
   });
   autocomplete.bindTo("bounds", map);
 
@@ -428,8 +436,9 @@ function initPlacesSearch() {
       map.setZoom(16);
     }
 
-    const openHours = place.opening_hours?.weekday_text || null;
-    _showMapPin(lat, lng, place.name || "", place.formatted_address || "", openHours);
+    const openHours   = place.opening_hours?.weekday_text || null;
+    const description = place.editorial_summary?.overview || "";
+    _showMapPin(lat, lng, place.name || "", place.formatted_address || "", openHours, description);
     clearBtn.classList.remove("hidden");
   });
 
