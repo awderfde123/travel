@@ -70,7 +70,10 @@ function renderMarkers() {
       title: place.name,
       icon: markerSvg(i + 1),
     });
-    marker.addListener("click", () => openDiscussPage(place.id));
+    marker.addListener("click", () => {
+      map.panTo({ lat: place.lat, lng: place.lng });
+      _showPlaceCard(place.name, "", place.openHours || null, "", place.id);
+    });
     markers.push(marker);
   });
   renderRoute();
@@ -231,7 +234,7 @@ function fitBounds() {
 // ── Drop a search/click pin with bottom card ──
 let _placeCardLat = null, _placeCardLng = null, _placeCardOpenHours = null;
 
-function _showPlaceCard(name, address, openHours, description = "") {
+function _showPlaceCard(name, address, openHours, description = "", placeId = null) {
   const card = document.getElementById("placeCard");
   if (!card) return;
   document.getElementById("placeCardName").textContent    = name || "（未知地點）";
@@ -262,7 +265,18 @@ function _showPlaceCard(name, address, openHours, description = "") {
     ? `<div class="place-card-desc-text">✨ ${esc(description)}</div>`
     : "";
 
-  document.getElementById("placeCardAdd").classList.toggle("hidden", !!state.finalized);
+  // ── 按鈕：已加入地點顯示「查看討論」，新地點顯示「加入行程」 ──
+  const addBtn     = document.getElementById("placeCardAdd");
+  const discussBtn = document.getElementById("placeCardDiscuss");
+  if (placeId) {
+    addBtn.classList.add("hidden");
+    discussBtn.classList.remove("hidden");
+    discussBtn.onclick = () => { _hidePlaceCard(); openDiscussPage(placeId); };
+  } else {
+    addBtn.classList.toggle("hidden", !!state.finalized);
+    discussBtn.classList.add("hidden");
+  }
+
   card.classList.remove("hidden");
 }
 

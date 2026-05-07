@@ -625,6 +625,15 @@ h1, h2, h3 {
   box-shadow: 2px 2px 0 var(--text);
 }
 .place-card-add-btn:hover { background: var(--shu-dark); transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--text); }
+.place-card-discuss-btn {
+  width: 100%; padding: 13px;
+  background: var(--accent-bg); color: var(--accent); border: 2px solid var(--accent);
+  font-family: "Noto Serif TC", serif;
+  font-size: 1rem; font-weight: 700;
+  cursor: pointer; letter-spacing: .1em; transition: all .15s;
+  box-shadow: 2px 2px 0 var(--accent);
+}
+.place-card-discuss-btn:hover { background: var(--accent); color: var(--surface); transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--accent-dark); }
 
 .map-empty {
   flex: 1; display: flex; flex-direction: column; align-items: center;
