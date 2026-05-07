@@ -142,21 +142,11 @@ function searchNearby(type) {
                   const openHours   = ok ? (details?.opening_hours?.weekday_text || null) : null;
                   const address     = ok ? (details?.formatted_address || "") : "";
                   const description = ok ? (details?.editorial_summary?.overview || "") : "";
-                  if (state.finalized) {
-                    _showMapPin(lat, lng, place.name || "", address, openHours, description);
-                  } else {
-                    pendingLatLng = { lat, lng };
-                    openAddDialog(place.name || "", openHours);
-                  }
+                  _showMapPin(lat, lng, place.name || "", address, openHours, description);
                 }
               );
             } else {
-              if (state.finalized) {
-                _showMapPin(lat, lng, place.name || "", "", null);
-              } else {
-                pendingLatLng = { lat, lng };
-                openAddDialog(place.name || "", null);
-              }
+              _showMapPin(lat, lng, place.name || "", "", null);
             }
           });
           nearbyMarkers.push(marker);
