@@ -86,6 +86,12 @@ function applyDepartDate() {
   }
 }
 
+document.getElementById("departDateChip")?.addEventListener("click", () => {
+  const input = document.getElementById("departDateInput");
+  if (!input) return;
+  try { input.showPicker(); } catch { input.click(); }
+});
+
 document.getElementById("departDateInput")?.addEventListener("change", e => {
   state.departDate = e.target.value;
   saveState();

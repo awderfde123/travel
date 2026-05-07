@@ -297,10 +297,6 @@ h1, h2, h3 {
   transition: transform .15s;
 }
 .depart-date-chip:hover { transform: rotate(0); }
-.depart-date-chip input[type="date"] {
-  position: absolute; inset: 0; opacity: 0;
-  width: 100%; height: 100%; cursor: pointer;
-}
 
 /* 主題切換按鈕 */
 .theme-toggle-btn {

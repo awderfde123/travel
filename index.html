@@ -102,14 +102,15 @@
             <button id="changeUserBtn" class="topbar-user-btn" title="更改名稱">
               <span id="topbarUserName"></span>
             </button>
-            <label
+            <button
               id="departDateChip"
               class="depart-date-chip hidden"
               title="設定出發日期"
+              type="button"
             >
               <span id="departDateDisplay">設出發日</span>
-              <input type="date" id="departDateInput" />
-            </label>
+            </button>
+            <input type="date" id="departDateInput" style="position:absolute;opacity:0;width:0;height:0;pointer-events:none;" />
             <span id="finalizedBadge" class="finalized-status-badge hidden"
               >已定案</span
             >
