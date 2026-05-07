@@ -136,12 +136,12 @@ function searchNearby(type) {
             if (place.place_id && _placesAllowed()) {
               _placesIncrement();
               _placesService.getDetails(
-                { placeId: place.place_id, fields: ["name", "opening_hours", "formatted_address", "editorial_summary"] },
+                { placeId: place.place_id, fields: ["name", "types", "opening_hours", "formatted_address", "editorial_summary", "rating", "user_ratings_total"] },
                 (details, detailStatus) => {
                   const ok          = detailStatus === google.maps.places.PlacesServiceStatus.OK;
                   const openHours   = ok ? (details?.opening_hours?.weekday_text || null) : null;
                   const address     = ok ? (details?.formatted_address || "") : "";
-                  const description = ok ? (details?.editorial_summary?.overview || "") : "";
+                  const description = ok ? _buildPlaceDesc(details) : "";
                   _showMapPin(lat, lng, place.name || "", address, openHours, description);
                 }
               );
@@ -224,6 +224,36 @@ function fitBounds() {
 // ── Drop a search/click pin with bottom card ──
 let _placeCardLat = null, _placeCardLng = null, _placeCardOpenHours = null;
 
+const _TYPE_ZH = {
+  restaurant:"餐廳", cafe:"咖啡廳", bakery:"烘焙坊", bar:"酒吧",
+  tourist_attraction:"觀光景點", museum:"博物館", art_gallery:"藝廊",
+  park:"公園", lodging:"住宿", convenience_store:"超商",
+  supermarket:"超市", shopping_mall:"購物中心", store:"商店",
+  spa:"水療", gym:"健身房", hospital:"醫院", pharmacy:"藥局",
+  subway_station:"捷運站", train_station:"火車站",
+  night_club:"夜店", movie_theater:"電影院",
+  amusement_park:"遊樂園", zoo:"動物園", aquarium:"水族館",
+  stadium:"體育場", library:"圖書館",
+  hair_care:"美髮", beauty_salon:"美容院",
+  gas_station:"加油站", parking:"停車場",
+};
+const _TYPE_SKIP = new Set(["point_of_interest","establishment","food","premise","locality","political","geocode"]);
+
+function _buildPlaceDesc(details) {
+  if (!details) return "";
+  if (details.editorial_summary?.overview) return details.editorial_summary.overview;
+  const parts = [];
+  const typeLabel = (details.types || [])
+    .filter(t => !_TYPE_SKIP.has(t) && _TYPE_ZH[t])
+    .slice(0, 2).map(t => _TYPE_ZH[t]).join("・");
+  if (typeLabel) parts.push(typeLabel);
+  if (details.rating) {
+    const n = details.user_ratings_total;
+    parts.push(`★ ${details.rating}${n ? `（${n.toLocaleString()} 則評論）` : ""}`);
+  }
+  return parts.join("　");
+}
+
 function _showPlaceCard(name, address, openHours, description = "", placeId = null) {
   const card = document.getElementById("placeCard");
   if (!card) return;
@@ -252,7 +282,7 @@ function _showPlaceCard(name, address, openHours, description = "", placeId = nu
   // ── 地點簡介 ──
   const descEl = document.getElementById("placeCardDesc");
   if (descEl) descEl.innerHTML = description
-    ? `<div class="place-card-desc-text">✨ ${esc(description)}</div>`
+    ? `<div class="place-card-desc-text">${esc(description)}</div>`
     : "";
 
   // ── 按鈕：已加入地點顯示「查看討論」，新地點顯示「加入行程」 ──
@@ -345,7 +375,7 @@ function setupMap() {
       event.stop();
       _placesIncrement();
       _placesService.getDetails(
-        { placeId: event.placeId, fields: ["name", "types", "opening_hours", "formatted_address", "editorial_summary"] },
+        { placeId: event.placeId, fields: ["name", "types", "opening_hours", "formatted_address", "editorial_summary", "rating", "user_ratings_total"] },
         (place, status) => {
           const SKIP_TYPES = ["route", "street_address", "street_number",
             "intersection", "political", "country",
@@ -357,7 +387,7 @@ function setupMap() {
           const name        = (ok && !isRoadOrArea) ? (place.name || "") : "";
           const openHours   = (ok && !isRoadOrArea) ? (place?.opening_hours?.weekday_text || null) : null;
           const address     = (ok && !isRoadOrArea) ? (place?.formatted_address || "") : "";
-          const description = (ok && !isRoadOrArea) ? (place?.editorial_summary?.overview || "") : "";
+          const description = (ok && !isRoadOrArea) ? _buildPlaceDesc(place) : "";
           if (!name) return; // unknown place — skip pin and card
           _showMapPin(lat, lng, name, address, openHours, description);
         }
@@ -418,7 +448,7 @@ function initPlacesSearch() {
   if (!window.google?.maps?.places || !input) return;
 
   const autocomplete = new google.maps.places.Autocomplete(input, {
-    fields: ["name", "geometry", "opening_hours", "formatted_address", "editorial_summary"],
+    fields: ["name", "geometry", "types", "opening_hours", "formatted_address", "editorial_summary", "rating", "user_ratings_total"],
   });
   autocomplete.bindTo("bounds", map);
 
@@ -441,7 +471,7 @@ function initPlacesSearch() {
     }
 
     const openHours   = place.opening_hours?.weekday_text || null;
-    const description = place.editorial_summary?.overview || "";
+    const description = _buildPlaceDesc(place);
     _showMapPin(lat, lng, place.name || "", place.formatted_address || "", openHours, description);
     clearBtn.classList.remove("hidden");
   });
