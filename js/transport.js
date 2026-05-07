@@ -74,7 +74,7 @@ function renderTransportList() {
             ${item.purchased ? "✅ 已購買" : "🛒 未購買"}
             ${item.price > 0 ? `<span class="transport-status-price">NT$${item.price.toLocaleString()}</span>` : ""}
           </button>
-          <span class="loc-discuss-count">💬 ${count > 0 ? `${count} 則討論` : "查看討論"}</span>
+          <span class="loc-discuss-count${count === 0 ? " loc-discuss-empty" : ""}">💬${count > 0 ? ` ${count} 則討論` : ""}</span>
         </div>
       </div>
       ${!finalized ? `
