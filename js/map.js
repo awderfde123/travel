@@ -72,7 +72,7 @@ function renderMarkers() {
     });
     marker.addListener("click", () => {
       map.panTo({ lat: place.lat, lng: place.lng });
-      _showPlaceCard(place.name, "", place.openHours || null, "", place.id);
+      _showPlaceCard(place.name, "", place.openHours || null, null, place.id);
     });
     markers.push(marker);
   });
@@ -136,17 +136,17 @@ function searchNearby(type) {
             if (place.place_id && _placesAllowed()) {
               _placesIncrement();
               _placesService.getDetails(
-                { placeId: place.place_id, fields: ["name", "types", "opening_hours", "formatted_address", "editorial_summary", "rating", "user_ratings_total"] },
+                { placeId: place.place_id, fields: ["name", "types", "opening_hours", "formatted_address", "editorial_summary", "rating", "user_ratings_total", "reviews"] },
                 (details, detailStatus) => {
-                  const ok          = detailStatus === google.maps.places.PlacesServiceStatus.OK;
-                  const openHours   = ok ? (details?.opening_hours?.weekday_text || null) : null;
-                  const address     = ok ? (details?.formatted_address || "") : "";
-                  const description = ok ? _buildPlaceDesc(details) : "";
-                  _showMapPin(lat, lng, place.name || "", address, openHours, description);
+                  const ok        = detailStatus === google.maps.places.PlacesServiceStatus.OK;
+                  const openHours = ok ? (details?.opening_hours?.weekday_text || null) : null;
+                  const address   = ok ? (details?.formatted_address || "") : "";
+                  const info      = ok ? _buildPlaceInfo(details) : null;
+                  _showMapPin(lat, lng, place.name || "", address, openHours, info);
                 }
               );
             } else {
-              _showMapPin(lat, lng, place.name || "", "", null);
+              _showMapPin(lat, lng, place.name || "", "", null, null);
             }
           });
           nearbyMarkers.push(marker);
@@ -239,26 +239,37 @@ const _TYPE_ZH = {
 };
 const _TYPE_SKIP = new Set(["point_of_interest","establishment","food","premise","locality","political","geocode"]);
 
-function _buildPlaceDesc(details) {
-  if (!details) return "";
-  if (details.editorial_summary?.overview) return details.editorial_summary.overview;
-  const parts = [];
+function _buildPlaceInfo(details) {
+  if (!details) return null;
   const typeLabel = (details.types || [])
     .filter(t => !_TYPE_SKIP.has(t) && _TYPE_ZH[t])
     .slice(0, 2).map(t => _TYPE_ZH[t]).join("・");
-  if (typeLabel) parts.push(typeLabel);
-  if (details.rating) {
-    const n = details.user_ratings_total;
-    parts.push(`★ ${details.rating}${n ? `（${n.toLocaleString()} 則評論）` : ""}`);
-  }
-  return parts.join("　");
+  return {
+    typeLabel,
+    rating:      details.rating || null,
+    reviewCount: details.user_ratings_total || 0,
+    editorial:   details.editorial_summary?.overview || "",
+    reviews:     (details.reviews || []).slice(0, 3),
+  };
 }
 
-function _showPlaceCard(name, address, openHours, description = "", placeId = null) {
+function _showPlaceCard(name, address, openHours, info = null, placeId = null) {
   const card = document.getElementById("placeCard");
   if (!card) return;
   document.getElementById("placeCardName").textContent    = name || "（未知地點）";
   document.getElementById("placeCardAddress").textContent = address || "";
+
+  // ── 類型 + 評分 ──
+  const metaEl = document.getElementById("placeCardMeta");
+  if (metaEl) {
+    const parts = [];
+    if (info?.typeLabel) parts.push(`<span class="pc-type">${esc(info.typeLabel)}</span>`);
+    if (info?.rating) {
+      const cnt = info.reviewCount ? ` <span class="pc-review-count">（${info.reviewCount.toLocaleString()} 則）</span>` : "";
+      parts.push(`<span class="pc-rating">★ ${info.rating}${cnt}</span>`);
+    }
+    metaEl.innerHTML = parts.join("");
+  }
 
   // ── 開放時間：今天顯示，其他天下拉 ──
   const hoursEl = document.getElementById("placeCardHours");
@@ -279,11 +290,30 @@ function _showPlaceCard(name, address, openHours, description = "", placeId = nu
     hoursEl.innerHTML = "";
   }
 
-  // ── 地點簡介 ──
+  // ── 介紹 ──
   const descEl = document.getElementById("placeCardDesc");
-  if (descEl) descEl.innerHTML = description
-    ? `<div class="place-card-desc-text">${esc(description)}</div>`
+  if (descEl) descEl.innerHTML = info?.editorial
+    ? `<div class="place-card-desc-text">${esc(info.editorial)}</div>`
     : "";
+
+  // ── 評論下拉 ──
+  const reviewsEl = document.getElementById("placeCardReviews");
+  if (reviewsEl) {
+    const reviews = info?.reviews || [];
+    reviewsEl.innerHTML = reviews.length ? `
+      <details class="reviews-details">
+        <summary>前 ${reviews.length} 則評論</summary>
+        ${reviews.map(r => `
+          <div class="review-item">
+            <div class="review-header">
+              <span class="review-author">${esc(r.author_name || "")}</span>
+              <span class="review-stars">${"★".repeat(r.rating || 0)}${"☆".repeat(5 - (r.rating || 0))}</span>
+              <span class="review-time">${esc(r.relative_time_description || "")}</span>
+            </div>
+            <div class="review-text">${esc(r.text || "")}</div>
+          </div>`).join("")}
+      </details>` : "";
+  }
 
   // ── 按鈕：已加入地點顯示「查看討論」，新地點顯示「加入行程」 ──
   const addBtn     = document.getElementById("placeCardAdd");
@@ -304,13 +334,12 @@ function _hidePlaceCard() {
   document.getElementById("placeCard")?.classList.add("hidden");
 }
 
-function _showMapPin(lat, lng, name, address, openHours, description = "") {
+function _showMapPin(lat, lng, name, address, openHours, info = null) {
   _placeCardLat       = lat;
   _placeCardLng       = lng;
   _placeCardOpenHours = openHours;
 
   if (_searchMarker) {
-    // Just move the existing marker — no flash
     _searchMarker.setPosition({ lat, lng });
     _searchMarker.setTitle(name || "");
   } else {
@@ -324,11 +353,10 @@ function _showMapPin(lat, lng, name, address, openHours, description = "") {
     });
   }
 
-  // Refresh click listener for updated place info
   google.maps.event.clearListeners(_searchMarker, "click");
-  _searchMarker.addListener("click", () => _showPlaceCard(name, address, openHours, description));
+  _searchMarker.addListener("click", () => _showPlaceCard(name, address, openHours, info));
 
-  _showPlaceCard(name, address, openHours, description);
+  _showPlaceCard(name, address, openHours, info);
 }
 
 // ── Setup ──
@@ -375,7 +403,7 @@ function setupMap() {
       event.stop();
       _placesIncrement();
       _placesService.getDetails(
-        { placeId: event.placeId, fields: ["name", "types", "opening_hours", "formatted_address", "editorial_summary", "rating", "user_ratings_total"] },
+        { placeId: event.placeId, fields: ["name", "types", "opening_hours", "formatted_address", "editorial_summary", "rating", "user_ratings_total", "reviews"] },
         (place, status) => {
           const SKIP_TYPES = ["route", "street_address", "street_number",
             "intersection", "political", "country",
@@ -383,13 +411,13 @@ function setupMap() {
             "administrative_area_level_3", "locality", "sublocality",
             "sublocality_level_1", "postal_code", "neighborhood"];
           const isRoadOrArea = place?.types?.some(t => SKIP_TYPES.includes(t));
-          const ok          = status === google.maps.places.PlacesServiceStatus.OK;
-          const name        = (ok && !isRoadOrArea) ? (place.name || "") : "";
-          const openHours   = (ok && !isRoadOrArea) ? (place?.opening_hours?.weekday_text || null) : null;
-          const address     = (ok && !isRoadOrArea) ? (place?.formatted_address || "") : "";
-          const description = (ok && !isRoadOrArea) ? _buildPlaceDesc(place) : "";
-          if (!name) return; // unknown place — skip pin and card
-          _showMapPin(lat, lng, name, address, openHours, description);
+          const ok        = status === google.maps.places.PlacesServiceStatus.OK;
+          const name      = (ok && !isRoadOrArea) ? (place.name || "") : "";
+          const openHours = (ok && !isRoadOrArea) ? (place?.opening_hours?.weekday_text || null) : null;
+          const address   = (ok && !isRoadOrArea) ? (place?.formatted_address || "") : "";
+          const info      = (ok && !isRoadOrArea) ? _buildPlaceInfo(place) : null;
+          if (!name) return;
+          _showMapPin(lat, lng, name, address, openHours, info);
         }
       );
     } else {
@@ -448,7 +476,7 @@ function initPlacesSearch() {
   if (!window.google?.maps?.places || !input) return;
 
   const autocomplete = new google.maps.places.Autocomplete(input, {
-    fields: ["name", "geometry", "types", "opening_hours", "formatted_address", "editorial_summary", "rating", "user_ratings_total"],
+    fields: ["name", "geometry", "types", "opening_hours", "formatted_address", "editorial_summary", "rating", "user_ratings_total", "reviews"],
   });
   autocomplete.bindTo("bounds", map);
 
@@ -470,9 +498,9 @@ function initPlacesSearch() {
       map.setZoom(16);
     }
 
-    const openHours   = place.opening_hours?.weekday_text || null;
-    const description = _buildPlaceDesc(place);
-    _showMapPin(lat, lng, place.name || "", place.formatted_address || "", openHours, description);
+    const openHours = place.opening_hours?.weekday_text || null;
+    const info      = _buildPlaceInfo(place);
+    _showMapPin(lat, lng, place.name || "", place.formatted_address || "", openHours, info);
     clearBtn.classList.remove("hidden");
   });
 

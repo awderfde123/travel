@@ -591,6 +591,10 @@ h1, h2, h3 {
   font-size: 1.2rem; font-weight: 700; color: var(--text);
   margin-bottom: 5px; line-height: 1.4; letter-spacing: 0;
 }
+.place-card-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.pc-type        { font-size: .78rem; background: var(--accent-bg); color: var(--accent); padding: 1px 7px; border-radius: 3px; font-weight: 600; }
+.pc-rating      { font-size: .82rem; color: var(--amber); font-weight: 700; }
+.pc-review-count{ font-weight: 400; color: var(--muted); font-size: .78rem; }
 .place-card-address { font-size: .82rem; color: var(--muted); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: "Caveat", cursive; font-size: 1rem; }
 .place-card-hours   { font-size: .82rem; margin-top: 6px; }
 .place-card-hour-row       { color: var(--muted); line-height: 1.7; }
@@ -625,6 +629,20 @@ h1, h2, h3 {
   box-shadow: 2px 2px 0 var(--text);
 }
 .place-card-add-btn:hover { background: var(--shu-dark); transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--text); }
+.place-card-reviews { margin-top: 6px; }
+.reviews-details { }
+.reviews-details summary {
+  font-size: .78rem; color: var(--accent); cursor: pointer;
+  list-style: none; display: inline-flex; align-items: center; gap: 4px; font-weight: 600;
+}
+.reviews-details summary::after { content: "▾"; font-size: .7rem; }
+.reviews-details[open] summary::after { content: "▴"; }
+.review-item { padding: 8px 0; border-top: 1px solid var(--border-light); }
+.review-header { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 3px; }
+.review-author { font-size: .78rem; font-weight: 700; color: var(--text); }
+.review-stars  { font-size: .72rem; color: var(--amber); letter-spacing: -.5px; }
+.review-time   { font-size: .72rem; color: var(--muted); margin-left: auto; }
+.review-text   { font-size: .78rem; color: var(--text-light); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .place-card-discuss-btn {
   width: 100%; padding: 13px;
   background: var(--accent-bg); color: var(--accent); border: 2px solid var(--accent);
