@@ -126,7 +126,7 @@ function renderPlanCards() {
   listEl.innerHTML = "";
 
   if (!planOrder.length) {
-    listEl.innerHTML = `<div class="plan-empty-hint">← 從左側拖入地點</div>`;
+    listEl.innerHTML = `<div class="plan-empty-hint">${_isMobile() ? "點 ＋ 加入地點" : "← 從左側拖入地點"}</div>`;
   } else {
     planOrder.forEach((id, i) => {
       const p = getPlace(id);
@@ -143,6 +143,8 @@ function renderPlanCards() {
   _rebuildLegs();
   _rebuildTicketZones();
 }
+
+const _isMobile = () => window.innerWidth <= 640;
 
 // ── SortableJS helpers ──
 function _renumberList() {
@@ -161,7 +163,7 @@ function _readState() {
 }
 
 function _initPoolSortable() {
-  if (!window.Sortable) return;
+  if (!window.Sortable || _isMobile()) return;
   const poolEl = document.getElementById("planPool");
   if (!poolEl) return;
   _poolSortable = Sortable.create(poolEl, {
@@ -191,7 +193,7 @@ function _initPoolSortable() {
 }
 
 function _initListSortable() {
-  if (!window.Sortable) return;
+  if (!window.Sortable || _isMobile()) return;
   const listEl = document.getElementById("planList");
   if (!listEl) return;
   _listSortable = Sortable.create(listEl, {
@@ -257,7 +259,7 @@ function _rebuildTransportPool() {
     poolEl.appendChild(card);
   });
 
-  if (window.Sortable) {
+  if (window.Sortable && !_isMobile()) {
     _transportPoolSortable = Sortable.create(poolEl, {
       group: { name: "transport", pull: "clone", put: false },
       animation: 150,
@@ -295,7 +297,7 @@ function _rebuildTicketPool() {
     poolEl.appendChild(card);
   });
 
-  if (window.Sortable) {
+  if (window.Sortable && !_isMobile()) {
     _ticketPoolSortable = Sortable.create(poolEl, {
       group: { name: "tickets", pull: "clone", put: false },
       animation: 150,
@@ -339,7 +341,7 @@ function _rebuildTicketZones() {
     dropEl.innerHTML = `<span class="plan-ticket-hint">🎫</span>`;
     zoneEl.appendChild(dropEl);
 
-    if (window.Sortable) {
+    if (window.Sortable && !_isMobile()) {
       const s = Sortable.create(dropEl, {
         group: { name: "tickets", pull: false, put: true },
         animation: 150,
@@ -384,7 +386,7 @@ function _createLegEl(key, fromId, toId) {
     dropEl.innerHTML = `<span class="plan-leg-walk">🚶</span>`;
     legEl.appendChild(dropEl);
 
-    if (window.Sortable) {
+    if (window.Sortable && !_isMobile()) {
       const s = Sortable.create(dropEl, {
         group: { name: "transport", pull: false, put: true },
         animation: 150,

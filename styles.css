@@ -8,10 +8,10 @@
 :root,
 [data-theme="light"] {
   /* ── 紙 (背景) ── */
-  --bg:           #f3eddc;
-  --surface:      #f8f2e2;
-  --surface-2:    #ede4cd;
-  --surface-3:    #e2d8bd;
+  --bg:           #f7eedb;
+  --surface:      #f5ecd9;
+  --surface-2:    #efe4cc;
+  --surface-3:    #e3d9bf;
 
   /* ── 墨 (文字) ── */
   --text:         #1f1a14;
@@ -40,9 +40,13 @@
   --green-border: #b1bf90;
 
   /* ── 芥末黃 ── */
-  --amber:        #b08518;
+  --amber:        #d4a017;
   --amber-bg:     #f4e9c4;
-  --amber-border: #d4b85c;
+  --amber-border: #d4a017;
+
+  /* ── 玫瑰橙 ── */
+  --rose:         #d97757;
+  --rose-bg:      #faeee7;
 
   --danger:       #c0392b;
   --danger-bg:    #fae3df;
@@ -128,7 +132,7 @@ body {
 
 /* 標題字 */
 h1, h2, h3 {
-  font-family: "Noto Serif TC", "Patrick Hand", serif;
+  font-family: "Source Serif 4", "Noto Serif TC", "Patrick Hand", serif;
   font-weight: 700;
   letter-spacing: .04em;
 }
@@ -138,6 +142,19 @@ h1, h2, h3 {
   font-family: "Caveat", "Patrick Hand", cursive;
   font-weight: 600;
 }
+
+/* 貼紙標籤 (dir-c Sticker component 對應) */
+.sticker {
+  display: inline-block; padding: 5px 13px;
+  background: var(--shu); color: var(--surface);
+  font-family: "Caveat", cursive; font-size: 1rem; font-weight: 700;
+  transform: rotate(-3deg);
+  box-shadow: 2px 2px 0 var(--text);
+  letter-spacing: .04em;
+}
+.sticker.mustard { background: var(--amber); color: var(--text); }
+.sticker.teal    { background: var(--accent); color: var(--surface); }
+.sticker.rose    { background: var(--rose); color: var(--surface); }
 
 /* ══════════════════════════════════════════════
    App Shell
@@ -261,11 +278,28 @@ h1, h2, h3 {
 
 .finalized-status-badge {
   font-size: .72rem; font-weight: 700; padding: 4px 12px;
-  letter-spacing: .12em; font-family: "Noto Serif TC", serif;
-  background: var(--green); border: 1.5px solid var(--text);
+  letter-spacing: .12em; font-family: "Caveat", cursive;
+  background: var(--shu); border: 1.5px solid var(--text);
   color: var(--surface); white-space: nowrap;
   transform: rotate(-2deg);
+  box-shadow: 2px 2px 0 var(--text);
+}
+
+/* 出發日期 chip */
+.depart-date-chip {
+  position: relative; display: inline-flex; align-items: center;
+  padding: 4px 12px; gap: 4px;
+  background: var(--amber-bg); border: 1.5px solid var(--text);
+  font-family: "Caveat", cursive; font-size: .85rem; font-weight: 700;
+  color: var(--text); cursor: pointer; white-space: nowrap;
+  transform: rotate(-1deg);
   box-shadow: 1.5px 1.5px 0 var(--text);
+  transition: transform .15s;
+}
+.depart-date-chip:hover { transform: rotate(0); }
+.depart-date-chip input[type="date"] {
+  position: absolute; inset: 0; opacity: 0;
+  width: 100%; height: 100%; cursor: pointer;
 }
 
 /* 主題切換按鈕 */
@@ -349,15 +383,20 @@ h1, h2, h3 {
 .trips-actions { display: flex; gap: 10px; align-items: center; flex-shrink: 0; z-index: 1; }
 
 .trips-list {
-  flex: 1; padding: 28px 8px 40px;
-  display: flex; flex-direction: column; gap: 14px;
+  flex: 1; padding: 40px 32px 80px;
+  display: flex; flex-direction: row; flex-wrap: wrap;
+  gap: 40px;
+  align-items: flex-start; align-content: flex-start;
   overflow-y: auto;
+  position: relative;
 }
 
-/* ── 旅程卡片 — 微旋轉、膠帶、便利貼感 ── */
+/* ── 旅程卡片 — 散落 2 欄、膠帶、便利貼感 ── */
 .trip-list-card {
-  display: flex; align-items: center; gap: 20px;
-  padding: 20px 22px;
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: 0;
+  width: 280px; flex-shrink: 0;
+  padding: 20px 22px 16px;
   background: var(--surface);
   border: 1.5px solid var(--text);
   cursor: pointer;
@@ -365,52 +404,76 @@ h1, h2, h3 {
   position: relative;
   box-shadow: 3px 3px 0 var(--text);
 }
-.trip-list-card:nth-child(odd)  { transform: rotate(-.4deg); }
-.trip-list-card:nth-child(even) { transform: rotate(.4deg); }
+.trip-list-card:nth-child(odd)  { transform: rotate(-2.5deg); }
+.trip-list-card:nth-child(even) { transform: rotate(2.5deg); margin-top: 30px; }
 .trip-list-card:hover {
   transform: rotate(0) translate(-1px, -2px);
   box-shadow: 5px 5px 0 var(--text);
 }
 /* 膠帶 */
 .trip-list-card::before {
-  content: ''; position: absolute; left: 18px; top: -8px;
-  width: 60px; height: 14px;
-  background: rgba(212,184,92,.55);
+  content: ''; position: absolute; left: 90px; top: -11px;
+  width: 100px; height: 22px;
+  background: rgba(212,160,23,.6);
+  background-image: repeating-linear-gradient(90deg, transparent, transparent 6px, rgba(255,255,255,.18) 6px, rgba(255,255,255,.18) 7px);
   transform: rotate(-4deg);
-  box-shadow: 0 1px 2px rgba(31,26,20,.12);
+  box-shadow: 0 1px 2px rgba(31,26,20,.15);
   pointer-events: none;
 }
 .trip-list-card:nth-child(even)::before {
-  background: rgba(42,111,124,.4); left: auto; right: 30px;
-  transform: rotate(3deg);
+  background: rgba(42,111,124,.5);
+  background-image: repeating-linear-gradient(90deg, transparent, transparent 6px, rgba(255,255,255,.18) 6px, rgba(255,255,255,.18) 7px);
+  left: auto; right: 20px; transform: rotate(3deg);
 }
+/* 奇偶卡片背景色交替 */
+.trip-list-card:nth-child(even) { background: #fff8eb; }
+.trip-list-card:nth-child(4n)   { background: #faf0d8; }
 
-.trip-list-info   { flex: 1; min-width: 0; }
-.trip-list-name {
-  font-family: "Noto Serif TC", serif;
-  font-size: 1.15rem; font-weight: 700; color: var(--text);
-  margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  letter-spacing: .02em;
-}
-.trip-list-meta   { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.trip-list-info   { width: 100%; }
 .trip-list-code {
   font-family: "Caveat", cursive; font-size: .9rem; color: var(--muted);
-  background: var(--amber-bg); border: 1px dashed var(--border-strong);
-  padding: 1px 9px; letter-spacing: .12em; font-weight: 600;
+  letter-spacing: .12em; font-weight: 600;
+  transform: rotate(-1deg); display: inline-block; margin-bottom: 4px;
+}
+.trip-list-name {
+  font-family: "Source Serif 4", "Noto Serif TC", serif;
+  font-size: 1.6rem; font-weight: 700; color: var(--text);
+  margin: 0 0 4px; line-height: 1.15; letter-spacing: 0;
+}
+.trip-list-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; flex-wrap: wrap;
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  width: 100%;
 }
 .trip-status-badge {
-  font-size: .68rem; font-weight: 700; padding: 3px 10px;
-  border: 1.5px solid var(--text); letter-spacing: .08em;
-  font-family: "Noto Serif TC", serif;
-  transform: rotate(-2deg);
-  box-shadow: 1.5px 1.5px 0 var(--text);
+  font-size: 1rem; font-weight: 700; padding: 5px 13px;
+  font-family: "Caveat", cursive; letter-spacing: .04em;
+  transform: rotate(3deg);
+  box-shadow: 2px 2px 0 rgba(31,26,20,.18);
+  display: inline-block;
 }
 .trip-status-badge.is-editing   { color: var(--text); background: var(--amber); }
-.trip-status-badge.is-finalized { color: var(--surface); background: var(--green); }
+.trip-status-badge.is-finalized { color: var(--surface); background: var(--shu); }
 .trip-list-date   { margin-top: 4px; font-size: .8rem; color: var(--muted); letter-spacing: 0; font-family: "Caveat", cursive; font-weight: 500; }
-.trip-list-arrow {
-  font-family: "Noto Serif TC", serif;
-  font-size: 1.3rem; color: var(--shu); flex-shrink: 0; opacity: .7; font-weight: 700;
+.trip-list-arrow { display: none; }
+
+/* 新增旅程浮動便利貼 */
+.trips-create-sticker {
+  position: absolute; right: 40px; bottom: 50px;
+  width: 160px; padding: 14px 16px;
+  background: #f4d35e; border: none;
+  transform: rotate(4deg); box-shadow: 0 3px 10px rgba(31,26,20,.2);
+  cursor: pointer; font-family: "Caveat", cursive; font-weight: 600;
+  text-align: left; font-size: 1.1rem; color: var(--text);
+  line-height: 1.4;
+  transition: transform .2s, box-shadow .2s;
+}
+.trips-create-sticker:hover {
+  transform: rotate(2deg) translate(-1px, -2px);
+  box-shadow: 3px 6px 14px rgba(31,26,20,.28);
+  background: #f4d35e !important;
 }
 
 /* ══════════════════════════════════════════════
@@ -741,6 +804,8 @@ h1, h2, h3 {
   font-family: "Caveat", cursive;
 }
 .loc-discuss-btn:hover { opacity: 1; background: transparent; border: none; transform: none; box-shadow: none; text-decoration: underline; text-underline-offset: 3px; text-decoration-style: wavy; }
+.loc-discuss-empty { opacity: .3; font-size: .9rem; }
+.loc-discuss-empty:hover { opacity: .7; text-decoration: none; }
 .loc-discuss-count { font-size: .85rem; color: var(--accent); font-weight: 700; opacity: .8; font-family: "Caveat", cursive; }
 
 .loc-actions { display: flex; gap: 5px; flex-shrink: 0; align-self: center; }
@@ -916,8 +981,8 @@ h1, h2, h3 {
   transition: transform .15s;
   align-self: flex-start;
 }
-.d-item:nth-child(odd)  { transform: rotate(-.5deg); }
-.d-item:nth-child(even) { transform: rotate(.5deg); align-self: flex-end; }
+.d-item:nth-child(odd)  { transform: rotate(-.7deg); }
+.d-item:nth-child(even) { transform: rotate(.7deg); align-self: flex-end; }
 .d-item:hover { transform: rotate(0); }
 .d-item-marked {
   background: #fff8c5;
@@ -1301,8 +1366,10 @@ dialog::backdrop { background: rgba(31,26,20,.6); backdrop-filter: blur(4px); }
   .trips-header h1 { font-size: 1.3rem; }
   .trips-actions { width: 100%; }
   .trips-actions button { flex: 1; justify-content: center; font-size: .88rem; }
-  .trips-list { padding: 18px 4px; }
-  .trip-list-card { padding: 18px 16px; }
+  .trips-list { padding: 20px 16px 80px; flex-direction: column; align-items: center; }
+  .trip-list-card { width: 100%; max-width: 320px; padding: 18px 18px 14px; }
+  .trip-list-card:nth-child(even) { margin-top: 0; }
+  .trips-create-sticker { right: 20px; bottom: 16px; }
 
   .topbar { flex-wrap: wrap; gap: 8px; padding: 10px 14px; height: auto; min-height: 60px; }
   .topbar-left  { flex: 1; min-width: 0; order: 1; }
@@ -1316,13 +1383,24 @@ dialog::backdrop { background: rgba(31,26,20,.6); backdrop-filter: blur(4px); }
   .dic-name { max-width: 160px; }
   .tab-btn  { font-size: .82rem; padding: 12px 2px; }
 
-  .plan-layout { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
-  .plan-pool-col   { max-height: 40vh; }
-  .plan-right-col  { flex-direction: column; }
-  .plan-selected-panel { width: 100%; max-height: 340px; }
-  .plan-map-wrap   { min-height: 220px; max-height: 260px; flex: none; }
+  /* Plan 手機版：直向三段，整頁捲動 */
+  .plan-view   { overflow-y: auto; }
+  .plan-layout {
+    height: auto; min-height: 0;
+    display: flex; flex-direction: column;
+    gap: var(--gap);
+  }
+  .plan-pool-col {
+    max-height: none; height: auto;
+    overflow: visible;
+  }
+  .plan-pool { overflow-y: visible; max-height: none; }
+  .plan-transport-pool { max-height: none; overflow-y: visible; }
+  .plan-right-col  { flex-direction: column; height: auto; }
+  .plan-selected-panel { width: 100%; max-height: none; height: auto; overflow: visible; }
+  .plan-list       { overflow-y: visible; max-height: none; }
+  .plan-map-wrap   { height: 260px; flex: none; }
   .plan-list .plan-card .plan-card-row { align-items: center; }
-  .plan-transport-pool { max-height: 120px; }
   .plan-pool, .locations-list, .discuss-msgs { touch-action: pan-y; }
 }
 

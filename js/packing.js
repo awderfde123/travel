@@ -81,6 +81,7 @@ function _renderSection(elId, items, type, finalized, user) {
         }
         el.classList.toggle("checked", ev.target.checked);
         savePacking();
+        if (typeof scheduleTripReminderDebounced === "function") scheduleTripReminderDebounced();
         const cS2 = packingShared.filter(p => p.checked).length;
         const cP2 = packingPersonal.filter(p => p.checkedBy?.[user]).length;
         document.getElementById("packingProgress").textContent =

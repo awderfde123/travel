@@ -93,6 +93,7 @@ function renderTransportList() {
       item.purchased = !item.purchased;
       saveTransport();
       renderTransportList();
+      if (typeof scheduleTripReminderDebounced === "function") scheduleTripReminderDebounced();
     });
     if (!finalized) {
       el.querySelector(".del").addEventListener("click", e => {

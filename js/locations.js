@@ -90,7 +90,7 @@ function renderLocationsList() {
           ${tickets.map(ticket => `<button class="loc-ticket-badge${ticket.purchased ? " purchased locked" : " unpurchased"}" data-ticket-id="${ticket.id}">
             ${ticket.purchased ? "✅" : "🎫"} ${esc(ticket.method)}
           </button>`).join("")}
-          ${!finalized ? `<button class="loc-discuss-btn">💬 ${count > 0 ? `${count} 則討論` : "查看討論"}</button>` : ""}
+          <button class="loc-discuss-btn${count === 0 ? " loc-discuss-empty" : ""}">💬${count > 0 ? ` ${count} 則討論` : ""}</button>
         </div>
         ${markedMsg ? `<div class="loc-marked-msg"><span class="loc-marked-author">${esc(markedMsg.author)}</span>${esc(markedMsg.text)}</div>` : ""}
       </div>

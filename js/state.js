@@ -6,6 +6,7 @@ const state = {
   showRoute:     false,
   tripName:      "",
   finalized:     false,
+  departDate:    "",   // "YYYY-MM-DD"
   planLegs:      {},   // "fromId__toId" → tripLeg ID
   planCardTimes: {},   // locationId → time string
   planTickets:   {},   // locationId → transportItem ID
@@ -32,6 +33,7 @@ function saveState(sync = true) {
     tripName:      state.tripName,
     finalized:     state.finalized,
     showRoute:     state.showRoute,
+    departDate:    state.departDate,
     planLegs:      state.planLegs,
     planCardTimes: state.planCardTimes,
     planTickets:   state.planTickets,
@@ -46,6 +48,7 @@ function loadState() {
   state.tripName      = meta.tripName      || "";
   state.finalized     = meta.finalized     || false;
   state.showRoute     = meta.showRoute     || false;
+  state.departDate    = meta.departDate    || "";
   state.planLegs      = meta.planLegs      || {};
   state.planCardTimes = meta.planCardTimes || {};
   state.planTickets   = meta.planTickets   || {};

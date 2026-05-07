@@ -57,6 +57,7 @@ function updateTripHistory(extra = {}) {
     code:        tripId,
     name:        state.tripName || "",
     finalized:   state.finalized || false,
+    departDate:  state.departDate || "",
     lastVisited: new Date().toISOString(),
     ...extra,
   };

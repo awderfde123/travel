@@ -69,6 +69,31 @@ document.getElementById("cancelEditTripNameBtn")?.addEventListener("click", () =
   document.getElementById("editTripNameDialog").close();
 });
 
+// ── 出發日期 ──
+function applyDepartDate() {
+  const chip    = document.getElementById("departDateChip");
+  const display = document.getElementById("departDateDisplay");
+  const input   = document.getElementById("departDateInput");
+  if (!chip) return;
+  chip.classList.remove("hidden");
+  if (state.departDate) {
+    const d = new Date(state.departDate + "T00:00:00");
+    display.textContent = d.toLocaleDateString("zh-TW", { month: "numeric", day: "numeric" }) + " 出發";
+    input.value = state.departDate;
+  } else {
+    display.textContent = "設出發日";
+    input.value = "";
+  }
+}
+
+document.getElementById("departDateInput")?.addEventListener("change", e => {
+  state.departDate = e.target.value;
+  saveState();
+  updateTripHistory({ departDate: state.departDate });
+  applyDepartDate();
+  scheduleTripReminderDebounced();
+});
+
 // 解除定案
 document.getElementById("unfinalizeBtn")?.addEventListener("click", () => {
   state.finalized = false;
@@ -146,6 +171,7 @@ document.getElementById("cancelNameBtn")?.addEventListener("click", () => {
   }
 
   // 4. 渲染（即便資料為空也先渲染）
+  applyDepartDate();
   renderLocationsList();
   renderTripLegList();
   renderTransportList();
